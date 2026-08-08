@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # The colour-parity test needs a real Postgres with pgvector — it is the only
+    # guard on the duplicated colour maths in migration 0012, so it must not be
+    # allowed to silently skip here.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      RAIL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      # Apply migration 0012 verbatim rather than extracting parts of it — a
+      # parity test running against an edited copy of the file proves nothing.
+      # It needs a `garments` table to hang its trigger on, so create the two
+      # columns it touches. A full `supabase db reset` would pull the whole local
+      # stack (auth, storage, kong) to test two functions.
+      - name: Apply colour functions
+        run: |
+          psql "$RAIL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -c 'create extension if not exists vector;' \
+            -c 'create extension if not exists pgcrypto;' \
+            -c 'create table public.garments (
+                  id uuid primary key default gen_random_uuid(),
+                  user_id uuid not null,
+                  colour_primary_hex text,
+                  colour_primary_lab real[3],
+                  colour_secondary_hex text,
+                  colour_secondary_lab real[3],
+                  is_neutral boolean not null default false
+                );'
+          psql "$RAIL_TEST_DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -f supabase/migrations/0012_colour_functions.sql
+
+      - name: Verify the parity suite will not skip
+        run: |
+          # A skipped parity suite leaves the duplicated colour maths in 0012
+          # unguarded, which is the exact failure this job exists to prevent.
+          psql "$RAIL_TEST_DATABASE_URL" -At -v ON_ERROR_STOP=1 \
+            -c "select public.hex_to_lab('#8b4513')" | grep -q . \
+            || { echo 'hex_to_lab is not installed; the parity test would skip'; exit 1; }
+
+      - run: npm test
+
+      - run: npm run typecheck
