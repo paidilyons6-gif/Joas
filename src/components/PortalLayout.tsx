@@ -1,10 +1,11 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { LogoLink } from "./Logo";
 import { useAuth } from "../lib/auth";
+import { isMember } from "../lib/access";
 
 export function PortalLayout() {
   const { user, signOut } = useAuth();
-  const member = user && user.plan !== "none";
+  const member = isMember(user?.plan);
 
   return (
     <div className="portal">
@@ -22,11 +23,17 @@ export function PortalLayout() {
           <NavLink to="/portal" end>
             Home
           </NavLink>
-          <NavLink to="/portal/training">Training</NavLink>
-          <NavLink to="/portal/resources">Resources</NavLink>
+          <NavLink to="/portal/courses">Courses</NavLink>
+          <NavLink to="/portal/calculators">Calculators</NavLink>
+          <NavLink to="/portal/tools">Toolkit</NavLink>
+          <NavLink to="/portal/resources">Vault</NavLink>
           <NavLink to="/portal/account">Account</NavLink>
         </nav>
-        <button className="btn btn--ghost-ink portal__signout" type="button" onClick={() => void signOut()}>
+        <button
+          className="btn btn--ghost-ink portal__signout"
+          type="button"
+          onClick={() => void signOut()}
+        >
           Log out
         </button>
       </aside>

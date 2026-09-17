@@ -2,54 +2,42 @@
 
 **Like the village, but for business.**
 
-Marketing site + member portal — training, resources, signup/login, and Stripe subscriptions.
+Marketing site + elite member portal — courses, financial calculators, startup toolkit, signup/login, and Stripe subscriptions.
+
+## Portal product
+
+- **Courses:** Startup Foundations, Money & Margins, Launch & Sales
+- **Calculators:** Pricing, break-even, revenue goal, runway, profit, offer stack
+- **Toolkit:** Offer builder, ideal client, 7-day launch planner, CEO scorecard
+- **Vault:** Copyable scripts and templates
+- **Access:** Free preview + membership unlock (`$49/mo` or `$397/yr`)
 
 ## Stack
 
-- **Frontend:** Vite + React + React Router
-- **Auth / DB:** Supabase (optional — demo mode works without it)
-- **Payments:** Stripe Checkout subscriptions via Netlify Functions
-- **Host:** Netlify (`netlify.toml` included)
-
-## Product model
-
-- Free account → portal home + Phase 1 training
-- **Membership** — $49/mo
-- **Founders Year** — $397/yr (best value)
-- Members unlock full curriculum, resources, and billing portal
+- Frontend: Vite + React + React Router
+- Auth / DB: Supabase (optional — demo mode works without it)
+- Payments: Stripe Checkout via Netlify Functions
+- Host: Netlify (`netlify.toml` included)
 
 ## Quick start (demo mode)
-
-No keys needed. Accounts and “payments” run on this device via localStorage.
 
 ```bash
 npm install
 npm run dev
 ```
 
-1. Open the site → **Let’s do this**
-2. Create an account
+1. Create an account
+2. Open `/portal` — free lessons + Pricing calculator + CEO scorecard
 3. Go to **Pricing** → pick a plan (demo unlocks instantly)
-4. Train inside **/portal**
+4. Explore Courses, Calculators, Toolkit, Vault
 
 ## Go live on Netlify
 
-1. Connect this GitHub repo in Netlify
-2. Build command `npm run build`, publish `dist` (already in `netlify.toml`)
-3. Add environment variables from `.env.example`
-4. Create two Stripe Prices (monthly + annual) and paste IDs into `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_ANNUAL`
-5. Run the SQL in `supabase/migrations/001_profiles.sql` in your Supabase project
-6. Point a Stripe webhook to `https://YOUR_SITE/.netlify/functions/stripe-webhook` for:
-   - `checkout.session.completed`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-
-## Local Netlify functions
-
-```bash
-npx netlify dev
-```
+1. Connect this GitHub repo
+2. Add env vars from `.env.example`
+3. Run `supabase/migrations/001_profiles.sql`
+4. Create Stripe prices + webhook → `/.netlify/functions/stripe-webhook`
 
 ## Brand
 
-Follows the Business by Becca board: signature pink `#FF2D8B`, soft pink, energy yellow, clarity blue, clean, ink — DM Sans / Playfair Display / Inter.
+Signature pink `#FF2D8B`, soft pink, energy yellow, clarity blue, clean, ink — DM Sans / Playfair Display / Inter.

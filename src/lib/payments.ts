@@ -1,4 +1,4 @@
-import type { PlanId } from "../data/content";
+import type { PlanId } from "../data/plans";
 import { hasStripe } from "./demo";
 
 export async function startCheckout(plan: PlanId, email: string) {

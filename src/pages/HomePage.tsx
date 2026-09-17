@@ -126,30 +126,30 @@ export function HomePage() {
               Progress over <em>perfection.</em>
             </h2>
             <p className="section__copy">
-              A home base for training modules, lesson checkoffs, resource
-              downloads, and billing — all in one pink-powered place.
+              Elite courses, financial calculators, and startup worksheets —
+              your village for building and getting paid.
             </p>
           </Reveal>
           <div className="offer__rows">
             <Reveal className="offer__row" as="div">
-              <h3>Guided curriculum</h3>
+              <h3>3 course tracks</h3>
               <p>
-                Four phases from clarity to growth — complete lessons, track
-                wins, and keep momentum between busy weeks.
+                Startup Foundations, Money &amp; Margins, and Launch &amp; Sales
+                — with lesson players, objectives, and checkoffs.
               </p>
             </Reveal>
             <Reveal className="offer__row" as="div">
-              <h3>Membership that pays for itself</h3>
+              <h3>Financial calculators</h3>
               <p>
-                Monthly or founding-year plans unlock the full vault. Manage
-                billing anytime from your account.
+                Pricing, break-even, revenue goals, runway, profit, and offer
+                stack math — built for founders, not finance majors.
               </p>
             </Reveal>
             <Reveal className="offer__row" as="div">
-              <h3>Built to grow with you</h3>
+              <h3>Startup toolkit</h3>
               <p>
-                Start free, upgrade when ready. Demo mode works today; wire
-                Supabase + Stripe when you go live.
+                Offer builder, ideal client sketch, 7-day launch planner, and
+                weekly CEO scorecard — saved as you go.
               </p>
             </Reveal>
           </div>

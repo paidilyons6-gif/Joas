@@ -7,8 +7,13 @@ import { PricingPage } from "./pages/PricingPage";
 import { SignInPage } from "./pages/SignInPage";
 import { SignUpPage } from "./pages/SignUpPage";
 import { PortalHome } from "./pages/portal/PortalHome";
-import { TrainingPage } from "./pages/portal/TrainingPage";
-import { ModulePage } from "./pages/portal/ModulePage";
+import { CoursesPage } from "./pages/portal/CoursesPage";
+import { TrackPage } from "./pages/portal/TrackPage";
+import { LessonPage } from "./pages/portal/LessonPage";
+import { ToolsPage } from "./pages/portal/ToolsPage";
+import { ToolPage } from "./pages/portal/ToolPage";
+import { CalculatorsPage } from "./pages/portal/CalculatorsPage";
+import { CalculatorPage } from "./pages/portal/CalculatorPage";
 import { ResourcesPage } from "./pages/portal/ResourcesPage";
 import { AccountPage } from "./pages/portal/AccountPage";
 import type { ReactNode } from "react";
@@ -41,10 +46,17 @@ export default function App() {
             }
           >
             <Route index element={<PortalHome />} />
-            <Route path="training" element={<TrainingPage />} />
-            <Route path="training/:moduleId" element={<ModulePage />} />
+            <Route path="courses" element={<CoursesPage />} />
+            <Route path="courses/:trackId" element={<TrackPage />} />
+            <Route path="courses/:trackId/:lessonId" element={<LessonPage />} />
+            <Route path="tools" element={<ToolsPage />} />
+            <Route path="tools/:toolId" element={<ToolPage />} />
+            <Route path="calculators" element={<CalculatorsPage />} />
+            <Route path="calculators/:calcId" element={<CalculatorPage />} />
             <Route path="resources" element={<ResourcesPage />} />
             <Route path="account" element={<AccountPage />} />
+            <Route path="training" element={<Navigate to="/portal/courses" replace />} />
+            <Route path="training/:moduleId" element={<Navigate to="/portal/courses" replace />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

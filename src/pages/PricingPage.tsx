@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PLANS, type PlanId } from "../data/content";
+import { PLANS, type PlanId } from "../data/plans";
 import { useAuth } from "../lib/auth";
 import { startCheckout } from "../lib/payments";
 import { Reveal } from "../components/Reveal";

@@ -33,7 +33,9 @@ export function AccountPage() {
       <h1>
         Your <em>membership</em>
       </h1>
-      <p className="portal-lede">Profile, plan, and billing controls.</p>
+      <p className="portal-lede">
+        Profile, plan, billing, and what you can access in the village.
+      </p>
 
       <div className="account-panel">
         <div className="account-row">
@@ -52,6 +54,14 @@ export function AccountPage() {
               : user.plan === "annual"
                 ? "Founders Year"
                 : "Monthly Membership"}
+          </strong>
+        </div>
+        <div className="account-row">
+          <span>Unlocked</span>
+          <strong>
+            {user.plan === "none"
+              ? "Startup Foundations (free lessons) · Pricing calculator · CEO scorecard"
+              : "All courses · All calculators · Full toolkit · Vault"}
           </strong>
         </div>
         <div className="account-row">
