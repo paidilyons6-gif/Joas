@@ -1,6 +1,8 @@
 # Business by Becca
 
-Marketing site + member portal for **Business by Becca** — training, resources, signup/login, and Stripe subscriptions.
+**Like the village, but for business.**
+
+Marketing site + member portal — training, resources, signup/login, and Stripe subscriptions.
 
 ## Stack
 

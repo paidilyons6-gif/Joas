@@ -43,7 +43,7 @@ export function SiteLayout() {
             <div>
               <LogoLink variant="light" />
               <p className="footer__tag">
-                Big dreams. Real strategy. A brighter you.
+                Like the village, but for business.
               </p>
             </div>
             <nav className="footer__nav" aria-label="Footer">

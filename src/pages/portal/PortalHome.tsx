@@ -15,10 +15,11 @@ export function PortalHome() {
     <div className="portal-page">
       <p className="eyebrow">Portal home</p>
       <h1>
-        Same girl, <em>bigger plans</em>
+        Your business <em>village</em>
       </h1>
       <p className="portal-lede">
-        Your training hub for offers, launches, and freedom-focused growth.
+        Like the village, but for business — training, resources, and support
+        for offers, launches, and growth.
       </p>
 
       <div className="stat-row">

@@ -28,10 +28,10 @@ export function HomePage() {
           <h1>
             <Logo variant="hero" />
           </h1>
-          <p className="hero__headline">Build the damn business.</p>
+          <p className="hero__headline">Like the village, but for business.</p>
           <p className="hero__lede">
-            Big dreams. Real strategy. A brighter you — training, community, and
-            a member portal for women who want more without losing themselves.
+            The support system for women building companies — training,
+            community, and a portal that helps you ship, not just dream.
           </p>
           <div className="hero__actions">
             <Link className="btn btn--primary" to={user ? "/portal" : "/sign-up"}>
@@ -47,15 +47,15 @@ export function HomePage() {
       <section className="section manifesto" aria-labelledby="manifesto-title">
         <div className="section__inner">
           <Reveal>
-            <p className="eyebrow">Same girl, bigger plans</p>
+            <p className="eyebrow">Becky Lyons</p>
             <h2 className="manifesto__title" id="manifesto-title">
-              You&apos;ve got this.
+              Build the damn business.
             </h2>
-            <p className="manifesto__accent">Action over perfection ♡</p>
+            <p className="manifesto__accent">Like the village, but for business ♡</p>
             <p className="section__copy">
               Practical tools. Real conversations. Big results. Business by
-              Becca is for the girls who want more — more freedom, more income,
-              more impact — without losing their personality in the process.
+              Becca is your village for offers, launches, and growth — so you
+              don&apos;t have to figure it out alone.
             </p>
             <ul className="checklist">
               <li>Bigger income</li>
@@ -78,7 +78,8 @@ export function HomePage() {
             </h2>
             <p className="section__copy">
               Sign up free, subscribe when you&apos;re ready, and train inside
-              your private portal — education, community, resources, freedom.
+              your private portal — your business village for education,
+              community, resources, and freedom.
             </p>
           </Reveal>
 
@@ -108,11 +109,11 @@ export function HomePage() {
         <div className="band__veil" aria-hidden="true" />
         <Reveal className="band__content">
           <h2 id="band-title">
-            Freedom looks <em>good</em> on you.
+            Your village for <em>bigger</em> plans.
           </h2>
           <p>
             Create your account, join membership, and open a portal built for
-            progress over perfection.
+            progress over perfection — with people who get it.
           </p>
         </Reveal>
       </section>
