@@ -1,0 +1,22 @@
+# A string used to distinguish different Supabase projects on the same host
+project_id = "utnsdavbxbnacseqerjr"
+
+[api]
+enabled = true
+
+[db]
+port = 54322
+major_version = 17
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = [
+  "http://127.0.0.1:5173",
+  "http://localhost:8888",
+]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false

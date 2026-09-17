@@ -19,7 +19,23 @@ Marketing site + elite member portal — courses, financial calculators, startup
 - Payments: Stripe Checkout via Netlify Functions
 - Host: Netlify (`netlify.toml` included)
 
-## Quick start (demo mode)
+## Backend (Supabase)
+
+Project: **Businessbybecca** (`utnsdavbxbnacseqerjr`, eu-west-1)
+
+Already applied:
+- `profiles` table + RLS
+- signup trigger to create profiles
+- email auth with autoconfirm (instant portal access)
+
+Local: copy `.env.example` → `.env` and fill anon + service role keys from the Supabase dashboard (API settings). A working `.env` is gitignored.
+
+Netlify env vars to set:
+- `VITE_SUPABASE_URL=https://utnsdavbxbnacseqerjr.supabase.co`
+- `VITE_SUPABASE_ANON_KEY=...` (anon/public)
+- `SUPABASE_URL=https://utnsdavbxbnacseqerjr.supabase.co`
+- `SUPABASE_SERVICE_ROLE_KEY=...` (secret — for Stripe webhooks)
+- Stripe keys when ready
 
 ```bash
 npm install
@@ -28,7 +44,7 @@ npm run dev
 
 1. Create an account
 2. Open `/portal` — free lessons + Pricing calculator + CEO scorecard
-3. Go to **Pricing** → pick a plan (demo unlocks instantly)
+3. Go to **Pricing** → pick a plan (demo unlocks instantly when Stripe keys are absent; live Checkout when Stripe is configured)
 4. Explore Courses, Calculators, Toolkit, Vault
 
 ## Go live on Netlify
