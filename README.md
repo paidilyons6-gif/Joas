@@ -1,8 +1,8 @@
-# Becca Businesses
+# Business by Becca
 
-A website for mothers ready to start their own companies — guidance, community, and a clear path from idea to launch.
+Marketing site for **Business by Becca** — big dreams, real strategy, a brighter you.
 
-Built with Vite + React + TypeScript.
+Built with Vite + React + TypeScript, following Becca’s brand board (palette, type, voice).
 
 ## Develop
 

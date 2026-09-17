@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 
 const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1484863137850-59afcfe05386?auto=format&fit=crop&w=2400&q=80";
+  "https://images.unsplash.com/photo-1529333166432-c89d40d0d94c?auto=format&fit=crop&w=2400&q=80";
 const BAND_IMAGE =
-  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=2000&q=80";
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=80";
 
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
@@ -19,7 +19,7 @@ function useReveal<T extends HTMLElement>() {
           observer.unobserve(node);
         }
       },
-      { threshold: 0.18, rootMargin: "0px 0px -8% 0px" },
+      { threshold: 0.16, rootMargin: "0px 0px -6% 0px" },
     );
 
     observer.observe(node);
@@ -34,15 +34,37 @@ function Reveal({
   className = "",
   as: Tag = "div",
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-  as?: "div" | "section" | "header" | "ul" | "li";
+  as?: "div" | "section" | "ul" | "li";
 }) {
   const ref = useReveal<HTMLDivElement>();
   return (
     <Tag ref={ref as never} className={`reveal ${className}`.trim()}>
       {children}
     </Tag>
+  );
+}
+
+function Logo({
+  variant = "default",
+}: {
+  variant?: "default" | "light" | "hero";
+}) {
+  const className =
+    variant === "hero"
+      ? "logo logo--hero"
+      : variant === "light"
+        ? "logo logo--light"
+        : "logo";
+
+  return (
+    <span className={className}>
+      <span className="logo__business">Business</span>
+      <span className="logo__by">
+        by Becca <span aria-hidden="true">♡</span>
+      </span>
+    </span>
   );
 }
 
@@ -59,15 +81,15 @@ export default function App() {
   return (
     <div className="site">
       <header className="nav">
-        <a className="nav__mark" href="#top">
-          Becca Businesses
+        <a href="#top" aria-label="Business by Becca home">
+          <Logo variant="light" />
         </a>
-        <a className="nav__link" href="#join">
-          Join the waitlist
+        <a className="nav__cta" href="#join">
+          Let&apos;s do this →
         </a>
       </header>
 
-      <section className="hero" id="top" aria-label="Becca Businesses">
+      <section className="hero" id="top" aria-label="Business by Becca">
         <div className="hero__media" aria-hidden="true">
           <img
             src={HERO_IMAGE}
@@ -79,114 +101,105 @@ export default function App() {
         </div>
         <div className="hero__veil" aria-hidden="true" />
         <div className="hero__content">
-          <h1 className="hero__brand">Becca Businesses</h1>
-          <p className="hero__headline">
-            The launchpad for mothers building companies of their own.
-          </p>
+          <h1>
+            <Logo variant="hero" />
+          </h1>
+          <p className="hero__headline">Build the damn business.</p>
           <p className="hero__lede">
-            Clear guidance, real community, and a path that fits around the life
-            you already love.
+            Big dreams. Real strategy. A brighter you — practical tools for
+            women who want more without losing themselves.
           </p>
           <div className="hero__actions">
             <a className="btn btn--primary" href="#join">
-              Get on the list
+              Let&apos;s do this →
             </a>
-            <a className="btn btn--ghost" href="#path">
-              See how it works
+            <a className="btn btn--ghost" href="#pillars">
+              See the vibe
             </a>
           </div>
         </div>
       </section>
 
-      <section className="section promise" aria-labelledby="promise-title">
+      <section className="section manifesto" aria-labelledby="manifesto-title">
         <div className="section__inner">
           <Reveal>
-            <p className="section__label">Built for moms</p>
-            <h2 className="section__title" id="promise-title">
-              Your idea deserves a real runway.
+            <p className="eyebrow">Same girl, bigger plans</p>
+            <h2 className="manifesto__title" id="manifesto-title">
+              You&apos;ve got this.
             </h2>
+            <p className="manifesto__accent">Action over perfection ♡</p>
             <p className="section__copy">
-              Becca Businesses helps mothers turn what they know, love, and live
-              into businesses that last — without pretending you have unlimited
-              hours or a spare cofounder.
+              Practical tools. Real conversations. Big results. Business by
+              Becca is for the girls who want more — more freedom, more income,
+              more impact — without losing their personality in the process.
             </p>
+            <ul className="checklist">
+              <li>Bigger income</li>
+              <li>A life I love</li>
+              <li>Helping others</li>
+              <li>Proud of me</li>
+              <li>Freedom</li>
+              <li>Same girl, bigger plans ♡</li>
+            </ul>
           </Reveal>
-
-          <div className="promise__grid">
-            <Reveal className="promise__item" as="div">
-              <p className="promise__num">01</p>
-              <h3>Clarity first</h3>
-              <p>
-                Name the offer, the customer, and the next right move — so you
-                stop spinning and start shipping.
-              </p>
-            </Reveal>
-            <Reveal className="promise__item" as="div">
-              <p className="promise__num">02</p>
-              <h3>Launch with support</h3>
-              <p>
-                Step-by-step launch plans, honest feedback, and a circle of moms
-                who get the juggle.
-              </p>
-            </Reveal>
-            <Reveal className="promise__item" as="div">
-              <p className="promise__num">03</p>
-              <h3>Grow on purpose</h3>
-              <p>
-                Systems, pricing, and momentum that scale with your season of
-                life — not against it.
-              </p>
-            </Reveal>
-          </div>
         </div>
       </section>
 
       <section
-        className="section path"
-        id="path"
-        aria-labelledby="path-title"
+        className="section pillars"
+        id="pillars"
+        aria-labelledby="pillars-title"
       >
         <div className="section__inner">
           <Reveal>
-            <p className="section__label">The path</p>
-            <h2 className="section__title" id="path-title">
-              From kitchen-table idea to open for business.
+            <p className="eyebrow">The mix</p>
+            <h2 className="section__title" id="pillars-title">
+              Ambitious. Unfiltered. <em>Yours.</em>
             </h2>
             <p className="section__copy">
-              A simple arc designed for real weeks with kids, careers, and
-              everything in between.
+              Education, community, resources, and freedom — built for founders
+              who move fast and stay real.
             </p>
           </Reveal>
 
-          <div className="path__steps">
-            <Reveal className="path__step" as="div">
-              <p className="path__phase">Phase one</p>
+          <div className="pillars__grid">
+            <Reveal className="pillar" as="div">
+              <p className="pillar__name">Education</p>
               <div>
-                <h3>Find your edge</h3>
+                <h3>Strategy that actually ships</h3>
                 <p>
-                  Workshops and one-to-one coaching help you shape a business
-                  rooted in your skills, story, and the market that actually
-                  needs you.
+                  Clear frameworks for offers, pricing, sales, and systems —
+                  designed for women building between real life and big goals.
                 </p>
               </div>
             </Reveal>
-            <Reveal className="path__step" as="div">
-              <p className="path__phase">Phase two</p>
+            <Reveal className="pillar" as="div">
+              <p className="pillar__name">Community</p>
               <div>
-                <h3>Build the foundation</h3>
+                <h3>Your ambitious girl gang</h3>
                 <p>
-                  Brand basics, offer design, pricing, and a lightweight
-                  operations setup so launch day feels steady — not scrambled.
+                  Accountability, celebrations, and honest feedback from women
+                  who get the dream and the dinner rush.
                 </p>
               </div>
             </Reveal>
-            <Reveal className="path__step" as="div">
-              <p className="path__phase">Phase three</p>
+            <Reveal className="pillar" as="div">
+              <p className="pillar__name">Resources</p>
               <div>
-                <h3>Go live &amp; grow</h3>
+                <h3>Tools you can use tonight</h3>
                 <p>
-                  First customers, first sales, and the habits that keep revenue
-                  moving while you protect family time.
+                  Templates, scripts, and playbooks that cut the overwhelm so
+                  you can take the next right step — today.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal className="pillar" as="div">
+              <p className="pillar__name">Freedom</p>
+              <div>
+                <h3>A life that looks good on you</h3>
+                <p>
+                  Income and impact on your terms — more space, more choice, and
+                  a business that funds the life you love.
                 </p>
               </div>
             </Reveal>
@@ -206,10 +219,12 @@ export default function App() {
         </div>
         <div className="band__veil" aria-hidden="true" />
         <Reveal className="band__content">
-          <h2 id="band-title">Motherhood is not a detour from ambition.</h2>
+          <h2 id="band-title">
+            Freedom looks <em>good</em> on you.
+          </h2>
           <p>
-            It is the reason so many of us build differently — with more heart,
-            sharper priorities, and businesses that actually fit our lives.
+            Ambition isn&apos;t the opposite of softness. Build boldly, stay
+            you, and make the damn plan happen.
           </p>
         </Reveal>
       </section>
@@ -217,37 +232,36 @@ export default function App() {
       <section className="section offer" aria-labelledby="offer-title">
         <div className="section__inner">
           <Reveal>
-            <p className="section__label">What you get</p>
+            <p className="eyebrow">Inside</p>
             <h2 className="section__title" id="offer-title">
-              Support that meets you where you are.
+              Progress over <em>perfection.</em>
             </h2>
             <p className="section__copy">
-              Whether you are sketching a first idea or refining something
-              already in motion, Becca Businesses walks with you.
+              Whether you&apos;re sketching the idea or scaling what&apos;s
+              already working, this is where strategy meets personality.
             </p>
           </Reveal>
 
-          <div className="offer__list">
+          <div className="offer__rows">
             <Reveal className="offer__row" as="div">
               <h3>Guided curriculum</h3>
               <p>
-                Practical modules on offers, branding, sales, and systems —
-                written for founders who nap-time plan and after-bedtime
-                execute.
+                Offer design, branding, sales, and ops — taught in a way that
+                respects your time and keeps your voice loud.
               </p>
             </Reveal>
             <Reveal className="offer__row" as="div">
               <h3>Live coaching &amp; office hours</h3>
               <p>
-                Ask the hard questions, get unstuck fast, and leave with a next
-                step you can finish this week.
+                Ask the messy questions, get unstuck fast, and leave with a next
+                move you can finish this week.
               </p>
             </Reveal>
             <Reveal className="offer__row" as="div">
-              <h3>A community of mom founders</h3>
+              <h3>A brighter-you community</h3>
               <p>
-                Celebrate wins, share referrals, and build alongside women who
-                understand both the dream and the dinner rush.
+                Celebrate wins, swap referrals, and build alongside women who
+                choose action over perfection — every time.
               </p>
             </Reveal>
           </div>
@@ -257,19 +271,18 @@ export default function App() {
       <section className="section cta" id="join" aria-labelledby="cta-title">
         <div className="section__inner">
           <Reveal>
-            <p className="section__label">Early access</p>
+            <p className="eyebrow">Early access</p>
             <h2 className="section__title" id="cta-title">
-              Ready when you are, mama.
+              Ready when <em>you</em> are.
             </h2>
             <p className="section__copy">
-              Join the waitlist for Becca Businesses. We will share launch
-              details, founding-member access, and the first workshops as they
-              open.
+              Jump on the waitlist for Business by Becca. Founding access,
+              first workshops, and launch news — no fluff.
             </p>
 
             {joined ? (
               <p className="cta__success" role="status">
-                You&apos;re on the list — we&apos;ll be in touch soon.
+                You&apos;re in. Big dreams incoming ♡
               </p>
             ) : (
               <>
@@ -288,10 +301,10 @@ export default function App() {
                     onChange={(event) => setEmail(event.target.value)}
                   />
                   <button className="btn btn--ink" type="submit">
-                    Join the waitlist
+                    Let&apos;s do this →
                   </button>
                 </form>
-                <p className="cta__note">No spam. Just launch news that matters.</p>
+                <p className="cta__note">No spam. Just brighter-future updates.</p>
               </>
             )}
           </Reveal>
@@ -300,27 +313,26 @@ export default function App() {
 
       <footer className="footer">
         <div className="footer__inner">
-          <p className="footer__brand">Becca Businesses</p>
+          <div className="footer__top">
+            <div>
+              <Logo variant="light" />
+              <p className="footer__tag">
+                Big dreams. Real strategy. A brighter you.
+              </p>
+            </div>
+            <nav className="footer__nav" aria-label="Footer">
+              <a href="#pillars">Education</a>
+              <a href="#pillars">Community</a>
+              <a href="#pillars">Resources</a>
+              <a href="#join">Freedom</a>
+            </nav>
+          </div>
           <p className="footer__meta">
-            From the team behind Bodies by Becca · Helping mothers build
-            companies with confidence
+            From the world of Bodies by Becca · Built for girls with bigger
+            plans ♡
           </p>
         </div>
       </footer>
-
-      <style>{`
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0, 0, 0, 0);
-          white-space: nowrap;
-          border: 0;
-        }
-      `}</style>
     </div>
   );
 }
