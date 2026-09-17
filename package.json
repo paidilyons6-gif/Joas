@@ -1,24 +1,25 @@
 {
-  "name": "rail",
-  "version": "0.1.0",
+  "name": "becca-businesses",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "test": "npm run test --workspace @rail/core",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "eslint .",
-    "db:reset": "supabase db reset",
-    "db:seed": "supabase db reset && psql \"$SUPABASE_DB_URL\" -f supabase/seed/fixtures.sql"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.8"
-  },
-  "engines": {
-    "node": ">=20"
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "oxlint": "^1.81.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
   }
 }
