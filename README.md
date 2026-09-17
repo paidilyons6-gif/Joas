@@ -1,98 +1,59 @@
-# Rail
+# Business by Becca
 
-A wardrobe app. Three things, in this order of importance: it holds your
-wardrobe, it builds outfits from it, and it watches the shops for what's
-missing.
+**Like the village, but for business.**
 
-The thesis that drives every trade-off: **outfits create the daily habit, price
-alerts create the revenue.** Where a decision makes the wardrobe worse to make
-shopping better, the wardrobe wins.
+Marketing site + elite member portal — courses, financial calculators, startup toolkit, signup/login, and Stripe subscriptions.
 
-## Where this is
+## Portal product
 
-**Milestone 1 — a wardrobe that works.** Auth, schema, RLS, photo import with
-automatic classification, wardrobe browse, manual wear logging.
+- **Courses:** Startup Foundations, Money & Margins, Launch & Sales
+- **Calculators:** Pricing, break-even, revenue goal, runway, profit, offer stack
+- **Toolkit:** Offer builder, ideal client, 7-day launch planner, CEO scorecard
+- **Vault:** Copyable scripts and templates
+- **Access:** Free preview + membership unlock (`$49/mo` or `$397/yr`)
 
-Milestones 2–5 (outfits, suggestions, the shop side, monetisation) are not
-started. `docs/MILESTONES.md` has the state of each.
+## Stack
 
-## Layout
+- Frontend: Vite + React + React Router
+- Auth / DB: Supabase (optional — demo mode works without it)
+- Payments: Stripe Checkout via Netlify Functions
+- Host: Netlify (`netlify.toml` included)
 
-```
-packages/core/       Domain logic, pure and testable. Colour maths, layer-slot
-                     rules, wardrobe derivations, and the one config module that
-                     holds every tunable weight and threshold.
-apps/mobile/         Expo (React Native) app. Expo Router, TanStack Query for
-                     server state, Zustand for UI state.
-supabase/migrations/ Forward-only SQL. Never edit one that has shipped.
-supabase/functions/  Edge Functions (Deno): embedding, account deletion.
-supabase/seed/       Fixture wardrobe (68 garments) and fixture catalogue.
-docs/                Decisions, milestone state, privacy.
-```
+## Backend (Supabase)
 
-## Running it
+Project: **Businessbybecca** (`utnsdavbxbnacseqerjr`, eu-west-1)
+
+Already applied:
+- `profiles` table + RLS
+- signup trigger to create profiles
+- email auth with autoconfirm (instant portal access)
+
+Local: copy `.env.example` → `.env` and fill anon + service role keys from the Supabase dashboard (API settings). A working `.env` is gitignored.
+
+Netlify env vars to set:
+- `VITE_SUPABASE_URL=https://utnsdavbxbnacseqerjr.supabase.co`
+- `VITE_SUPABASE_ANON_KEY=...` (anon/public)
+- `SUPABASE_URL=https://utnsdavbxbnacseqerjr.supabase.co`
+- `SUPABASE_SERVICE_ROLE_KEY=...` (secret — for Stripe webhooks)
+- Stripe keys when ready
 
 ```bash
 npm install
-
-# Local Supabase, migrations, and the fixture wardrobe.
-npx supabase start
-npm run db:seed
-
-cp .env.example .env      # fill in the anon key printed by `supabase start`
-npm start --workspace @rail/mobile
+npm run dev
 ```
 
-The fixture user is `fixture@rail.test` / `fixture-password`, with 68 garments
-across every layer slot.
+1. Create an account
+2. Open `/portal` — free lessons + Pricing calculator + CEO scorecard
+3. Go to **Pricing** → pick a plan (demo unlocks instantly when Stripe keys are absent; live Checkout when Stripe is configured)
+4. Explore Courses, Calculators, Toolkit, Vault
 
-## Tests
+## Go live on Netlify
 
-```bash
-npm test          # unit tests
-npm run typecheck # TypeScript strict, both workspaces
-```
+1. Connect this GitHub repo
+2. Add env vars from `.env.example`
+3. Run `supabase/migrations/001_profiles.sql`
+4. Create Stripe prices + webhook → `/.netlify/functions/stripe-webhook`
 
-Two suites matter more than the rest, per the working agreement in the spec: the
-outfit scorer and the price-low detector. A regression in either is invisible in
-the UI and fatal to trust. The scorer arrives in Milestone 2; its foundations
-(CIEDE2000, the near-miss band, layer-slot validity) are tested now.
+## Brand
 
-`colour-parity.test.ts` needs a real Postgres and **skips without
-`RAIL_TEST_DATABASE_URL`**. It is the only guard on the deliberately duplicated
-colour maths in migration `0012`, so CI sets it and fails if the functions are
-missing. If you are changing colour code, set it locally too:
-
-```bash
-RAIL_TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm test
-```
-
-## Things worth knowing before you change something
-
-**The wardrobe works offline, and that is not negotiable.** Reads fall back to a
-SQLite mirror; writes queue in an outbox and replay on reconnect. Price data may
-be stale offline and must be *labelled* stale, never silently served as current.
-
-**Colour lives in CIELAB, not hex.** Garments store their Lab triple at import
-so the scorer never converts inside its 50ms budget. ΔE is CIEDE2000 — CIE76
-overstates distance among saturated warm tones, which is exactly the "two browns
-fighting" case users notice most.
-
-**Entitlement limits are enforced by database triggers**, not by the client. The
-UI gate is presentation; the trigger in `0007` is the limit.
-
-**Every tunable number belongs in `packages/core/src/config.ts`.** Scoring
-weights are also stored in the `scoring_config` table so they can be tuned
-without shipping a build; the baked-in values are the offline default.
-
-**Before adding a dependency, say why it beats the platform primitive.** There
-are two such notes already, in `src/lib/offline.ts` (expo-sqlite over
-WatermelonDB) and `src/lib/database.types.ts` (why the generated types are
-absent rather than approximated).
-
-## Decisions already made
-
-The five §10 decisions are settled and recorded in `docs/DECISIONS.md`:
-server-side embeddings, menswear-first taxonomy, email import in scope for v1
-but not for M1, no affiliate feeds applied for yet, free tier capped at 20
-garments. Don't re-litigate them without reading that file.
+Signature pink `#FF2D8B`, soft pink, energy yellow, clarity blue, clean, ink — DM Sans / Playfair Display / Inter.
