@@ -74,7 +74,11 @@ export default function App() {
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!email.trim()) return;
+    const form = event.currentTarget;
+    const value = new FormData(form).get("email");
+    const nextEmail = typeof value === "string" ? value.trim() : email.trim();
+    if (!nextEmail) return;
+    setEmail(nextEmail);
     setJoined(true);
   }
 
