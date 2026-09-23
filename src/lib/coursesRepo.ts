@@ -4,6 +4,11 @@ import type { CourseLesson, CourseTrack } from "../data/courses";
 import { COURSE_TRACKS } from "../data/courses";
 import type { NavSettings, StudioTrack } from "./studio";
 import { DEFAULT_NAV, studioStore } from "./studio";
+import {
+  DEFAULT_SITE_COPY,
+  siteCopyStore,
+  type SiteCopy,
+} from "./siteCopy";
 
 type DbTrack = {
   id: string;
@@ -231,4 +236,37 @@ export async function saveNavSettingsRemote(nav: NavSettings) {
   await supabase
     .from("site_settings")
     .upsert({ id: "main", nav, updated_at: new Date().toISOString() });
+}
+
+export async function fetchSiteCopy(): Promise<SiteCopy> {
+  if (!hasLiveBackend()) return siteCopyStore.get();
+  const supabase = getSupabase();
+  if (!supabase) return siteCopyStore.get();
+  const { data } = await supabase
+    .from("site_settings")
+    .select("copy")
+    .eq("id", "main")
+    .maybeSingle();
+  if (!data?.copy) return siteCopyStore.get();
+  const merged = {
+    ...DEFAULT_SITE_COPY,
+    ...(data.copy as Partial<SiteCopy>),
+    checklist: Array.isArray((data.copy as SiteCopy).checklist)
+      ? (data.copy as SiteCopy).checklist
+      : DEFAULT_SITE_COPY.checklist,
+  };
+  siteCopyStore.save(merged);
+  return merged;
+}
+
+export async function saveSiteCopyRemote(copy: SiteCopy) {
+  siteCopyStore.save(copy);
+  if (!hasLiveBackend()) return;
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.from("site_settings").upsert({
+    id: "main",
+    copy,
+    updated_at: new Date().toISOString(),
+  });
 }

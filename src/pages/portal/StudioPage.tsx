@@ -17,8 +17,14 @@ import {
 import {
   deleteStudioTrackRemote,
   saveNavSettingsRemote,
+  saveSiteCopyRemote,
   saveStudioTrackRemote,
+  fetchSiteCopy,
 } from "../../lib/coursesRepo";
+import {
+  DEFAULT_SITE_COPY,
+  type SiteCopy,
+} from "../../lib/siteCopy";
 
 export function StudioPage() {
   const { user } = useAuth();
@@ -29,6 +35,8 @@ export function StudioPage() {
   const [programs, setPrograms] = useState(listProgramsForStudio());
   const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
   const [navSaved, setNavSaved] = useState("");
+  const [copy, setCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY);
+  const [copySaved, setCopySaved] = useState("");
 
   function refresh() {
     setPrograms(listProgramsForStudio());
@@ -37,6 +45,7 @@ export function StudioPage() {
 
   useEffect(() => {
     refresh();
+    void fetchSiteCopy().then(setCopy);
   }, []);
 
   function createCourse() {
@@ -67,7 +76,6 @@ export function StudioPage() {
 
   function toggleNav(id: NavTopicId) {
     if (id === "studio" || id === "home" || id === "account") {
-      // Keep core admin + account always available for admin safety
       if (id === "studio") return;
     }
     const next = { ...nav, [id]: !nav[id] };
@@ -81,16 +89,99 @@ export function StudioPage() {
     });
   }
 
+  function updateCopy<K extends keyof SiteCopy>(key: K, value: SiteCopy[K]) {
+    setCopy((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function saveCopy() {
+    void saveSiteCopyRemote(copy).then(() => {
+      setCopySaved("Homepage writing saved ♡ — refresh the home page to see it.");
+      window.setTimeout(() => setCopySaved(""), 3000);
+    });
+  }
+
   return (
     <div className="portal-page">
       <p className="eyebrow">Studio</p>
       <h1>
-        Edit programs &amp; <em>lessons</em>
+        Edit programs &amp; <em>writing</em>
       </h1>
       <p className="portal-lede">
-        Change any course on the site — titles, lessons, worksheets — and choose
-        which menu topics members see.
+        Change homepage copy, courses, lessons, and which menu topics members
+        see — signed in as admin ({user.email}).
       </p>
+
+      <section className="studio-nav-settings">
+        <h2 className="portal-subhead">Homepage writing</h2>
+        <p className="portal-lede">
+          Edit the words visitors see on the landing page (hero, manifesto, and
+          more). Save, then open the home page.
+        </p>
+        <div className="tool-form">
+          {(
+            [
+              ["heroHeadline", "Hero headline"],
+              ["heroLede", "Hero supporting sentence"],
+              ["heroCtaGuest", "Primary button (logged out)"],
+              ["heroCtaMember", "Primary button (logged in)"],
+              ["heroCtaSecondary", "Secondary button"],
+              ["manifestoEyebrow", "Manifesto eyebrow"],
+              ["manifestoTitle", "Manifesto title"],
+              ["manifestoAccent", "Manifesto accent line"],
+              ["manifestoCopy", "Manifesto paragraph"],
+              ["pillarsEyebrow", "Pillars eyebrow"],
+              ["pillarsTitle", "Pillars title"],
+              ["pillarsTitleEm", "Pillars italic word"],
+              ["pillarsCopy", "Pillars paragraph"],
+              ["bandTitle", "Band title"],
+              ["bandTitleEm", "Band italic ending"],
+              ["bandCopy", "Band paragraph"],
+              ["offerEyebrow", "Offer eyebrow"],
+              ["offerTitle", "Offer title"],
+              ["offerTitleEm", "Offer italic word"],
+              ["offerCopy", "Offer paragraph"],
+            ] as const
+          ).map(([key, label]) => (
+            <label key={key} className="calc-field">
+              <span>{label}</span>
+              {key.includes("Copy") || key.includes("Lede") || key === "manifestoCopy" || key === "pillarsCopy" || key === "bandCopy" || key === "offerCopy" ? (
+                <textarea
+                  rows={3}
+                  value={copy[key]}
+                  onChange={(e) => updateCopy(key, e.target.value)}
+                />
+              ) : (
+                <input
+                  value={copy[key]}
+                  onChange={(e) => updateCopy(key, e.target.value)}
+                />
+              )}
+            </label>
+          ))}
+          <label className="calc-field">
+            <span>Checklist (one item per line)</span>
+            <textarea
+              rows={6}
+              value={copy.checklist.join("\n")}
+              onChange={(e) =>
+                updateCopy(
+                  "checklist",
+                  e.target.value
+                    .split("\n")
+                    .map((l) => l.trim())
+                    .filter(Boolean),
+                )
+              }
+            />
+          </label>
+          <div className="account-actions">
+            <button className="btn btn--primary" type="button" onClick={saveCopy}>
+              Save homepage writing →
+            </button>
+            {copySaved && <p className="form-status">{copySaved}</p>}
+          </div>
+        </div>
+      </section>
 
       <div className="studio-hero">
         <div>
@@ -101,7 +192,7 @@ export function StudioPage() {
           </p>
         </div>
         <button className="btn btn--primary" type="button" onClick={createCourse}>
-          + New course
+          New course →
         </button>
       </div>
 

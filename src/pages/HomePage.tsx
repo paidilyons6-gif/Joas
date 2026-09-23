@@ -1,13 +1,30 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Logo } from "../components/Logo";
 import { Reveal } from "../components/Reveal";
 import { useAuth } from "../lib/auth";
+import { DEFAULT_SITE_COPY, type SiteCopy } from "../lib/siteCopy";
+import { fetchSiteCopy } from "../lib/coursesRepo";
 
 const HERO_IMAGE = "/hero.jpg";
 const BAND_IMAGE = "/band.jpg";
 
 export function HomePage() {
   const { user } = useAuth();
+  const [copy, setCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY);
+
+  useEffect(() => {
+    void fetchSiteCopy().then(setCopy);
+    const refresh = () => {
+      void fetchSiteCopy().then(setCopy);
+    };
+    window.addEventListener("bbb-copy-updated", refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener("bbb-copy-updated", refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
 
   return (
     <>
@@ -23,17 +40,14 @@ export function HomePage() {
           <h1>
             <Logo variant="hero" />
           </h1>
-          <p className="hero__headline">Welcome to The Office.</p>
-          <p className="hero__lede">
-            The support system for women building companies — training,
-            community, and a portal that helps you ship, not just dream.
-          </p>
+          <p className="hero__headline">{copy.heroHeadline}</p>
+          <p className="hero__lede">{copy.heroLede}</p>
           <div className="hero__actions">
             <Link className="btn btn--primary" to={user ? "/portal" : "/sign-up"}>
-              {user ? "Open your portal →" : "Let's do this →"}
+              {user ? copy.heroCtaMember : copy.heroCtaGuest}
             </Link>
             <Link className="btn btn--ghost" to="/pricing">
-              Membership
+              {copy.heroCtaSecondary}
             </Link>
           </div>
         </div>
@@ -42,23 +56,16 @@ export function HomePage() {
       <section className="section manifesto" aria-labelledby="manifesto-title">
         <div className="section__inner">
           <Reveal>
-            <p className="eyebrow">Becky Lyons</p>
+            <p className="eyebrow">{copy.manifestoEyebrow}</p>
             <h2 className="manifesto__title" id="manifesto-title">
-              Build the damn business.
+              {copy.manifestoTitle}
             </h2>
-            <p className="manifesto__accent">Your seat at The Office ♡</p>
-            <p className="section__copy">
-              Practical tools. Real conversations. Big results. This is where
-              you get help with offers, launches, and growth — so you don&apos;t
-              have to figure it out alone.
-            </p>
+            <p className="manifesto__accent">{copy.manifestoAccent}</p>
+            <p className="section__copy">{copy.manifestoCopy}</p>
             <ul className="checklist">
-              <li>Bigger income</li>
-              <li>A life I love</li>
-              <li>Helping others</li>
-              <li>Proud of me</li>
-              <li>Freedom</li>
-              <li>Same girl, bigger plans ♡</li>
+              {copy.checklist.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </Reveal>
         </div>
@@ -67,15 +74,11 @@ export function HomePage() {
       <section className="section pillars" id="pillars" aria-labelledby="pillars-title">
         <div className="section__inner">
           <Reveal>
-            <p className="eyebrow">The mix</p>
+            <p className="eyebrow">{copy.pillarsEyebrow}</p>
             <h2 className="section__title" id="pillars-title">
-              Ambitious. Unfiltered. <em>Yours.</em>
+              {copy.pillarsTitle} <em>{copy.pillarsTitleEm}</em>
             </h2>
-            <p className="section__copy">
-              Sign up free, subscribe when you&apos;re ready, and train inside
-              The Office — education, community, resources, and freedom in one
-              place.
-            </p>
+            <p className="section__copy">{copy.pillarsCopy}</p>
           </Reveal>
 
           <div className="pillars__grid">
@@ -84,12 +87,12 @@ export function HomePage() {
               ["Community", "Your ambitious girl gang", "Accountability and honest feedback from women who get the dream and the dinner rush."],
               ["Resources", "Tools you can use tonight", "Templates, scripts, and playbooks that cut overwhelm so you move today."],
               ["Freedom", "A life that looks good on you", "Income and impact on your terms — more space, more choice, more you."],
-            ].map(([name, title, copy]) => (
+            ].map(([name, title, blurb]) => (
               <Reveal className="pillar" as="div" key={name}>
                 <p className="pillar__name">{name}</p>
                 <div>
                   <h3>{title}</h3>
-                  <p>{copy}</p>
+                  <p>{blurb}</p>
                 </div>
               </Reveal>
             ))}
@@ -106,27 +109,20 @@ export function HomePage() {
         <div className="band__veil" aria-hidden="true" />
         <Reveal className="band__content">
           <h2 id="band-title">
-            Bigger plans start in <em>The Office.</em>
+            {copy.bandTitle} <em>{copy.bandTitleEm}</em>
           </h2>
-          <p>
-            Create your account, open The Office with BodiesByBecca membership
-            (App Store / Play), and keep selling programs like HOTMESS on the
-            site.
-          </p>
+          <p>{copy.bandCopy}</p>
         </Reveal>
       </section>
 
       <section className="section offer" aria-labelledby="offer-title">
         <div className="section__inner">
           <Reveal>
-            <p className="eyebrow">Inside The Office</p>
+            <p className="eyebrow">{copy.offerEyebrow}</p>
             <h2 className="section__title" id="offer-title">
-              Progress over <em>perfection.</em>
+              {copy.offerTitle} <em>{copy.offerTitleEm}</em>
             </h2>
-            <p className="section__copy">
-              Elite courses, financial calculators, and startup worksheets —
-              everything you need to build and get paid.
-            </p>
+            <p className="section__copy">{copy.offerCopy}</p>
           </Reveal>
           <div className="offer__rows">
             <Reveal className="offer__row" as="div">
