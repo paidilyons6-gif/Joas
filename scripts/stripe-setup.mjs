@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Creates Stripe one-time products for The Office + HOTMESS.
+ * Creates Stripe products/prices for The Office (one-time + subscriptions) + HOTMESS.
  * Run locally with your key in .env (gitignored) — never paste keys into chat.
  *
  *   echo 'STRIPE_SECRET_KEY=sk_live_...' >> .env
@@ -46,15 +46,69 @@ if (key.includes("IrrssOVBYl") || key.length < 20) {
 
 const stripe = new Stripe(key);
 
-async function ensureOneTimeProduct(opts) {
-  const { name, description, amountCents, lookupKey } = opts;
+async function findPriceByLookup(lookupKey) {
   const existing = await stripe.prices.list({
     lookup_keys: [lookupKey],
     active: true,
     limit: 1,
   });
-  if (existing.data[0]) {
-    return { productId: String(existing.data[0].product), priceId: existing.data[0].id, created: false };
+  return existing.data[0] || null;
+}
+
+async function ensureOfficeProduct() {
+  const products = await stripe.products.search({
+    query: "metadata['bbb']:'true' AND metadata['role']:'office'",
+    limit: 1,
+  });
+  if (products.data[0]) return products.data[0];
+
+  // Fall back: reuse product from any existing Office price
+  for (const key of [
+    "bbb_office_onetime",
+    "bbb_office_monthly",
+    "bbb_office_annual",
+  ]) {
+    const price = await findPriceByLookup(key);
+    if (price) {
+      return await stripe.products.retrieve(String(price.product));
+    }
+  }
+
+  return stripe.products.create({
+    name: "The Office",
+    description:
+      "Business by Becca — The Office membership (subscribe or pay once).",
+    metadata: { bbb: "true", role: "office" },
+  });
+}
+
+async function ensurePrice(opts) {
+  const { productId, amountCents, lookupKey, recurring } = opts;
+  const existing = await findPriceByLookup(lookupKey);
+  if (existing) {
+    return { priceId: existing.id, created: false };
+  }
+
+  const price = await stripe.prices.create({
+    product: productId,
+    unit_amount: amountCents,
+    currency: "usd",
+    lookup_key: lookupKey,
+    ...(recurring ? { recurring } : {}),
+    metadata: { bbb: "true", lookup: lookupKey },
+  });
+  return { priceId: price.id, created: true };
+}
+
+async function ensureOneTimeProduct(opts) {
+  const { name, description, amountCents, lookupKey } = opts;
+  const existing = await findPriceByLookup(lookupKey);
+  if (existing) {
+    return {
+      productId: String(existing.product),
+      priceId: existing.id,
+      created: false,
+    };
   }
 
   const product = await stripe.products.create({
@@ -72,18 +126,32 @@ async function ensureOneTimeProduct(opts) {
   return { productId: product.id, priceId: price.id, created: true };
 }
 
-const office = await ensureOneTimeProduct({
-  name: "The Office — one-time access",
-  description:
-    "One-time purchase unlocking The Office portal (Business by Becca).",
-  amountCents: 19700, // $197 — change in Stripe Dashboard anytime
+const officeProduct = await ensureOfficeProduct();
+
+const office = await ensurePrice({
+  productId: officeProduct.id,
+  amountCents: 19700, // $197 one-time
   lookupKey: "bbb_office_onetime",
+});
+
+const monthly = await ensurePrice({
+  productId: officeProduct.id,
+  amountCents: 4900, // $49 / month
+  lookupKey: "bbb_office_monthly",
+  recurring: { interval: "month" },
+});
+
+const annual = await ensurePrice({
+  productId: officeProduct.id,
+  amountCents: 39700, // $397 / year
+  lookupKey: "bbb_office_annual",
+  recurring: { interval: "year" },
 });
 
 const hotmess = await ensureOneTimeProduct({
   name: "HOTMESS",
   description: "HOTMESS program — sold on the website.",
-  amountCents: 9700, // $97 — change in Stripe Dashboard anytime
+  amountCents: 9700, // $97
   lookupKey: "bbb_hotmess_onetime",
 });
 
@@ -93,6 +161,8 @@ Stripe products ready.
 Add these to Netlify → Site configuration → Environment variables:
 
   STRIPE_PRICE_OFFICE=${office.priceId}
+  STRIPE_PRICE_MONTHLY=${monthly.priceId}
+  STRIPE_PRICE_ANNUAL=${annual.priceId}
   STRIPE_PRICE_HOTMESS=${hotmess.priceId}
 
 Also ensure you already have:
@@ -104,6 +174,8 @@ Also ensure you already have:
 
 Then Trigger deploy (clear cache).
 
-Office:  ${office.created ? "created" : "reused"}  ${office.priceId}
-HOTMESS: ${hotmess.created ? "created" : "reused"} ${hotmess.priceId}
+Office one-time: ${office.created ? "created" : "reused"}  ${office.priceId}
+Office monthly:  ${monthly.created ? "created" : "reused"}  ${monthly.priceId}
+Office yearly:   ${annual.created ? "created" : "reused"}  ${annual.priceId}
+HOTMESS:         ${hotmess.created ? "created" : "reused"} ${hotmess.priceId}
 `);
