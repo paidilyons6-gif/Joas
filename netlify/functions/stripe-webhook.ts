@@ -62,12 +62,23 @@ export const handler: Handler = async (event) => {
       session.customer_details?.email ||
       session.customer_email ||
       undefined;
-    const plan = session.metadata?.plan === "annual" ? "annual" : "monthly";
     const customerId =
       typeof session.customer === "string"
         ? session.customer
         : session.customer?.id;
-    if (email) await setPlanByEmail(email, plan, customerId);
+
+    const kind = session.metadata?.kind;
+    const productId = session.metadata?.productId;
+
+    // One-time The Office purchase unlocks portal membership
+    if (email && (kind === "office" || productId === "office")) {
+      await setPlanByEmail(email, "monthly", customerId);
+    } else if (email && session.metadata?.plan) {
+      const plan =
+        session.metadata.plan === "annual" ? "annual" : "monthly";
+      await setPlanByEmail(email, plan, customerId);
+    }
+    // HOTMESS program purchases do not change membership plan
   }
 
   if (stripeEvent.type === "customer.subscription.updated") {

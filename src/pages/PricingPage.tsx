@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { PLANS, appStoreUrl, playStoreUrl, type PlanId } from "../data/plans";
+import { appStoreUrl, playStoreUrl } from "../data/plans";
 import { useAuth } from "../lib/auth";
-import { activateMembershipDemo } from "../lib/payments";
+import {
+  activateMembershipDemo,
+  startOfficeCheckout,
+} from "../lib/payments";
+import { hasStripe } from "../lib/demo";
 import { Reveal } from "../components/Reveal";
 import { isMember } from "../lib/access";
 
@@ -13,25 +17,29 @@ export function PricingPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const member = isMember(user?.plan);
+  const stripeReady = hasStripe();
 
   useEffect(() => {
     if (params.get("checkout") === "cancel") {
-      setMessage("No charge. Subscribe anytime in the Bodies by Becca app.");
+      setMessage("Checkout cancelled — no charge.");
     }
   }, [params]);
 
-  async function unlockDemo(plan: PlanId) {
+  async function buyOffice() {
+    setMessage("");
     if (!user) {
-      navigate("/sign-up", { state: { plan } });
+      navigate("/sign-up", { state: { plan: "monthly" } });
       return;
     }
     setBusy(true);
-    setMessage("");
     try {
-      await activateMembershipDemo(plan, activatePlan);
-      navigate("/portal?checkout=success");
+      const result = await startOfficeCheckout(user.email);
+      if (result.demo) {
+        await activateMembershipDemo("monthly", activatePlan);
+        navigate("/portal?checkout=success");
+      }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not unlock");
+      setMessage(error instanceof Error ? error.message : "Checkout failed");
     } finally {
       setBusy(false);
     }
@@ -42,15 +50,14 @@ export function PricingPage() {
       <section className="section page-hero">
         <div className="section__inner">
           <Reveal>
-            <p className="eyebrow">BodiesByBecca membership</p>
+            <p className="eyebrow">Access</p>
             <h1 className="section__title">
-              Membership in the <em>app</em>
+              Unlock <em>The Office</em>
             </h1>
             <p className="section__copy">
-              Challenges wrap after October. Ongoing access is{" "}
-              <strong>BodiesByBecca membership</strong> — billed through the
-              Apple App Store or Google Play Store. Create a free website
-              account, subscribe in the app, then open The Office here.
+              Create a free account, then unlock everything with a one-time
+              Office purchase on this site — or BodiesByBecca membership in the
+              app (App Store / Play) after challenges end in October.
             </p>
           </Reveal>
         </div>
@@ -58,111 +65,85 @@ export function PricingPage() {
 
       <section className="section pricing">
         <div className="section__inner pricing__grid">
-          {(Object.keys(PLANS) as PlanId[]).map((id) => {
-            const plan = PLANS[id];
-            const isCurrent = user?.plan === id;
-            return (
-              <Reveal
-                className={`price-card ${id === "annual" ? "price-card--featured" : ""}`}
-                key={id}
-              >
-                {plan.highlight && (
-                  <p className="price-card__badge">{plan.highlight}</p>
-                )}
-                <h2>{plan.name}</h2>
-                <p className="price-card__price">
-                  <span>{plan.priceLabel}</span>
-                  {plan.cadence}
-                </p>
-                <ul>
-                  {plan.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-                {isCurrent || member ? (
-                  <Link className="btn btn--ink" to="/portal/account">
-                    Membership active · account →
-                  </Link>
-                ) : (
-                  <div className="price-card__stores">
-                    <a
-                      className="btn btn--primary"
-                      href={appStoreUrl()}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      App Store →
-                    </a>
-                    <a
-                      className="btn btn--ink"
-                      href={playStoreUrl()}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Play Store →
-                    </a>
-                  </div>
-                )}
-              </Reveal>
-            );
-          })}
-        </div>
-
-        <div className="pricing-faq" style={{ marginTop: "2rem" }}>
-          <h2>Already subscribed in the app?</h2>
-          <p style={{ textAlign: "center", color: "var(--ink-muted)", marginBottom: "1rem" }}>
-            Create or log into the same email on this site. Demo unlock is for
-            preview; production can link app receipts to your portal account.
-          </p>
-          {user && !member && (
-            <div className="account-actions" style={{ justifyContent: "center" }}>
+          <Reveal className="price-card price-card--featured">
+            <p className="price-card__badge">Website · one-time</p>
+            <h2>The Office</h2>
+            <p className="price-card__price">
+              <span>One-time</span>
+              {" "}via Stripe
+            </p>
+            <ul>
+              <li>Full Office portal unlock</li>
+              <li>All courses, calculators & toolkit</li>
+              <li>Vault + community</li>
+              <li>Pay once on this website</li>
+            </ul>
+            {member ? (
+              <Link className="btn btn--ink" to="/portal">
+                You&apos;re unlocked · open portal →
+              </Link>
+            ) : (
               <button
-                className="btn btn--ghost-ink"
+                className="btn btn--primary"
                 type="button"
                 disabled={busy}
-                onClick={() => void unlockDemo("monthly")}
+                onClick={() => void buyOffice()}
               >
-                {busy ? "Unlocking…" : "Preview unlock (demo) →"}
+                {busy
+                  ? "Opening…"
+                  : stripeReady
+                    ? "Buy The Office →"
+                    : "Unlock (demo) →"}
               </button>
-            </div>
-          )}
-          {!user && (
-            <p className="pricing__note">
-              <Link to="/sign-up">Create free account</Link> ·{" "}
-              <Link to="/sign-in">Log in</Link>
+            )}
+          </Reveal>
+
+          <Reveal className="price-card">
+            <p className="price-card__badge">App · recurring</p>
+            <h2>BodiesByBecca</h2>
+            <p className="price-card__price">
+              <span>In-app</span>
+              {" "}membership
             </p>
-          )}
+            <ul>
+              <li>BodiesByBecca membership</li>
+              <li>Billed via App Store or Play Store</li>
+              <li>After challenges end (October)</li>
+              <li>Cancel in your device subscriptions</li>
+            </ul>
+            <div className="price-card__stores">
+              <a
+                className="btn btn--primary"
+                href={appStoreUrl()}
+                target="_blank"
+                rel="noreferrer"
+              >
+                App Store →
+              </a>
+              <a
+                className="btn btn--ink"
+                href={playStoreUrl()}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Play Store →
+              </a>
+            </div>
+          </Reveal>
         </div>
 
         {message && <p className="form-status">{message}</p>}
-
-        <div className="pricing-faq">
-          <h2>How it works</h2>
-          <dl>
-            <div>
-              <dt>BodiesByBecca membership</dt>
-              <dd>
-                Recurring membership through Apple or Google after challenges end
-                in October. Cancel in your phone&apos;s subscriptions.
-              </dd>
-            </div>
-            <div>
-              <dt>Programs on the website</dt>
-              <dd>
-                HOTMESS and other programs keep selling on this site — separate
-                from app membership.{" "}
-                <Link to="/programs">See programs →</Link>
-              </dd>
-            </div>
-            <div>
-              <dt>The Office portal</dt>
-              <dd>
-                Free to create an account. Courses and tools unlock with an
-                active BodiesByBecca membership.
-              </dd>
-            </div>
-          </dl>
-        </div>
+        <p className="pricing__note">
+          Programs like <Link to="/programs">HOTMESS</Link> are sold separately
+          on the site.
+          {!stripeReady && (
+            <>
+              {" "}
+              Demo mode: Office unlock works on this device until Stripe price
+              IDs are set on Netlify.
+            </>
+          )}
+        </p>
       </section>
     </main>
   );
