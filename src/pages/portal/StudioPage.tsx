@@ -3,9 +3,14 @@ import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { isAdminEmail } from "../../lib/admin";
 import {
+  DEFAULT_NAV,
   emptyLesson,
   emptyTrack,
+  listProgramsForStudio,
+  NAV_META,
   studioStore,
+  type NavSettings,
+  type NavTopicId,
   type StudioLesson,
   type StudioTrack,
 } from "../../lib/studio";
@@ -16,42 +21,78 @@ export function StudioPage() {
   if (!user) return <Navigate to="/sign-in" replace />;
   if (!isAdminEmail(user.email)) return <Navigate to="/portal" replace />;
 
-  const [tracks, setTracks] = useState<StudioTrack[]>([]);
+  const [programs, setPrograms] = useState(listProgramsForStudio());
+  const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
+  const [navSaved, setNavSaved] = useState("");
+
+  function refresh() {
+    setPrograms(listProgramsForStudio());
+    setNav(studioStore.getNavSettings());
+  }
 
   useEffect(() => {
-    setTracks(studioStore.list());
+    refresh();
   }, []);
 
   function createCourse() {
     const track = emptyTrack();
     studioStore.upsertTrack(track);
-    setTracks(studioStore.list());
+    refresh();
     navigate(`/portal/studio/${track.id}`);
   }
 
-  function remove(id: string) {
-    if (!confirm("Delete this course? This cannot be undone.")) return;
+  function editProgram(editableId: string, source: "builtin" | "studio") {
+    if (source === "builtin") {
+      const track = studioStore.editBuiltin(editableId);
+      navigate(`/portal/studio/${track.id}`);
+      return;
+    }
+    navigate(`/portal/studio/${editableId}`);
+  }
+
+  function remove(id: string, source: "builtin" | "studio") {
+    if (source === "builtin") {
+      alert("Built-in programs stay in the library. Edit them instead of deleting.");
+      return;
+    }
+    if (!confirm("Delete this custom course? This cannot be undone.")) return;
     studioStore.deleteTrack(id);
-    setTracks(studioStore.list());
+    refresh();
+  }
+
+  function toggleNav(id: NavTopicId) {
+    if (id === "studio" || id === "home" || id === "account") {
+      // Keep core admin + account always available for admin safety
+      if (id === "studio") return;
+    }
+    const next = { ...nav, [id]: !nav[id] };
+    setNav(next);
+  }
+
+  function saveNav() {
+    studioStore.saveNavSettings(nav);
+    window.dispatchEvent(new Event("bbb-nav-updated"));
+    setNavSaved("Menu topics updated ♡");
+    window.setTimeout(() => setNavSaved(""), 2000);
   }
 
   return (
     <div className="portal-page">
       <p className="eyebrow">Studio</p>
       <h1>
-        Create your <em>learning portal</em>
+        Edit programs &amp; <em>lessons</em>
       </h1>
       <p className="portal-lede">
-        Build Village-style courses for Business by Becca — modules, lessons,
-        worksheets, and publish when ready. Optimized for laptop creation.
+        Change any course on the site — titles, lessons, worksheets — and choose
+        which menu topics members see.
       </p>
 
       <div className="studio-hero">
         <div>
-          <h2>Your course library</h2>
+          <h2>Programs on the site</h2>
           <p>
-            Members see published courses in Courses. Drafts stay private until
-            you hit publish.
+            Edit Startup Foundations, Money &amp; Margins, Launch &amp; Sales, or
+            add new village courses.
           </p>
         </div>
         <button className="btn btn--primary" type="button" onClick={createCourse}>
@@ -59,46 +100,68 @@ export function StudioPage() {
         </button>
       </div>
 
-      {tracks.length === 0 ? (
-        <div className="studio-empty">
-          <h3>No custom courses yet</h3>
-          <p>
-            Start your first learning path — offers, money, launch, or anything
-            your village needs.
-          </p>
-          <button className="btn btn--ink" type="button" onClick={createCourse}>
-            Create first course →
-          </button>
-        </div>
-      ) : (
-        <div className="module-grid">
-          {tracks.map((track) => (
-            <article key={track.id} className="module-card module-card--tall">
-              <p className="module-card__phase">
-                {track.published ? "Published" : "Draft"}
-              </p>
-              <h3>{track.title}</h3>
-              <p>{track.blurb}</p>
-              <p className="module-card__meta">
-                {track.lessons.length} lessons ·{" "}
-                {track.membersOnly ? "Members only" : "Free access"}
-              </p>
-              <div className="account-actions">
-                <Link className="btn btn--ink" to={`/portal/studio/${track.id}`}>
-                  Edit →
-                </Link>
+      <div className="module-grid">
+        {programs.map((program) => (
+          <article key={program.id} className="module-card module-card--tall">
+            <p className="module-card__phase">
+              {program.source === "builtin" ? "Built-in" : program.published ? "Published" : "Draft"}
+            </p>
+            <h3>{program.title}</h3>
+            <p>{program.blurb}</p>
+            <p className="module-card__meta">
+              {program.lessonCount} lessons · tap Edit to change content
+            </p>
+            <div className="account-actions">
+              <button
+                className="btn btn--ink"
+                type="button"
+                onClick={() => editProgram(program.editableId, program.source)}
+              >
+                Edit program →
+              </button>
+              {program.source === "studio" && (
                 <button
                   className="btn btn--ghost-ink"
                   type="button"
-                  onClick={() => remove(track.id)}
+                  onClick={() => remove(program.editableId, program.source)}
                 >
                   Delete
                 </button>
-              </div>
-            </article>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <section className="studio-nav-settings">
+        <h2 className="portal-subhead">Menu topics shown</h2>
+        <p className="portal-lede">
+          Turn topics on or off for the Learning Village menu. Studio always stays
+          visible for you as admin.
+        </p>
+        <div className="nav-toggle-grid">
+          {NAV_META.map((item) => (
+            <label key={item.id} className="nav-toggle">
+              <input
+                type="checkbox"
+                checked={item.id === "studio" ? true : nav[item.id] !== false}
+                disabled={item.id === "studio"}
+                onChange={() => toggleNav(item.id)}
+              />
+              <span>
+                <strong>{item.label}</strong>
+                <small>{item.group}</small>
+              </span>
+            </label>
           ))}
         </div>
-      )}
+        <div className="account-actions">
+          <button className="btn btn--primary" type="button" onClick={saveNav}>
+            Save menu topics
+          </button>
+          {navSaved && <p className="form-status">{navSaved}</p>}
+        </div>
+      </section>
     </div>
   );
 }
@@ -116,10 +179,23 @@ export function StudioEditorPage() {
   const [saved, setSaved] = useState("");
 
   useEffect(() => {
-    if (!existing) navigate("/portal/studio");
-  }, [existing, navigate]);
+    if (!trackId) {
+      navigate("/portal/studio");
+      return;
+    }
+    let found = studioStore.getTrack(trackId);
+    if (!found) {
+      try {
+        found = studioStore.editBuiltin(trackId);
+      } catch {
+        navigate("/portal/studio");
+        return;
+      }
+    }
+    setTrack(found);
+  }, [trackId, navigate]);
 
-  if (!track) return null;
+  if (!track) return <div className="loading-screen">Loading program…</div>;
 
   const current = track;
   const lesson = current.lessons[activeLesson] || current.lessons[0];
@@ -153,6 +229,17 @@ export function StudioEditorPage() {
     setActiveLesson(next.length - 1);
   }
 
+  function removeLesson() {
+    if (current.lessons.length <= 1) {
+      alert("Keep at least one lesson in the program.");
+      return;
+    }
+    if (!confirm("Delete this lesson?")) return;
+    const next = current.lessons.filter((_, i) => i !== activeLesson);
+    updateTrack({ lessons: next });
+    setActiveLesson(Math.max(0, activeLesson - 1));
+  }
+
   function addSection() {
     if (!lesson) return;
     updateLesson({
@@ -166,7 +253,7 @@ export function StudioEditorPage() {
   function onSave(event: FormEvent) {
     event.preventDefault();
     studioStore.upsertTrack(current);
-    setSaved(current.published ? "Published to the portal ♡" : "Draft saved ♡");
+    setSaved("Program & lessons saved ♡");
     window.setTimeout(() => setSaved(""), 2200);
   }
 
@@ -174,32 +261,40 @@ export function StudioEditorPage() {
     const next: StudioTrack = {
       ...current,
       published: !current.published,
-      badge: !current.published ? "Village course" : "Draft",
+      badge: !current.published
+        ? current.overridesId
+          ? current.badge
+          : "Village course"
+        : "Draft",
     };
     setTrack(next);
     studioStore.upsertTrack(next);
-    setSaved(next.published ? "Live in Courses ♡" : "Unpublished — draft only");
+    setSaved(next.published ? "Live for members ♡" : "Hidden as draft");
     window.setTimeout(() => setSaved(""), 2200);
   }
 
   return (
     <div className="portal-page studio-editor">
       <Link className="back-link" to="/portal/studio">
-        ← Studio
+        ← All programs
       </Link>
       <div className="studio-editor__head">
         <div>
-          <p className="eyebrow">Course editor</p>
+          <p className="eyebrow">Program editor</p>
           <h1>
-            Build on <em>laptop</em>
+            Edit <em>lessons</em>
           </h1>
+          <p className="portal-lede">
+            Change titles, teaching content, actions, and worksheets for each
+            lesson.
+          </p>
         </div>
         <div className="account-actions">
           <button className="btn btn--ghost-ink" type="button" onClick={publishToggle}>
-            {current.published ? "Unpublish" : "Publish course"}
+            {current.published ? "Unpublish" : "Publish"}
           </button>
           <button className="btn btn--primary" type="button" onClick={onSave}>
-            Save
+            Save changes
           </button>
         </div>
       </div>
@@ -208,7 +303,7 @@ export function StudioEditorPage() {
       <form className="studio-layout" onSubmit={onSave}>
         <aside className="studio-sidebar">
           <label className="calc-field">
-            <span>Course title</span>
+            <span>Program title</span>
             <input
               value={current.title}
               onChange={(e) => updateTrack({ title: e.target.value })}
@@ -245,9 +340,14 @@ export function StudioEditorPage() {
               </button>
             ))}
           </div>
-          <button className="btn btn--ink" type="button" onClick={addLesson}>
-            + Add lesson
-          </button>
+          <div className="account-actions">
+            <button className="btn btn--ink" type="button" onClick={addLesson}>
+              + Add lesson
+            </button>
+            <button className="btn btn--ghost-ink" type="button" onClick={removeLesson}>
+              Delete lesson
+            </button>
+          </div>
         </aside>
 
         {lesson && (
@@ -269,6 +369,16 @@ export function StudioEditorPage() {
                   updateLesson({ duration: Number(e.target.value) || 1 })
                 }
               />
+            </label>
+            <label className="check-item">
+              <input
+                type="checkbox"
+                checked={lesson.membersOnly}
+                onChange={(e) =>
+                  updateLesson({ membersOnly: e.target.checked })
+                }
+              />
+              <span>This lesson is members only</span>
             </label>
             <label className="calc-field">
               <span>Objectives (one per line)</span>

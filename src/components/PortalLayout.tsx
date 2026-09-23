@@ -1,13 +1,50 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { LogoLink } from "./Logo";
 import { useAuth } from "../lib/auth";
 import { isMember } from "../lib/access";
 import { isAdminEmail } from "../lib/admin";
+import {
+  DEFAULT_NAV,
+  NAV_META,
+  studioStore,
+  type NavSettings,
+  type NavTopicId,
+} from "../lib/studio";
+
+const PATHS: Record<NavTopicId, string> = {
+  home: "/portal",
+  courses: "/portal/courses",
+  vault: "/portal/resources",
+  calculators: "/portal/calculators",
+  toolkit: "/portal/tools",
+  studio: "/portal/studio",
+  account: "/portal/account",
+};
 
 export function PortalLayout() {
   const { user, signOut } = useAuth();
   const member = isMember(user?.plan);
   const admin = isAdminEmail(user?.email);
+  const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
+
+  useEffect(() => {
+    setNav(studioStore.getNavSettings());
+    const onStorage = () => setNav(studioStore.getNavSettings());
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("bbb-nav-updated", onStorage);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("bbb-nav-updated", onStorage);
+    };
+  }, []);
+
+  function visible(id: NavTopicId) {
+    if (id === "studio" && !admin) return false;
+    return nav[id] !== false;
+  }
+
+  const groups = ["Learn", "Build", "Create", "You"] as const;
 
   return (
     <div className="portal">
@@ -27,23 +64,26 @@ export function PortalLayout() {
           </p>
         </div>
         <nav className="portal__nav" aria-label="Portal">
-          <p className="portal__nav-label">Learn</p>
-          <NavLink to="/portal" end>
-            Home
-          </NavLink>
-          <NavLink to="/portal/courses">Courses</NavLink>
-          <NavLink to="/portal/resources">Vault</NavLink>
-          <p className="portal__nav-label">Build</p>
-          <NavLink to="/portal/calculators">Calculators</NavLink>
-          <NavLink to="/portal/tools">Toolkit</NavLink>
-          {admin && (
-            <>
-              <p className="portal__nav-label">Create</p>
-              <NavLink to="/portal/studio">Studio</NavLink>
-            </>
-          )}
-          <p className="portal__nav-label">You</p>
-          <NavLink to="/portal/account">Account</NavLink>
+          {groups.map((group) => {
+            const items = NAV_META.filter(
+              (m) => m.group === group && visible(m.id),
+            );
+            if (!items.length) return null;
+            return (
+              <div className="portal__nav-group" key={group}>
+                <p className="portal__nav-label">{group}</p>
+                {items.map((item) => (
+                  <NavLink
+                    key={item.id}
+                    to={PATHS[item.id]}
+                    end={item.id === "home"}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
         </nav>
         <div className="portal__side-foot">
           {!member && (
@@ -67,14 +107,16 @@ export function PortalLayout() {
             <p className="portal__topbar-title">Your laptop learning portal</p>
           </div>
           <div className="portal__topbar-actions">
-            {admin && (
+            {admin && visible("studio") && (
               <Link className="btn btn--primary" to="/portal/studio">
-                Create course →
+                Edit programs →
               </Link>
             )}
-            <Link className="btn btn--ghost-ink" to="/portal/courses">
-              Browse courses
-            </Link>
+            {visible("courses") && (
+              <Link className="btn btn--ghost-ink" to="/portal/courses">
+                Browse courses
+              </Link>
+            )}
           </div>
         </header>
         <main className="portal__main">

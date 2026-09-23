@@ -1044,6 +1044,11 @@ button {
   gap: 0.35rem;
 }
 
+.portal__nav-group {
+  display: grid;
+  gap: 0.35rem;
+}
+
 .portal__nav a {
   font-family: var(--font-display);
   font-weight: 700;
@@ -1053,6 +1058,9 @@ button {
   padding: 0.7rem 0.85rem;
   border-radius: 0.65rem;
   color: rgba(248, 248, 246, 0.75);
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .portal__nav a.active,
@@ -1332,7 +1340,20 @@ a.module-card:hover {
 
 @media (max-width: 899px) {
   .portal__nav {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .portal__nav-group {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .portal__nav-label {
+    grid-column: 1 / -1;
+    margin-top: 0.15rem;
   }
 
   .portal__signout {
@@ -1670,7 +1691,19 @@ a.module-card:hover {
 
 @media (max-width: 899px) {
   .portal__nav {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .portal__nav-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+
+  .portal__nav-label {
+    grid-column: 1 / -1;
   }
 }
 
@@ -1930,4 +1963,55 @@ a.module-card:hover {
   .nav {
     padding-inline: 3rem;
   }
+}
+
+
+.studio-nav-settings {
+  margin-top: 2.5rem;
+  padding-top: 0.5rem;
+}
+
+.nav-toggle-grid {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem 0 1.25rem;
+}
+
+@media (min-width: 700px) {
+  .nav-toggle-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.nav-toggle {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 0.9rem 1rem;
+  background: var(--white);
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+  cursor: pointer;
+}
+
+.nav-toggle input {
+  margin-top: 0.2rem;
+  accent-color: var(--signature);
+}
+
+.nav-toggle span {
+  display: grid;
+  gap: 0.15rem;
+  font-family: var(--font-body);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.nav-toggle strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+.nav-toggle small {
+  color: var(--ink-muted);
 }
