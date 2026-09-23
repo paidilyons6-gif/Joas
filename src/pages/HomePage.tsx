@@ -28,7 +28,7 @@ export function HomePage() {
           <h1>
             <Logo variant="hero" />
           </h1>
-          <p className="hero__headline">Like the office, but for business.</p>
+          <p className="hero__headline">Welcome to The Office.</p>
           <p className="hero__lede">
             The support system for women building companies — training,
             community, and a portal that helps you ship, not just dream.
@@ -51,11 +51,11 @@ export function HomePage() {
             <h2 className="manifesto__title" id="manifesto-title">
               Build the damn business.
             </h2>
-            <p className="manifesto__accent">Like the office, but for business ♡</p>
+            <p className="manifesto__accent">Your seat at The Office ♡</p>
             <p className="section__copy">
-              Practical tools. Real conversations. Big results. Business by
-              Becca is your office for offers, launches, and growth — so you
-              don&apos;t have to figure it out alone.
+              Practical tools. Real conversations. Big results. This is where
+              you get help with offers, launches, and growth — so you don&apos;t
+              have to figure it out alone.
             </p>
             <ul className="checklist">
               <li>Bigger income</li>
@@ -78,8 +78,8 @@ export function HomePage() {
             </h2>
             <p className="section__copy">
               Sign up free, subscribe when you&apos;re ready, and train inside
-              your private portal — your business office for education,
-              community, resources, and freedom.
+              The Office — education, community, resources, and freedom in one
+              place.
             </p>
           </Reveal>
 
@@ -109,7 +109,7 @@ export function HomePage() {
         <div className="band__veil" aria-hidden="true" />
         <Reveal className="band__content">
           <h2 id="band-title">
-            Your office for <em>bigger</em> plans.
+            Bigger plans start in <em>The Office.</em>
           </h2>
           <p>
             Create your account, join membership, and open a portal built for
@@ -121,13 +121,13 @@ export function HomePage() {
       <section className="section offer" aria-labelledby="offer-title">
         <div className="section__inner">
           <Reveal>
-            <p className="eyebrow">Inside the portal</p>
+            <p className="eyebrow">Inside The Office</p>
             <h2 className="section__title" id="offer-title">
               Progress over <em>perfection.</em>
             </h2>
             <p className="section__copy">
               Elite courses, financial calculators, and startup worksheets —
-              your office for building and getting paid.
+              everything you need to build and get paid.
             </p>
           </Reveal>
           <div className="offer__rows">

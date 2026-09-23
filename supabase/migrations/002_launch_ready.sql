@@ -33,7 +33,7 @@ create table if not exists public.course_tracks (
   id text primary key,
   title text not null,
   blurb text not null default '',
-  badge text not null default 'Office course',
+  badge text not null default 'Member course',
   members_only boolean not null default true,
   published boolean not null default false,
   sort_order int not null default 0,

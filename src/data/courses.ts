@@ -278,7 +278,7 @@ export const COURSE_TRACKS: CourseTrack[] = [
         ],
         sections: [
           {
-            heading: "The office rhythm",
+            heading: "Your weekly rhythm",
             body: "Outreach, content, delivery, CEO review. Same four beats every week. Boring systems create exciting freedom. When the week has a shape, you stop reinventing your job every Monday morning while the dishwasher runs.",
           },
           {
@@ -876,7 +876,7 @@ export const COURSE_TRACKS: CourseTrack[] = [
         ],
         sections: [
           {
-            heading: "Keep the office growing",
+            heading: "Keep momentum growing",
             body: "Happy clients are your warmest channel, so ask clearly and offer continuity when results are landing. Most women wait for the 'perfect moment' and then never ask. Perfect is a shipped ask after a real win.",
           },
           {

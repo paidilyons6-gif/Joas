@@ -97,7 +97,7 @@ export function StudioPage() {
           <h2>Programs on the site</h2>
           <p>
             Edit Startup Foundations, Money &amp; Margins, Launch &amp; Sales, or
-            add new office courses.
+            add new courses for members.
           </p>
         </div>
         <button className="btn btn--primary" type="button" onClick={createCourse}>
@@ -141,7 +141,7 @@ export function StudioPage() {
       <section className="studio-nav-settings">
         <h2 className="portal-subhead">Menu topics shown</h2>
         <p className="portal-lede">
-          Turn topics on or off for The Office menu. Studio always stays
+          Turn topics on or off in the portal menu. Studio always stays
           visible for you as admin.
         </p>
         <div className="nav-toggle-grid">
@@ -270,7 +270,7 @@ export function StudioEditorPage() {
       badge: !current.published
         ? current.overridesId
           ? current.badge
-          : "Office course"
+          : "Member course"
         : "Draft",
     };
     setTrack(next);

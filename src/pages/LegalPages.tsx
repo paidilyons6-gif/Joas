@@ -15,9 +15,9 @@ export function PrivacyPage() {
             details are processed by Stripe — we do not store full card numbers.
           </p>
           <p>
-            We use your data to deliver The Office portal, improve the
-            product, and communicate about your membership. We do not sell your
-            personal information.
+            We use your data to deliver The Office membership portal, improve
+            the product, and communicate about your membership. We do not sell
+            your personal information.
           </p>
           <p>
             You can request access or deletion of your account data by emailing
@@ -52,9 +52,9 @@ export function TermsPage() {
             redistribute course materials.
           </p>
           <p>
-            Office posts must stay respectful. We may remove content that is
-            abusive, spammy, or illegal. These terms may update as the product
-            grows.
+            Community posts in The Office must stay respectful. We may remove
+            content that is abusive, spammy, or illegal. These terms may update
+            as the product grows.
           </p>
           <p>
             <Link to="/">← Back home</Link>

@@ -58,7 +58,7 @@ export function PortalLayout() {
     <>
       <div className="portal__brand">
         <LogoLink />
-        <p className="portal__tag">The office</p>
+        <p className="portal__tag">The Office</p>
       </div>
       <div className="portal__user">
         <p className="portal__hello">Hey {user?.name?.split(" ")[0] || "you"} ♡</p>

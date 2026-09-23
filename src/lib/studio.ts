@@ -48,7 +48,7 @@ export const NAV_META: {
   { id: "home", label: "Home", group: "Learn" },
   { id: "courses", label: "Courses", group: "Learn" },
   { id: "vault", label: "Vault", group: "Learn" },
-  { id: "office", label: "Office", group: "Learn" },
+  { id: "office", label: "The Office", group: "Learn" },
   { id: "calculators", label: "Calculators", group: "Build" },
   { id: "toolkit", label: "Toolkit", group: "Build" },
   { id: "studio", label: "Studio", group: "Create", adminOnly: true },
@@ -144,7 +144,7 @@ function toCourseTrack(t: StudioTrack): CourseTrack {
     id: t.id,
     title: t.title,
     blurb: t.blurb,
-    badge: t.badge || (t.published ? "Office course" : "Draft"),
+    badge: t.badge || (t.published ? "Member course" : "Draft"),
     membersOnly: t.membersOnly,
     lessons: t.lessons,
   };
@@ -249,7 +249,7 @@ export function emptyTrack(): StudioTrack {
   return {
     id,
     title: "Untitled course",
-    blurb: "Describe what members will learn in this office course.",
+    blurb: "Describe what members will learn in this course.",
     badge: "Draft",
     membersOnly: true,
     published: false,

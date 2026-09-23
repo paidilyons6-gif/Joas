@@ -20,7 +20,7 @@ export function CoursesPage() {
             Train like you mean <em>business</em>
           </h1>
           <p className="portal-lede">
-            Office-style learning paths — startup, money, launch, plus any
+            Learning paths — startup, money, launch, plus any
             courses Becca publishes in Studio.
           </p>
         </div>

@@ -36,7 +36,7 @@ export function AccountPage() {
         Your <em>membership</em>
       </h1>
       <p className="portal-lede">
-        Profile, plan, billing, and what you can access in the office.
+        Profile, plan, billing, and what you can access inside The Office.
       </p>
 
       <div className="account-panel">

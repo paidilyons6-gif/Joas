@@ -57,9 +57,9 @@ export function OfficePage() {
 
   return (
     <div className="portal-page">
-      <p className="eyebrow">The office</p>
+      <p className="eyebrow">Community</p>
       <h1>
-        Like the office, but for <em>business</em>
+        The <em>Office</em>
       </h1>
       <p className="portal-lede">
         Share wins, ask questions, and get unstuck with other mom founders.
@@ -69,8 +69,8 @@ export function OfficePage() {
       {!member && (
         <div className="upgrade-banner">
           <div>
-            <h2>Full office energy unlocks with membership</h2>
-            <p>You can still read the vibe — upgrade to post and go deeper.</p>
+            <h2>Membership unlocks posting in The Office</h2>
+            <p>You can still browse — upgrade when you&apos;re ready to join in.</p>
           </div>
           <Link className="btn btn--primary" to="/pricing">
             Upgrade →
@@ -81,7 +81,7 @@ export function OfficePage() {
       {member && (
         <form className="office-composer" onSubmit={(e) => void onSubmit(e)}>
           <label className="calc-field">
-            <span>Share with the office</span>
+            <span>Share with everyone</span>
             <textarea
               rows={3}
               value={body}
@@ -93,7 +93,7 @@ export function OfficePage() {
           </label>
           {error && <p className="form-error">{error}</p>}
           <button className="btn btn--primary" type="submit" disabled={busy}>
-            {busy ? "Posting…" : "Post to the office →"}
+            {busy ? "Posting…" : "Post →"}
           </button>
         </form>
       )}
