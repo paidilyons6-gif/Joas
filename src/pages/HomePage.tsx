@@ -3,10 +3,8 @@ import { Logo } from "../components/Logo";
 import { Reveal } from "../components/Reveal";
 import { useAuth } from "../lib/auth";
 
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1529333166432-c89d40d0d94c?auto=format&fit=crop&w=2400&q=80";
-const BAND_IMAGE =
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2000&q=80";
+const HERO_IMAGE = "/hero.jpg";
+const BAND_IMAGE = "/band.jpg";
 
 export function HomePage() {
   const { user } = useAuth();
