@@ -45,6 +45,8 @@ export function PortalLayout() {
 
   function visible(id: NavTopicId) {
     if (id === "studio" && !admin) return false;
+    // Free accounts: only Home + Account (content stays locked until membership)
+    if (!member && !admin && id !== "home" && id !== "account") return false;
     return nav[id] !== false;
   }
 
@@ -65,9 +67,9 @@ export function PortalLayout() {
         <p className="portal__plan">
           {member
             ? user?.plan === "annual"
-              ? "Founders Year member"
-              : "Monthly member"
-            : "Free account · upgrade to unlock"}
+              ? "BodiesByBecca yearly"
+              : "BodiesByBecca member"
+            : "Free account · content locked"}
         </p>
       </div>
       <nav className="portal__nav" aria-label="Portal" onClick={closeMenu}>
@@ -95,7 +97,7 @@ export function PortalLayout() {
       <div className="portal__side-foot">
         {!member && (
           <Link className="btn btn--primary portal__upgrade" to="/pricing" onClick={closeMenu}>
-            Upgrade →
+            BodiesByBecca →
           </Link>
         )}
         <button
@@ -135,7 +137,9 @@ export function PortalLayout() {
         <header className="portal__topbar">
           <div>
             <p className="portal__topbar-kicker">Business by Becca</p>
-            <p className="portal__topbar-title">Your laptop learning portal</p>
+            <p className="portal__topbar-title">
+              {member || admin ? "Your laptop learning portal" : "Membership required to unlock"}
+            </p>
           </div>
           <div className="portal__topbar-actions">
             {admin && visible("studio") && (
@@ -143,9 +147,14 @@ export function PortalLayout() {
                 Edit programs →
               </Link>
             )}
-            {visible("courses") && (
+            {member && visible("courses") && (
               <Link className="btn btn--ghost-ink" to="/portal/courses">
                 Browse courses
+              </Link>
+            )}
+            {!member && !admin && (
+              <Link className="btn btn--primary" to="/pricing">
+                Get membership →
               </Link>
             )}
           </div>
