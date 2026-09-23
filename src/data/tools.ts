@@ -38,8 +38,8 @@ export const TOOLS: ToolMeta[] = [
     id: "ceo-scorecard",
     title: "Weekly CEO scorecard",
     blurb: "Revenue, outreach, content, and energy — one honest check-in.",
-    membersOnly: false,
-    badge: "Free preview",
+    membersOnly: true,
+    badge: "Members",
   },
 ];
 

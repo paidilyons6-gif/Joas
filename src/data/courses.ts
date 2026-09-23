@@ -25,13 +25,13 @@ export const COURSE_TRACKS: CourseTrack[] = [
     blurb:
       "From fuzzy idea to a clear offer people will pay for — clarity, brand, ops, and growth that fit real life.",
     badge: "Start here",
-    membersOnly: false,
+    membersOnly: true,
     lessons: [
       {
         id: "startup-1",
         title: "Your unfair advantage",
         duration: 14,
-        membersOnly: false,
+        membersOnly: true,
         objectives: [
           "Name the skills and lived experience only you combine",
           "Spot market pain you already understand from the inside",
@@ -65,7 +65,7 @@ export const COURSE_TRACKS: CourseTrack[] = [
         id: "startup-2",
         title: "Who it's for (and who it's not)",
         duration: 15,
-        membersOnly: false,
+        membersOnly: true,
         objectives: [
           "Define a specific buyer with real constraints",
           "Write a pain-to-result promise in one breath",
@@ -99,7 +99,7 @@ export const COURSE_TRACKS: CourseTrack[] = [
         id: "startup-3",
         title: "Sketch the first offer",
         duration: 16,
-        membersOnly: false,
+        membersOnly: true,
         objectives: [
           "Define deliverables, timeline, and what 'done' means",
           "Pick a brave-but-believable price for a first test",

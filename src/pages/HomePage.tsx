@@ -11,16 +11,13 @@ export function HomePage() {
 
   return (
     <>
-      <section className="hero" id="top" aria-label="Business by Becca">
-        <div className="hero__media" aria-hidden="true">
-          <img
-            src={HERO_IMAGE}
-            alt=""
-            width={2400}
-            height={1600}
-            fetchPriority="high"
-          />
-        </div>
+      <section
+        className="hero"
+        id="top"
+        aria-label="Business by Becca"
+        style={{ ["--hero-image" as string]: `url(${HERO_IMAGE})` }}
+      >
+        <div className="hero__media" aria-hidden="true" />
         <div className="hero__veil" aria-hidden="true" />
         <div className="hero__content">
           <h1>
@@ -100,17 +97,19 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="band" aria-labelledby="band-title">
-        <div className="band__media" aria-hidden="true">
-          <img src={BAND_IMAGE} alt="" width={2000} height={1333} loading="lazy" />
-        </div>
+      <section
+        className="band"
+        aria-labelledby="band-title"
+        style={{ ["--band-image" as string]: `url(${BAND_IMAGE})` }}
+      >
+        <div className="band__media" aria-hidden="true" />
         <div className="band__veil" aria-hidden="true" />
         <Reveal className="band__content">
           <h2 id="band-title">
             Bigger plans start in <em>The Office.</em>
           </h2>
           <p>
-            Create your account, join membership, and open a portal built for
+            Create your account, subscribe, and open a portal built for
             progress over perfection — with people who get it.
           </p>
         </Reveal>

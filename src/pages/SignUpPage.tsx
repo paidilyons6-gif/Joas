@@ -53,7 +53,7 @@ export function SignUpPage() {
             ? "Create your account, then subscribe monthly ($49) to unlock The Office."
             : plan === "annual"
               ? "Create your account, then subscribe yearly ($397) to unlock The Office."
-              : "Get free portal access. Subscribe anytime for full courses & resources."}
+              : "Create a free account, then subscribe to unlock courses, tools, and The Office."}
         </p>
         <form className="auth-form" onSubmit={(e) => void onSubmit(e)}>
           <label>

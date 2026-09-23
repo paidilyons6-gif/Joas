@@ -113,7 +113,7 @@ REFERRAL ASK
     title: "CEO weekly habits",
     type: "Checklist",
     blurb: "The boring rhythm that creates exciting freedom.",
-    membersOnly: false,
+    membersOnly: true,
     content: `WEEKLY CEO HABITS
 □ Outreach conversations logged
 □ One teaching post published

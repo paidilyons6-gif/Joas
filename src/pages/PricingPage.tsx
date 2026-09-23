@@ -75,8 +75,8 @@ export function PricingPage() {
               Membership that <em>keeps</em> paying off.
             </h1>
             <p className="section__copy">
-              Create a free account, then subscribe monthly or yearly. Card
-              payments renew automatically — cancel anytime from your account.
+              Free to create an account. Everything inside The Office stays locked
+              until you subscribe — monthly or yearly. Cancel anytime.
             </p>
           </Reveal>
         </div>

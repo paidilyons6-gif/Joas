@@ -28,26 +28,66 @@ export function PortalHome() {
   const tracks = getAllTracks();
   const checkoutSuccess = params.get("checkout") === "success";
 
-  const checklist = [
-    {
-      id: "lesson",
-      label: "Complete your first free lesson",
-      done: done > 0,
-      to: "/portal/courses/startup/startup-1",
-    },
-    {
-      id: "calc",
-      label: "Run the Pricing Power calculator",
-      done: false,
-      to: "/portal/calculators/pricing",
-    },
-    {
-      id: "upgrade",
-      label: "Unlock membership when ready",
-      done: member,
-      to: "/pricing",
-    },
-  ];
+  if (!member && !admin) {
+    return (
+      <div className="portal-page">
+        {checkoutSuccess && (
+          <div className="upgrade-banner" role="status">
+            <div>
+              <h2>Thanks for subscribing ♡</h2>
+              <p>If access isn&apos;t open yet, refresh in a moment while Stripe confirms.</p>
+            </div>
+            <button className="btn btn--primary" type="button" onClick={() => void refresh()}>
+              Refresh access
+            </button>
+          </div>
+        )}
+
+        <p className="eyebrow">Your account</p>
+        <h1>
+          You&apos;re in — now <em>subscribe</em>
+        </h1>
+        <p className="portal-lede">
+          Free accounts can sign up anytime. Courses, calculators, toolkit, vault,
+          and The Office unlock with a membership.
+        </p>
+
+        <div className="upgrade-banner">
+          <div>
+            <h2>Unlock The Office</h2>
+            <p>$49/month or $397/year — cancel anytime.</p>
+          </div>
+          <Link className="btn btn--primary" to="/pricing">
+            Subscribe →
+          </Link>
+        </div>
+
+        <div className="stat-row stat-row--3">
+          <div className="stat">
+            <p className="stat__label">Courses</p>
+            <p className="stat__value">{tracks.length}</p>
+            <p className="stat__meta">Locked until membership</p>
+          </div>
+          <div className="stat">
+            <p className="stat__label">Tools</p>
+            <p className="stat__value">{CALCULATORS.length + TOOLS.length}</p>
+            <p className="stat__meta">Calculators + worksheets</p>
+          </div>
+          <div className="stat">
+            <p className="stat__label">Access</p>
+            <p className="stat__value">Free</p>
+            <p className="stat__meta">Subscribe to open everything</p>
+          </div>
+        </div>
+
+        <div className="account-actions" style={{ marginTop: "1.5rem" }}>
+          <Link className="btn btn--ghost-ink" to="/portal/account">
+            Account settings
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="portal-page">
@@ -55,11 +95,7 @@ export function PortalHome() {
         <div className="upgrade-banner" role="status">
           <div>
             <h2>You&apos;re in ♡</h2>
-            <p>
-              {member
-                ? "Membership is active — dive into Money, Launch, and the full toolkit."
-                : "If you just paid, refresh in a moment while Stripe confirms."}
-            </p>
+            <p>Membership is active — dive into courses, tools, and The Office.</p>
           </div>
           <button className="btn btn--primary" type="button" onClick={() => void refresh()}>
             Refresh access
@@ -85,23 +121,6 @@ export function PortalHome() {
         )}
       </div>
 
-      <section className="onboarding-card">
-        <h2>Start here</h2>
-        <ul className="check-list">
-          {checklist.map((item) => (
-            <li key={item.id}>
-              <Link
-                className={`check-item ${item.done ? "check-item--on" : ""}`}
-                to={item.to}
-              >
-                <span aria-hidden="true">{item.done ? "✓" : "○"}</span>
-                <span>{item.label}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <div className="stat-row stat-row--3">
         <div className="stat">
           <p className="stat__label">Course progress</p>
@@ -115,10 +134,8 @@ export function PortalHome() {
         </div>
         <div className="stat">
           <p className="stat__label">Access</p>
-          <p className="stat__value">{member ? "Member" : "Free"}</p>
-          <p className="stat__meta">
-            {member ? "Membership active" : "Upgrade for Money + Launch tracks"}
-          </p>
+          <p className="stat__value">Member</p>
+          <p className="stat__meta">Full Office unlocked</p>
         </div>
         <div className="stat">
           <p className="stat__label">Tools ready</p>
@@ -145,31 +162,15 @@ export function PortalHome() {
         </div>
       )}
 
-      {!member && (
-        <div className="upgrade-banner">
-          <div>
-            <h2>Unlock the elite portal</h2>
-            <p>
-              Money &amp; Margins, Launch &amp; Sales, full calculators, and the
-              startup toolkit.
-            </p>
-          </div>
-          <Link className="btn btn--primary" to="/pricing">
-            View pricing →
-          </Link>
-        </div>
-      )}
-
       <h2 className="portal-subhead">Course tracks</h2>
       <div className="module-grid module-grid--desktop">
         {tracks.map((track) => {
           const progress = trackProgressFromTrack(track, user.completedLessons);
-          const locked = track.membersOnly && !member;
           return (
             <Link
               key={track.id}
-              className={`module-card ${locked ? "module-card--locked" : ""}`}
-              to={locked ? "/pricing" : `/portal/courses/${track.id}`}
+              className="module-card"
+              to={`/portal/courses/${track.id}`}
             >
               <p className="module-card__phase">{track.badge}</p>
               <h3>{track.title}</h3>
@@ -178,9 +179,7 @@ export function PortalHome() {
                 <span style={{ width: `${progress.pct}%` }} />
               </div>
               <p className="module-card__meta">
-                {locked
-                  ? "Members only"
-                  : `${progress.done}/${progress.total} lessons · ${progress.pct}%`}
+                {progress.done}/{progress.total} lessons · {progress.pct}%
               </p>
             </Link>
           );
@@ -194,18 +193,12 @@ export function PortalHome() {
           <h3>Pricing power</h3>
           <p>Set a price with margin math.</p>
         </Link>
-        <Link
-          className="pin-card"
-          to={member ? "/portal/calculators/breakeven" : "/pricing"}
-        >
+        <Link className="pin-card" to="/portal/calculators/breakeven">
           <p className="module-card__phase">Calculator</p>
           <h3>Break-even</h3>
           <p>Know your number to cover costs.</p>
         </Link>
-        <Link
-          className="pin-card"
-          to={member ? "/portal/tools/offer-builder" : "/pricing"}
-        >
+        <Link className="pin-card" to="/portal/tools/offer-builder">
           <p className="module-card__phase">Toolkit</p>
           <h3>Offer builder</h3>
           <p>Draft who, promise, and price.</p>

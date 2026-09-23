@@ -62,7 +62,7 @@ export function AccountPage() {
           <span>Unlocked</span>
           <strong>
             {user.plan === "none"
-              ? "Startup Foundations (free lessons) · Pricing calculator · CEO scorecard"
+              ? "Account only — subscribe to unlock The Office"
               : "All courses · All calculators · Full toolkit · Vault · The Office"}
           </strong>
         </div>

@@ -67,7 +67,7 @@ Also set on Netlify:
 
 | Plan | Price | Access |
 |---|---|---|
-| Free account | $0 | Preview lessons + Pricing calculator + CEO scorecard |
+| Free account | $0 | Sign up only — content locked until subscribe |
 | Monthly | $49/mo | Full Office |
 | Yearly | $397/yr | Full Office + founding perks |
 

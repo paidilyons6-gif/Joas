@@ -21,6 +21,7 @@ import { ResourcesPage } from "./pages/portal/ResourcesPage";
 import { AccountPage } from "./pages/portal/AccountPage";
 import { StudioPage, StudioEditorPage } from "./pages/portal/StudioPage";
 import { OfficePage } from "./pages/portal/OfficePage";
+import { RequireMember } from "./components/RequireMember";
 import type { ReactNode } from "react";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -55,19 +56,82 @@ export default function App() {
               }
             >
               <Route index element={<PortalHome />} />
-              <Route path="courses" element={<CoursesPage />} />
-              <Route path="courses/:trackId" element={<TrackPage />} />
-              <Route path="courses/:trackId/:lessonId" element={<LessonPage />} />
-              <Route path="tools" element={<ToolsPage />} />
-              <Route path="tools/:toolId" element={<ToolPage />} />
-              <Route path="calculators" element={<CalculatorsPage />} />
-              <Route path="calculators/:calcId" element={<CalculatorPage />} />
-              <Route path="resources" element={<ResourcesPage />} />
-              <Route path="office" element={<OfficePage />} />
-              <Route path="village" element={<Navigate to="/portal/office" replace />} />
               <Route path="account" element={<AccountPage />} />
               <Route path="studio" element={<StudioPage />} />
               <Route path="studio/:trackId" element={<StudioEditorPage />} />
+              <Route
+                path="courses"
+                element={
+                  <RequireMember>
+                    <CoursesPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="courses/:trackId"
+                element={
+                  <RequireMember>
+                    <TrackPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="courses/:trackId/:lessonId"
+                element={
+                  <RequireMember>
+                    <LessonPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="tools"
+                element={
+                  <RequireMember>
+                    <ToolsPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="tools/:toolId"
+                element={
+                  <RequireMember>
+                    <ToolPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="calculators"
+                element={
+                  <RequireMember>
+                    <CalculatorsPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="calculators/:calcId"
+                element={
+                  <RequireMember>
+                    <CalculatorPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="resources"
+                element={
+                  <RequireMember>
+                    <ResourcesPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="office"
+                element={
+                  <RequireMember>
+                    <OfficePage />
+                  </RequireMember>
+                }
+              />
+              <Route path="village" element={<Navigate to="/portal/office" replace />} />
               <Route path="training" element={<Navigate to="/portal/courses" replace />} />
               <Route path="training/:moduleId" element={<Navigate to="/portal/courses" replace />} />
             </Route>

@@ -19,8 +19,8 @@ export const CALCULATORS: CalculatorMeta[] = [
     id: "pricing",
     title: "Pricing power",
     blurb: "Cost, hours, and margin → a price you can say out loud.",
-    membersOnly: false,
-    badge: "Free preview",
+    membersOnly: true,
+    badge: "Members",
   },
   {
     id: "breakeven",
