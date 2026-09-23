@@ -22,6 +22,13 @@ Marketing site + member portal — courses, calculators, toolkit, vault, communi
 - Payments: Stripe Checkout via Netlify Functions
 - Host: Netlify (`netlify.toml` included)
 
+## Subscriptions (yes)
+
+Monthly **$49** and yearly **$397** via Stripe Checkout. Members cancel from Account → Manage subscription.
+
+- Demo (no Stripe keys): subscribe unlocks instantly on-device
+- Live: set keys per **[STRIPE_SETUP.md](./STRIPE_SETUP.md)** and deploy from Git (not Drop) so Netlify Functions run
+
 ## Quick start
 
 ```bash

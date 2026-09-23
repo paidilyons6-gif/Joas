@@ -12,7 +12,7 @@ export function SiteLayout() {
       <header className={`nav ${isHome ? "nav--overlay" : "nav--solid"}`}>
         <LogoLink variant={isHome ? "light" : "default"} />
         <nav className="nav__links" aria-label="Primary">
-          <NavLink to="/pricing">Pricing</NavLink>
+          <NavLink to="/pricing">Subscribe</NavLink>
           {user ? (
             <Link className="nav__cta" to="/portal">
               Open portal →
@@ -47,7 +47,7 @@ export function SiteLayout() {
               </p>
             </div>
             <nav className="footer__nav" aria-label="Footer">
-              <Link to="/pricing">Pricing</Link>
+              <Link to="/pricing">Subscribe</Link>
               <Link to="/sign-up">Join</Link>
               <Link to="/portal">Portal</Link>
               <Link to="/privacy">Privacy</Link>

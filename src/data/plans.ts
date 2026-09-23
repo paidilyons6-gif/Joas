@@ -11,24 +11,24 @@ export const PLANS: Record<
   }
 > = {
   monthly: {
-    name: "Membership",
+    name: "Monthly",
     priceLabel: "$49",
     cadence: "/month",
     features: [
-      "3 full course tracks",
+      "Full access to The Office",
+      "All 3 course tracks",
       "Financial calculators suite",
-      "Startup toolkit worksheets",
-      "Resource vault + templates",
+      "Startup toolkit + vault",
       "Cancel anytime",
     ],
   },
   annual: {
-    name: "Founders Year",
+    name: "Yearly",
     priceLabel: "$397",
     cadence: "/year",
-    highlight: "Best value · 2 months free",
+    highlight: "Best value · save ~2 months",
     features: [
-      "Everything in Membership",
+      "Everything in Monthly",
       "Founders badge in portal",
       "Priority office-hours seats",
       "Annual strategy reset call",

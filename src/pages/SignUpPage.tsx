@@ -15,7 +15,12 @@ export function SignUpPage() {
   const [busy, setBusy] = useState(false);
 
   if (user) {
-    return <Navigate to={plan ? "/pricing" : "/portal"} replace />;
+    return (
+      <Navigate
+        to={plan === "monthly" || plan === "annual" ? `/pricing?plan=${plan}` : "/portal"}
+        replace
+      />
+    );
   }
 
   async function onSubmit(event: FormEvent) {
@@ -24,7 +29,11 @@ export function SignUpPage() {
     setBusy(true);
     try {
       await signUp({ name, email, password });
-      navigate(plan ? "/pricing" : "/portal");
+      navigate(
+        plan === "monthly" || plan === "annual"
+          ? `/pricing?plan=${plan}`
+          : "/portal",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign up");
     } finally {
@@ -40,7 +49,11 @@ export function SignUpPage() {
           Create your <em>account</em>
         </h1>
         <p className="auth-card__lede">
-          Get portal access. Upgrade anytime for full training &amp; resources.
+          {plan === "monthly"
+            ? "Create your account, then subscribe monthly ($49) to unlock The Office."
+            : plan === "annual"
+              ? "Create your account, then subscribe yearly ($397) to unlock The Office."
+              : "Get free portal access. Subscribe anytime for full courses & resources."}
         </p>
         <form className="auth-form" onSubmit={(e) => void onSubmit(e)}>
           <label>

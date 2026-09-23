@@ -38,7 +38,7 @@ export function HomePage() {
               {user ? "Open your portal →" : "Let's do this →"}
             </Link>
             <Link className="btn btn--ghost" to="/pricing">
-              See membership
+              Subscribe
             </Link>
           </div>
         </div>
@@ -155,7 +155,7 @@ export function HomePage() {
           </div>
           <div className="section__cta-row">
             <Link className="btn btn--primary" to="/pricing">
-              View pricing →
+              Subscribe →
             </Link>
             <Link className="btn btn--ink" to="/sign-up">
               Create free account

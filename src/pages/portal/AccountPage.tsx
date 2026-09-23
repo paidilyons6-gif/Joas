@@ -54,8 +54,8 @@ export function AccountPage() {
             {user.plan === "none"
               ? "Free"
               : user.plan === "annual"
-                ? "Founders Year"
-                : "Monthly Membership"}
+                ? "Yearly subscription"
+                : "Monthly subscription"}
           </strong>
         </div>
         <div className="account-row">
@@ -63,7 +63,7 @@ export function AccountPage() {
           <strong>
             {user.plan === "none"
               ? "Startup Foundations (free lessons) · Pricing calculator · CEO scorecard"
-              : "All courses · All calculators · Full toolkit · Vault"}
+              : "All courses · All calculators · Full toolkit · Vault · The Office"}
           </strong>
         </div>
         <div className="account-row">
@@ -80,7 +80,7 @@ export function AccountPage() {
         )}
         {user.plan === "none" ? (
           <Link className="btn btn--primary" to="/pricing">
-            Upgrade membership →
+            Subscribe →
           </Link>
         ) : (
           <button
@@ -89,7 +89,7 @@ export function AccountPage() {
             disabled={busy}
             onClick={() => void manageBilling()}
           >
-            {busy ? "Opening…" : "Manage billing"}
+            {busy ? "Opening…" : "Manage subscription"}
           </button>
         )}
         <button className="btn btn--ghost-ink" type="button" onClick={() => void signOut()}>

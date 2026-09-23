@@ -907,6 +907,36 @@ button {
   font-weight: 600;
 }
 
+.pricing-faq {
+  margin: 3rem auto 0;
+  max-width: 40rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(26, 26, 26, 0.1);
+}
+
+.pricing-faq h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.pricing-faq dl {
+  display: grid;
+  gap: 1.15rem;
+}
+
+.pricing-faq dt {
+  font-family: var(--font-display);
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+}
+
+.pricing-faq dd {
+  color: var(--ink-muted);
+}
+
 /* ——— Auth ——— */
 .auth-page {
   display: grid;
