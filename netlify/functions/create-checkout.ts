@@ -85,8 +85,13 @@ export const handler: Handler = async (event) => {
 
     const isSubscription = kind === "monthly" || kind === "annual";
     const unlocksOffice = kind === "office" || isSubscription;
+    // Lifetime one-time maps to annual in profiles (permanent unlock flag).
     const planMeta =
-      kind === "annual" ? "annual" : kind === "monthly" || kind === "office" ? "monthly" : "";
+      kind === "annual" || kind === "office"
+        ? "annual"
+        : kind === "monthly"
+          ? "monthly"
+          : "";
 
     const session = await stripe.checkout.sessions.create({
       mode: isSubscription ? "subscription" : "payment",
@@ -102,7 +107,11 @@ export const handler: Handler = async (event) => {
         : `${siteUrl}/programs?checkout=cancel`,
       allow_promotion_codes: true,
       metadata: {
-        kind: unlocksOffice ? (isSubscription ? "subscription" : "office") : "program",
+        kind: unlocksOffice
+          ? isSubscription
+            ? "subscription"
+            : "office"
+          : "program",
         productId: kind,
         plan: planMeta,
       },

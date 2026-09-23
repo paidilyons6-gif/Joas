@@ -64,9 +64,10 @@ async function ensureOfficeProduct() {
 
   // Fall back: reuse product from any existing Office price
   for (const key of [
-    "bbb_office_onetime",
+    "bbb_office_lifetime",
     "bbb_office_monthly",
     "bbb_office_annual",
+    "bbb_office_onetime",
   ]) {
     const price = await findPriceByLookup(key);
     if (price) {
@@ -130,8 +131,8 @@ const officeProduct = await ensureOfficeProduct();
 
 const office = await ensurePrice({
   productId: officeProduct.id,
-  amountCents: 19700, // $197 one-time
-  lookupKey: "bbb_office_onetime",
+  amountCents: 59700, // $597 lifetime
+  lookupKey: "bbb_office_lifetime",
 });
 
 const monthly = await ensurePrice({
@@ -174,7 +175,7 @@ Also ensure you already have:
 
 Then Trigger deploy (clear cache).
 
-Office one-time: ${office.created ? "created" : "reused"}  ${office.priceId}
+Office lifetime: ${office.created ? "created" : "reused"}  ${office.priceId}
 Office monthly:  ${monthly.created ? "created" : "reused"}  ${monthly.priceId}
 Office yearly:   ${annual.created ? "created" : "reused"}  ${annual.priceId}
 HOTMESS:         ${hotmess.created ? "created" : "reused"} ${hotmess.priceId}

@@ -71,9 +71,9 @@ export const handler: Handler = async (event) => {
     const kind = session.metadata?.kind;
     const productId = session.metadata?.productId;
 
-    // One-time The Office purchase unlocks portal membership
+    // Lifetime one-time Office purchase unlocks as annual (permanent access).
     if (email && (kind === "office" || productId === "office")) {
-      await setPlanByEmail(email, "monthly", customerId);
+      await setPlanByEmail(email, "annual", customerId);
     } else if (email && session.metadata?.plan) {
       const plan =
         session.metadata.plan === "annual" ? "annual" : "monthly";

@@ -9,6 +9,7 @@ import {
 import { Reveal } from "../components/Reveal";
 import { isMember } from "../lib/access";
 import type { PlanId } from "../data/plans";
+import { OFFICE_OFFERS, type OfficeOfferId } from "../data/officeOffers";
 
 export function PricingPage() {
   const { user, activatePlan } = useAuth();
@@ -38,11 +39,11 @@ export function PricingPage() {
     setMessage("");
     const u = await requireUser("office");
     if (!u) return;
-    setBusy("office");
+    setBusy("lifetime");
     try {
       const result = await startOfficeCheckout(u.email);
       if (result.demo) {
-        await activateMembershipDemo("monthly", activatePlan);
+        await activateMembershipDemo("annual", activatePlan);
         navigate("/portal?checkout=success");
       }
     } catch (error) {
@@ -70,6 +71,40 @@ export function PricingPage() {
     }
   }
 
+  function renderCta(id: OfficeOfferId) {
+    if (member) {
+      return (
+        <Link className="btn btn--ink" to="/portal">
+          You&apos;re unlocked →
+        </Link>
+      );
+    }
+    if (id === "lifetime") {
+      return (
+        <button
+          className="btn btn--primary"
+          type="button"
+          disabled={busy !== null}
+          onClick={() => void buyOneTime()}
+        >
+          {busy === "lifetime" ? "Opening…" : OFFICE_OFFERS.lifetime.cta}
+        </button>
+      );
+    }
+    return (
+      <button
+        className="btn btn--primary"
+        type="button"
+        disabled={busy !== null}
+        onClick={() => void buySub(id)}
+      >
+        {busy === id ? "Opening…" : OFFICE_OFFERS[id].cta}
+      </button>
+    );
+  }
+
+  const order: OfficeOfferId[] = ["monthly", "annual", "lifetime"];
+
   return (
     <main className="page">
       <section className="section page-hero">
@@ -77,12 +112,12 @@ export function PricingPage() {
           <Reveal>
             <p className="eyebrow">The Office</p>
             <h1 className="section__title">
-              Subscribe or pay <em>once</em>
+              Pick how you want to <em>pay</em>
             </h1>
             <p className="section__copy">
-              Create a free account, then unlock The Office with a monthly or
-              yearly subscription — or a one-time purchase. Same portal access
-              either way.
+              Same full Office access on every option. Monthly stays flexible,
+              yearly saves vs month-to-month, lifetime is one payment with no
+              renewals.
             </p>
           </Reveal>
         </div>
@@ -90,89 +125,29 @@ export function PricingPage() {
 
       <section className="section pricing">
         <div className="section__inner pricing__grid">
-          <Reveal className="price-card">
-            <p className="price-card__badge">Subscription</p>
-            <h2>Monthly</h2>
-            <p className="price-card__price">
-              <span>$49</span>/month
-            </p>
-            <ul>
-              <li>Full Office access</li>
-              <li>Courses, tools, vault, community</li>
-              <li>Cancel anytime in Stripe billing</li>
-              <li>Renews automatically</li>
-            </ul>
-            {member ? (
-              <Link className="btn btn--ink" to="/portal">
-                You&apos;re unlocked →
-              </Link>
-            ) : (
-              <button
-                className="btn btn--primary"
-                type="button"
-                disabled={busy !== null}
-                onClick={() => void buySub("monthly")}
+          {order.map((id) => {
+            const offer = OFFICE_OFFERS[id];
+            return (
+              <Reveal
+                key={id}
+                className={`price-card${offer.featured ? " price-card--featured" : ""}`}
               >
-                {busy === "monthly" ? "Opening…" : "Subscribe monthly →"}
-              </button>
-            )}
-          </Reveal>
-
-          <Reveal className="price-card price-card--featured">
-            <p className="price-card__badge">Best value</p>
-            <h2>Yearly</h2>
-            <p className="price-card__price">
-              <span>$397</span>/year
-            </p>
-            <ul>
-              <li>Everything in monthly</li>
-              <li>~2 months free vs monthly</li>
-              <li>Full Office access</li>
-              <li>Renews yearly</li>
-            </ul>
-            {member ? (
-              <Link className="btn btn--ink" to="/portal">
-                You&apos;re unlocked →
-              </Link>
-            ) : (
-              <button
-                className="btn btn--primary"
-                type="button"
-                disabled={busy !== null}
-                onClick={() => void buySub("annual")}
-              >
-                {busy === "annual" ? "Opening…" : "Subscribe yearly →"}
-              </button>
-            )}
-          </Reveal>
-
-          <Reveal className="price-card">
-            <p className="price-card__badge">One-time</p>
-            <h2>Pay once</h2>
-            <p className="price-card__price">
-              <span>$197</span>
-            </p>
-            <ul>
-              <li>Full Office unlock</li>
-              <li>No recurring charge</li>
-              <li>Same courses & tools</li>
-              <li>One payment on this site</li>
-            </ul>
-            {member ? (
-              <Link className="btn btn--ink" to="/portal">
-                You&apos;re unlocked →
-              </Link>
-            ) : (
-              <button
-                className="btn btn--primary"
-                type="button"
-                disabled={busy !== null}
-                onClick={() => void buyOneTime()}
-              >
-                {busy === "office" ? "Opening…" : "Buy once →"}
-              </button>
-            )}
-          </Reveal>
+                <p className="price-card__badge">{offer.badge}</p>
+                <h2>{offer.name}</h2>
+                <p className="price-card__price">
+                  <span>{offer.priceLabel}</span>
+                  {offer.priceSuffix}
+                </p>
+                <p className="price-card__blurb">{offer.blurb}</p>
+                <ul>
+                  {offer.features.map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+                {renderCta(id)}
+              </Reveal>
+            );
+          })}
         </div>
 
         {message && <p className="form-status">{message}</p>}
