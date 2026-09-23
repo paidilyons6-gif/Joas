@@ -5,9 +5,9 @@ const stripeSecret = process.env.STRIPE_SECRET_KEY;
 const siteUrl =
   process.env.URL || process.env.DEPLOY_PRIME_URL || "http://localhost:8888";
 
-const PRICE_ENV: Record<string, string | undefined> = {
-  monthly: process.env.STRIPE_PRICE_MONTHLY,
-  annual: process.env.STRIPE_PRICE_ANNUAL,
+/** Website sells programs (e.g. HOTMESS). Membership is App Store / Play Store. */
+const PROGRAM_PRICE_ENV: Record<string, string | undefined> = {
+  hotmess: process.env.STRIPE_PRICE_HOTMESS,
 };
 
 export const handler: Handler = async (event) => {
@@ -18,52 +18,44 @@ export const handler: Handler = async (event) => {
   if (!stripeSecret) {
     return {
       statusCode: 503,
-      body: "Stripe is not configured. Set STRIPE_SECRET_KEY on Netlify.",
+      body: "Stripe is not configured for program checkout. Set STRIPE_SECRET_KEY on Netlify.",
     };
   }
 
   try {
     const body = JSON.parse(event.body || "{}") as {
+      kind?: string;
       plan?: string;
+      programId?: string;
       email?: string;
     };
-    const plan = body.plan === "annual" ? "annual" : "monthly";
-    const priceId = PRICE_ENV[plan];
+
+    // Legacy membership checkout blocked — membership is in-app
+    if (body.kind !== "program" && !body.programId) {
+      return {
+        statusCode: 400,
+        body: "BodiesByBecca membership is billed via App Store / Play Store. Use kind=program for HOTMESS and other website programs.",
+      };
+    }
+
+    const programId = (body.programId || "hotmess").toLowerCase();
+    const priceId = PROGRAM_PRICE_ENV[programId];
     if (!priceId) {
       return {
         statusCode: 500,
-        body: `Missing Stripe price id for ${plan}. Set STRIPE_PRICE_${plan.toUpperCase()} on Netlify.`,
+        body: `Missing Stripe price for program "${programId}". Set STRIPE_PRICE_${programId.toUpperCase()} on Netlify.`,
       };
     }
 
     const stripe = new Stripe(stripeSecret);
-
-    // Reuse Stripe customer when possible so portal + renewals stay linked
-    let customerId: string | undefined;
-    if (body.email) {
-      const existing = await stripe.customers.list({
-        email: body.email,
-        limit: 1,
-      });
-      if (existing.data[0]) {
-        customerId = existing.data[0].id;
-      }
-    }
-
     const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      ...(customerId
-        ? { customer: customerId }
-        : { customer_email: body.email }),
+      mode: "payment",
+      customer_email: body.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${siteUrl}/portal?checkout=success`,
-      cancel_url: `${siteUrl}/pricing?checkout=cancel`,
+      success_url: `${siteUrl}/programs?checkout=success&program=${programId}`,
+      cancel_url: `${siteUrl}/programs?checkout=cancel`,
       allow_promotion_codes: true,
-      billing_address_collection: "auto",
-      metadata: { plan },
-      subscription_data: {
-        metadata: { plan },
-      },
+      metadata: { kind: "program", programId },
     });
 
     return {

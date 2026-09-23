@@ -909,6 +909,16 @@ button {
   font-weight: 600;
 }
 
+.price-card__stores {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.price-card__stores .btn {
+  justify-content: center;
+  width: 100%;
+}
+
 .pricing-faq {
   margin: 3rem auto 0;
   max-width: 40rem;

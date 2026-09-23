@@ -33,7 +33,7 @@ export function HomePage() {
               {user ? "Open your portal →" : "Let's do this →"}
             </Link>
             <Link className="btn btn--ghost" to="/pricing">
-              Subscribe
+              Membership
             </Link>
           </div>
         </div>
@@ -109,8 +109,9 @@ export function HomePage() {
             Bigger plans start in <em>The Office.</em>
           </h2>
           <p>
-            Create your account, subscribe, and open a portal built for
-            progress over perfection — with people who get it.
+            Create your account, open The Office with BodiesByBecca membership
+            (App Store / Play), and keep selling programs like HOTMESS on the
+            site.
           </p>
         </Reveal>
       </section>
@@ -151,11 +152,11 @@ export function HomePage() {
             </Reveal>
           </div>
           <div className="section__cta-row">
-            <Link className="btn btn--primary" to="/pricing">
-              Subscribe →
+            <Link className="btn btn--primary" to="/programs">
+              Shop programs →
             </Link>
-            <Link className="btn btn--ink" to="/sign-up">
-              Create free account
+            <Link className="btn btn--ink" to="/pricing">
+              BodiesByBecca membership
             </Link>
           </div>
         </div>

@@ -20,6 +20,7 @@ import { CalculatorPage } from "./pages/portal/CalculatorPage";
 import { ResourcesPage } from "./pages/portal/ResourcesPage";
 import { AccountPage } from "./pages/portal/AccountPage";
 import { StudioPage, StudioEditorPage } from "./pages/portal/StudioPage";
+import { ProgramsPage } from "./pages/ProgramsPage";
 import { OfficePage } from "./pages/portal/OfficePage";
 import { RequireMember } from "./components/RequireMember";
 import type { ReactNode } from "react";
@@ -40,6 +41,7 @@ export default function App() {
             <Route element={<SiteLayout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/programs" element={<ProgramsPage />} />
               <Route path="/sign-in" element={<SignInPage />} />
               <Route path="/sign-up" element={<SignUpPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />

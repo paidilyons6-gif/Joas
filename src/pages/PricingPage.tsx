@@ -1,67 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { PLANS, type PlanId } from "../data/plans";
+import { PLANS, appStoreUrl, playStoreUrl, type PlanId } from "../data/plans";
 import { useAuth } from "../lib/auth";
-import { hasStripe } from "../lib/demo";
-import { startCheckout } from "../lib/payments";
+import { activateMembershipDemo } from "../lib/payments";
 import { Reveal } from "../components/Reveal";
 import { isMember } from "../lib/access";
 
 export function PricingPage() {
   const { user, activatePlan } = useAuth();
   const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
-  const [busy, setBusy] = useState<PlanId | null>(null);
+  const [params] = useSearchParams();
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const stripeReady = hasStripe();
-  const autoStarted = useRef(false);
+  const member = isMember(user?.plan);
 
   useEffect(() => {
     if (params.get("checkout") === "cancel") {
-      setMessage("Checkout cancelled — no charge. Subscribe whenever you're ready.");
+      setMessage("No charge. Subscribe anytime in the Bodies by Becca app.");
     }
   }, [params]);
 
-  useEffect(() => {
-    const planParam = params.get("plan");
-    if (autoStarted.current || !user || !planParam) return;
-    if (planParam !== "monthly" && planParam !== "annual") return;
-    if (isMember(user.plan)) return;
-    autoStarted.current = true;
-    setParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.delete("plan");
-        return next;
-      },
-      { replace: true },
-    );
-    void choose(planParam);
-  }, [user, params, setParams]);
-
-  async function choose(plan: PlanId) {
-    setMessage("");
+  async function unlockDemo(plan: PlanId) {
     if (!user) {
       navigate("/sign-up", { state: { plan } });
       return;
     }
-
-    if (user.plan === plan) {
-      setMessage("You're already on this plan. Manage it from Account.");
-      return;
-    }
-
-    setBusy(plan);
+    setBusy(true);
+    setMessage("");
     try {
-      const result = await startCheckout(plan, user.email);
-      if (result.demo) {
-        await activatePlan(plan);
-        navigate("/portal?checkout=success");
-      }
+      await activateMembershipDemo(plan, activatePlan);
+      navigate("/portal?checkout=success");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Checkout failed");
+      setMessage(error instanceof Error ? error.message : "Could not unlock");
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   }
 
@@ -70,13 +42,15 @@ export function PricingPage() {
       <section className="section page-hero">
         <div className="section__inner">
           <Reveal>
-            <p className="eyebrow">Subscribe</p>
+            <p className="eyebrow">BodiesByBecca membership</p>
             <h1 className="section__title">
-              Membership that <em>keeps</em> paying off.
+              Membership in the <em>app</em>
             </h1>
             <p className="section__copy">
-              Free to create an account. Everything inside The Office stays locked
-              until you subscribe — monthly or yearly. Cancel anytime.
+              Challenges wrap after October. Ongoing access is{" "}
+              <strong>BodiesByBecca membership</strong> — billed through the
+              Apple App Store or Google Play Store. Create a free website
+              account, subscribe in the app, then open The Office here.
             </p>
           </Reveal>
         </div>
@@ -105,62 +79,86 @@ export function PricingPage() {
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                {isCurrent ? (
+                {isCurrent || member ? (
                   <Link className="btn btn--ink" to="/portal/account">
-                    Current plan · manage →
+                    Membership active · account →
                   </Link>
                 ) : (
-                  <button
-                    className="btn btn--primary"
-                    type="button"
-                    disabled={busy === id}
-                    onClick={() => void choose(id)}
-                  >
-                    {busy === id
-                      ? stripeReady
-                        ? "Opening checkout…"
-                        : "Activating…"
-                      : id === "annual"
-                        ? "Subscribe yearly →"
-                        : "Subscribe monthly →"}
-                  </button>
+                  <div className="price-card__stores">
+                    <a
+                      className="btn btn--primary"
+                      href={appStoreUrl()}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      App Store →
+                    </a>
+                    <a
+                      className="btn btn--ink"
+                      href={playStoreUrl()}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Play Store →
+                    </a>
+                  </div>
                 )}
               </Reveal>
             );
           })}
         </div>
+
+        <div className="pricing-faq" style={{ marginTop: "2rem" }}>
+          <h2>Already subscribed in the app?</h2>
+          <p style={{ textAlign: "center", color: "var(--ink-muted)", marginBottom: "1rem" }}>
+            Create or log into the same email on this site. Demo unlock is for
+            preview; production can link app receipts to your portal account.
+          </p>
+          {user && !member && (
+            <div className="account-actions" style={{ justifyContent: "center" }}>
+              <button
+                className="btn btn--ghost-ink"
+                type="button"
+                disabled={busy}
+                onClick={() => void unlockDemo("monthly")}
+              >
+                {busy ? "Unlocking…" : "Preview unlock (demo) →"}
+              </button>
+            </div>
+          )}
+          {!user && (
+            <p className="pricing__note">
+              <Link to="/sign-up">Create free account</Link> ·{" "}
+              <Link to="/sign-in">Log in</Link>
+            </p>
+          )}
+        </div>
+
         {message && <p className="form-status">{message}</p>}
-        <p className="pricing__note">
-          {stripeReady
-            ? "Secure checkout powered by Stripe. Subscriptions renew until you cancel."
-            : "Demo mode: subscribe unlocks instantly on this device. Connect Stripe on Netlify for real card payments."}
-          <br />
-          Already have an account? <Link to="/sign-in">Log in</Link> ·{" "}
-          <Link to="/sign-up">Join free first</Link>
-        </p>
 
         <div className="pricing-faq">
-          <h2>How subscriptions work</h2>
+          <h2>How it works</h2>
           <dl>
             <div>
-              <dt>When do I get charged?</dt>
+              <dt>BodiesByBecca membership</dt>
               <dd>
-                At checkout, then every month ($49) or every year ($397) until you
-                cancel.
+                Recurring membership through Apple or Google after challenges end
+                in October. Cancel in your phone&apos;s subscriptions.
               </dd>
             </div>
             <div>
-              <dt>Can I cancel?</dt>
+              <dt>Programs on the website</dt>
               <dd>
-                Yes — anytime from Account → Manage subscription. You keep access
-                through the period you already paid for.
+                HOTMESS and other programs keep selling on this site — separate
+                from app membership.{" "}
+                <Link to="/programs">See programs →</Link>
               </dd>
             </div>
             <div>
-              <dt>What unlocks?</dt>
+              <dt>The Office portal</dt>
               <dd>
-                All course tracks, calculators, toolkit, vault, and posting in
-                The Office.
+                Free to create an account. Courses and tools unlock with an
+                active BodiesByBecca membership.
               </dd>
             </div>
           </dl>

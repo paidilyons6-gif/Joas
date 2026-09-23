@@ -12,7 +12,8 @@ export function SiteLayout() {
       <header className={`nav ${isHome ? "nav--overlay" : "nav--solid"}`}>
         <LogoLink variant={isHome ? "light" : "default"} />
         <nav className="nav__links" aria-label="Primary">
-          <NavLink to="/pricing">Subscribe</NavLink>
+          <NavLink to="/programs">Programs</NavLink>
+          <NavLink to="/pricing">Membership</NavLink>
           {user ? (
             <Link className="nav__cta" to="/portal">
               Open portal →
@@ -30,8 +31,9 @@ export function SiteLayout() {
 
       {mode === "demo" && (
         <div className="demo-banner" role="status">
-          Demo mode — accounts &amp; payments work on this device. Connect
-          Supabase + Stripe for production.
+          Demo mode — accounts work on this device. BodiesByBecca membership
+          bills in the app (App Store / Play). Programs like HOTMESS sell on
+          this site.
         </div>
       )}
 
@@ -47,7 +49,8 @@ export function SiteLayout() {
               </p>
             </div>
             <nav className="footer__nav" aria-label="Footer">
-              <Link to="/pricing">Subscribe</Link>
+              <Link to="/programs">Programs</Link>
+              <Link to="/pricing">Membership</Link>
               <Link to="/sign-up">Join</Link>
               <Link to="/portal">Portal</Link>
               <Link to="/privacy">Privacy</Link>

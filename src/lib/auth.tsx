@@ -151,9 +151,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(toAuthUser(demoStore.setPlan(plan), "demo"));
         return;
       }
-      throw new Error(
-        "Live membership unlocks after Stripe checkout completes. Use demo mode (no Supabase keys) to preview instantly.",
-      );
+        throw new Error(
+          "BodiesByBecca membership is billed in the App Store / Play Store. Use demo mode to preview portal unlock, or link the same email after you subscribe in the app.",
+        );
     },
     [live],
   );

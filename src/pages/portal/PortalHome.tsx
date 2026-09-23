@@ -35,7 +35,7 @@ export function PortalHome() {
           <div className="upgrade-banner" role="status">
             <div>
               <h2>Thanks for subscribing ♡</h2>
-              <p>If access isn&apos;t open yet, refresh in a moment while Stripe confirms.</p>
+              <p>If access isn&apos;t open yet, refresh after your app subscription syncs.</p>
             </div>
             <button className="btn btn--primary" type="button" onClick={() => void refresh()}>
               Refresh access
@@ -45,20 +45,20 @@ export function PortalHome() {
 
         <p className="eyebrow">Your account</p>
         <h1>
-          You&apos;re in — now <em>subscribe</em>
+          You&apos;re in — get <em>BodiesByBecca</em>
         </h1>
         <p className="portal-lede">
           Free accounts can sign up anytime. Courses, calculators, toolkit, vault,
-          and The Office unlock with a membership.
+          and The Office unlock with BodiesByBecca membership (App Store / Play).
         </p>
 
         <div className="upgrade-banner">
           <div>
-            <h2>Unlock The Office</h2>
-            <p>$49/month or $397/year — cancel anytime.</p>
+            <h2>Unlock with BodiesByBecca</h2>
+            <p>Subscribe in the app after challenges end in October — then open The Office here.</p>
           </div>
           <Link className="btn btn--primary" to="/pricing">
-            Subscribe →
+            Membership →
           </Link>
         </div>
 
@@ -66,17 +66,12 @@ export function PortalHome() {
           <div className="stat">
             <p className="stat__label">Courses</p>
             <p className="stat__value">{tracks.length}</p>
-            <p className="stat__meta">Locked until membership</p>
-          </div>
-          <div className="stat">
-            <p className="stat__label">Tools</p>
-            <p className="stat__value">{CALCULATORS.length + TOOLS.length}</p>
-            <p className="stat__meta">Calculators + worksheets</p>
+            <p className="stat__meta">BodiesByBecca membership</p>
           </div>
           <div className="stat">
             <p className="stat__label">Access</p>
             <p className="stat__value">Free</p>
-            <p className="stat__meta">Subscribe to open everything</p>
+            <p className="stat__meta">Subscribe in the app to open everything</p>
           </div>
         </div>
 
@@ -95,7 +90,7 @@ export function PortalHome() {
         <div className="upgrade-banner" role="status">
           <div>
             <h2>You&apos;re in ♡</h2>
-            <p>Membership is active — dive into courses, tools, and The Office.</p>
+            <p>BodiesByBecca membership is active — dive into courses, tools, and The Office.</p>
           </div>
           <button className="btn btn--primary" type="button" onClick={() => void refresh()}>
             Refresh access

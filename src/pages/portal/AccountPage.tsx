@@ -1,32 +1,20 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
-import { openBillingPortal } from "../../lib/payments";
+import { appStoreUrl, playStoreUrl } from "../../data/plans";
 import { isAdminEmail } from "../../lib/admin";
 
 export function AccountPage() {
   const { user, signOut, mode } = useAuth();
   const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
   const admin = isAdminEmail(user?.email);
 
   if (!user) return <Navigate to="/sign-in" replace />;
 
-  async function manageBilling() {
-    setBusy(true);
-    setMessage("");
-    try {
-      const result = await openBillingPortal(user!.email);
-      if (result.demo) {
-        setMessage(
-          "Demo mode: billing portal opens when Stripe is connected. Manage plans on the pricing page for now.",
-        );
-      }
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Billing portal failed");
-    } finally {
-      setBusy(false);
-    }
+  function manageMembership() {
+    setMessage(
+      "BodiesByBecca membership is managed in the Bodies by Becca app — Apple App Store or Google Play subscriptions.",
+    );
   }
 
   return (
@@ -36,7 +24,8 @@ export function AccountPage() {
         Your <em>membership</em>
       </h1>
       <p className="portal-lede">
-        Profile, plan, billing, and what you can access inside The Office.
+        Profile and BodiesByBecca access for The Office. Programs like HOTMESS
+        are sold separately on the website.
       </p>
 
       <div className="account-panel">
@@ -52,23 +41,27 @@ export function AccountPage() {
           <span>Plan</span>
           <strong>
             {user.plan === "none"
-              ? "Free"
+              ? "Free account"
               : user.plan === "annual"
-                ? "Yearly subscription"
-                : "Monthly subscription"}
+                ? "BodiesByBecca yearly"
+                : "BodiesByBecca monthly"}
           </strong>
         </div>
         <div className="account-row">
           <span>Unlocked</span>
           <strong>
             {user.plan === "none"
-              ? "Account only — subscribe to unlock The Office"
-              : "All courses · All calculators · Full toolkit · Vault · The Office"}
+              ? "Account only — BodiesByBecca membership unlocks The Office"
+              : "All courses · calculators · toolkit · vault · The Office"}
           </strong>
         </div>
         <div className="account-row">
+          <span>Billing</span>
+          <strong>App Store / Play Store</strong>
+        </div>
+        <div className="account-row">
           <span>Mode</span>
-          <strong>{mode === "demo" ? "Demo (local)" : "Live (Supabase)"}</strong>
+          <strong>{mode === "demo" ? "Demo (local)" : "Live"}</strong>
         </div>
       </div>
 
@@ -79,17 +72,24 @@ export function AccountPage() {
           </Link>
         )}
         {user.plan === "none" ? (
-          <Link className="btn btn--primary" to="/pricing">
-            Subscribe →
-          </Link>
+          <>
+            <a className="btn btn--primary" href={appStoreUrl()} target="_blank" rel="noreferrer">
+              App Store →
+            </a>
+            <a className="btn btn--ink" href={playStoreUrl()} target="_blank" rel="noreferrer">
+              Play Store →
+            </a>
+            <Link className="btn btn--ghost-ink" to="/programs">
+              Shop HOTMESS →
+            </Link>
+          </>
         ) : (
           <button
             className="btn btn--primary"
             type="button"
-            disabled={busy}
-            onClick={() => void manageBilling()}
+            onClick={manageMembership}
           >
-            {busy ? "Opening…" : "Manage subscription"}
+            Manage in app
           </button>
         )}
         <button className="btn btn--ghost-ink" type="button" onClick={() => void signOut()}>

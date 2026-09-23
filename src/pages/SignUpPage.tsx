@@ -49,11 +49,9 @@ export function SignUpPage() {
           Create your <em>account</em>
         </h1>
         <p className="auth-card__lede">
-          {plan === "monthly"
-            ? "Create your account, then subscribe monthly ($49) to unlock The Office."
-            : plan === "annual"
-              ? "Create your account, then subscribe yearly ($397) to unlock The Office."
-              : "Create a free account, then subscribe to unlock courses, tools, and The Office."}
+          {plan === "monthly" || plan === "annual"
+            ? "Create your free site account, then get BodiesByBecca membership in the App Store or Play Store to unlock The Office."
+            : "Create a free account. BodiesByBecca membership (in the app) unlocks The Office. Programs like HOTMESS sell on the site."}
         </p>
         <form className="auth-form" onSubmit={(e) => void onSubmit(e)}>
           <label>

@@ -11,13 +11,15 @@ export function PrivacyPage() {
         <div className="legal-copy">
           <p>
             Business by Becca collects the account information you provide
-            (name, email) to run memberships, courses, and support. Payment
-            details are processed by Stripe — we do not store full card numbers.
+            (name, email) to run memberships, courses, and support. BodiesByBecca
+            membership payments are processed by Apple or Google through the
+            Bodies by Becca app. Program purchases on this website (e.g. HOTMESS)
+            may be processed by Stripe — we do not store full card numbers.
           </p>
           <p>
-            We use your data to deliver The Office membership portal, improve
-            the product, and communicate about your membership. We do not sell
-            your personal information.
+            We use your data to deliver The Office portal and BodiesByBecca
+            membership access, improve the product, and communicate about your
+            account. We do not sell your personal information.
           </p>
           <p>
             You can request access or deletion of your account data by emailing
@@ -47,9 +49,11 @@ export function TermsPage() {
             offer, and market — we do not guarantee income outcomes.
           </p>
           <p>
-            Memberships renew according to the plan you choose until cancelled.
-            Content remains for active members. Do not share login credentials or
-            redistribute course materials.
+            Memberships renew through the Apple App Store or Google Play until
+            cancelled in your device settings. Challenges may run on a seasonal
+            calendar (including through October). Website programs such as
+            HOTMESS are separate purchases. Content remains for active members.
+            Do not share login credentials or redistribute course materials.
           </p>
           <p>
             Community posts in The Office must stay respectful. We may remove
