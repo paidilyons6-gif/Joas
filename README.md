@@ -2,68 +2,65 @@
 
 **Like the village, but for business.**
 
-Marketing site + elite member portal — courses, financial calculators, startup toolkit, signup/login, and Stripe subscriptions.
+Marketing site + member portal — courses, calculators, toolkit, vault, village feed, Studio CMS, signup/login, and Stripe subscriptions.
 
-## Portal product
+## What’s included
 
-- **Courses:** Startup Foundations, Money & Margins, Launch & Sales
+- **Courses:** Startup Foundations, Money & Margins, Launch & Sales (full lesson curriculum)
+- **Studio:** Admin (`r.lyons1@icloud.com`) edits programs/lessons and menu topics
 - **Calculators:** Pricing, break-even, revenue goal, runway, profit, offer stack
-- **Toolkit:** Offer builder, ideal client, 7-day launch planner, CEO scorecard
+- **Toolkit:** Offer builder, ideal client, launch planner, CEO scorecard
 - **Vault:** Copyable scripts and templates
-- **Access:** Free preview + membership unlock (`$49/mo` or `$397/yr`)
+- **Village:** Member community feed
+- **Access:** Free preview + membership (`$49/mo` or `$397/yr`)
+- **Modes:** Demo (localStorage) works with zero keys; live uses Supabase + Stripe
 
 ## Stack
 
 - Frontend: Vite + React + React Router
-- Auth / DB: Supabase (optional — demo mode works without it)
+- Auth / DB: Supabase (optional)
 - Payments: Stripe Checkout via Netlify Functions
 - Host: Netlify (`netlify.toml` included)
 
-## Studio (create courses)
-
-Becca can create Village-style courses at `/portal/studio` when signed in with an admin email.
-
-Set admin emails in `.env`:
-
-```bash
-VITE_ADMIN_EMAILS=your@email.com,another@email.com
-```
-
-Defaults include common Becca emails for local testing. Published studio courses appear in **Courses** for members.
-
-
-Project: **Businessbybecca** (`utnsdavbxbnacseqerjr`, eu-west-1)
-
-Already applied:
-- `profiles` table + RLS
-- signup trigger to create profiles
-- email auth with autoconfirm (instant portal access)
-
-Local: copy `.env.example` → `.env` and fill anon + service role keys from the Supabase dashboard (API settings). A working `.env` is gitignored.
-
-Netlify env vars to set:
-- `VITE_SUPABASE_URL=https://utnsdavbxbnacseqerjr.supabase.co`
-- `VITE_SUPABASE_ANON_KEY=...` (anon/public)
-- `SUPABASE_URL=https://utnsdavbxbnacseqerjr.supabase.co`
-- `SUPABASE_SERVICE_ROLE_KEY=...` (secret — for Stripe webhooks)
-- Stripe keys when ready
+## Quick start
 
 ```bash
 npm install
+cp .env.example .env   # optional for live mode
 npm run dev
 ```
 
-1. Create an account
+1. Create an account (demo accepts any password)
 2. Open `/portal` — free lessons + Pricing calculator + CEO scorecard
-3. Go to **Pricing** → pick a plan (demo unlocks instantly when Stripe keys are absent; live Checkout when Stripe is configured)
-4. Explore Courses, Calculators, Toolkit, Vault
+3. **Pricing** → pick a plan (demo unlocks instantly; live Checkout when Stripe is set)
+4. Explore Courses, Calculators, Toolkit, Vault, Village
+5. Admin email opens **Studio** to edit programs and nav topics
 
-## Go live on Netlify
+## Supabase migrations
 
-1. Connect this GitHub repo
-2. Add env vars from `.env.example`
-3. Run `supabase/migrations/001_profiles.sql`
-4. Create Stripe prices + webhook → `/.netlify/functions/stripe-webhook`
+Run in order in the SQL editor:
+
+1. `supabase/migrations/001_profiles.sql`
+2. `supabase/migrations/002_launch_ready.sql` — courses CMS, drafts, village, admin flag, plan protection
+
+Project: **Businessbybecca** (`utnsdavbxbnacseqerjr`)
+
+## Netlify env vars
+
+From `.env.example`:
+
+- `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` (webhook plan updates)
+- `VITE_STRIPE_PUBLISHABLE_KEY` / `STRIPE_SECRET_KEY`
+- `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_ANNUAL`
+- `STRIPE_WEBHOOK_SECRET` → endpoint `/.netlify/functions/stripe-webhook`
+- `VITE_ADMIN_EMAILS` (optional override; default includes `r.lyons1@icloud.com`)
+
+Live membership unlocks **only** via Stripe webhook (client cannot set `plan`).
+
+## Static zip
+
+`business_by_becca_static.zip` is a built `dist/` you can drag onto Netlify Drop for a quick preview (API routes need a full Netlify deploy).
 
 ## Brand
 

@@ -2015,3 +2015,164 @@ a.module-card:hover {
 .nav-toggle small {
   color: var(--ink-muted);
 }
+
+/* ——— Mobile portal drawer ——— */
+.portal__menu-btn {
+  display: none;
+}
+
+.portal__backdrop {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .portal {
+    grid-template-columns: 1fr;
+  }
+
+  .portal__menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0.85rem;
+    right: 0.85rem;
+    z-index: 40;
+    padding: 0.55rem 0.95rem;
+    border-radius: var(--radius-btn);
+    background: var(--ink);
+    color: var(--clean);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 8px 24px rgba(26, 26, 26, 0.18);
+  }
+
+  .portal__side {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(18.5rem, 86vw);
+    z-index: 35;
+    transform: translateX(-105%);
+    transition: transform 0.28s var(--ease);
+    overflow: auto;
+    box-shadow: 12px 0 40px rgba(26, 26, 26, 0.22);
+  }
+
+  .portal--menu-open .portal__side {
+    transform: translateX(0);
+  }
+
+  .portal__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: rgba(26, 26, 26, 0.45);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .portal__main {
+    padding-top: 3.5rem;
+  }
+}
+
+/* ——— Village feed ——— */
+.village-composer {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.25rem 0 1.75rem;
+  padding: 1.25rem;
+  background: var(--white);
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+}
+
+.village-feed {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.village-post {
+  padding: 1.15rem 1.25rem;
+  background: var(--white);
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+  display: grid;
+  gap: 0.65rem;
+}
+
+.village-post__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.village-post__meta strong {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+.village-post__meta time {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.village-post p {
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+
+/* ——— Onboarding + legal ——— */
+.onboarding-card {
+  margin: 1.25rem 0 1.75rem;
+  padding: 1.25rem;
+  background: linear-gradient(
+    135deg,
+    rgba(165, 232, 243, 0.45),
+    rgba(255, 193, 227, 0.55)
+  );
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+}
+
+.onboarding-card h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  margin-bottom: 0.75rem;
+}
+
+.onboarding-card .check-item {
+  text-decoration: none;
+}
+
+.legal-page {
+  padding: clamp(5rem, 12vw, 7rem) 0 4rem;
+}
+
+.legal-copy {
+  max-width: 40rem;
+  display: grid;
+  gap: 1rem;
+  color: var(--ink-muted);
+  margin-top: 1.25rem;
+}
+
+.legal-copy a {
+  color: var(--signature);
+  font-weight: 600;
+}
+
+.stat-row--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 800px) {
+  .stat-row--3 {
+    grid-template-columns: 1fr;
+  }
+}

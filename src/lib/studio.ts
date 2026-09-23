@@ -19,6 +19,7 @@ export type NavTopicId =
   | "vault"
   | "calculators"
   | "toolkit"
+  | "village"
   | "studio"
   | "account";
 
@@ -33,6 +34,7 @@ export const DEFAULT_NAV: NavSettings = {
   vault: true,
   calculators: true,
   toolkit: true,
+  village: true,
   studio: true,
   account: true,
 };
@@ -46,6 +48,7 @@ export const NAV_META: {
   { id: "home", label: "Home", group: "Learn" },
   { id: "courses", label: "Courses", group: "Learn" },
   { id: "vault", label: "Vault", group: "Learn" },
+  { id: "village", label: "Village", group: "Learn" },
   { id: "calculators", label: "Calculators", group: "Build" },
   { id: "toolkit", label: "Toolkit", group: "Build" },
   { id: "studio", label: "Studio", group: "Create", adminOnly: true },

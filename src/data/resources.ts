@@ -122,4 +122,49 @@ REFERRAL ASK
 □ Scorecard filled
 □ Next week blocked`,
   },
+  {
+    id: "boundary-script",
+    title: "Boundary & capacity script",
+    type: "Scripts",
+    blurb: "Say no (or not now) without burning the relationship.",
+    membersOnly: true,
+    content: `CAPACITY SCRIPT
+"I love this — and I'm at capacity for [timeline]. I can either waitlist you for [next window] or recommend [alt]. Which feels better?"
+
+BOUNDARY
+"I don't take on [scope] anymore. What I do offer is [offer] — want the details?"`,
+  },
+  {
+    id: "money-date",
+    title: "Monthly money date",
+    type: "Checklist",
+    blurb: "A 45-minute ritual so cash doesn't surprise you.",
+    membersOnly: true,
+    content: `MONEY DATE (45 min)
+1. Open bank + Stripe + unpaid invoices
+2. Note cash in / cash out / runway
+3. Update break-even + revenue goal calc
+4. Move profit % to savings (even $20)
+5. One pricing or collections action for next week`,
+  },
+  {
+    id: "content-batch",
+    title: "Content batch planner",
+    type: "Template",
+    blurb: "Plan a week of posts that teach and invite.",
+    membersOnly: true,
+    content: `CONTENT BATCH
+Pillar topic:
+Audience pain:
+Promise / takeaway:
+
+Mon — Teach
+Tue — Story / proof
+Wed — Soft invite
+Thu — FAQ / myth
+Fri — Clear CTA
+
+CTA link / booking:
+Offer name:`,
+  },
 ];

@@ -67,6 +67,8 @@ export function SignInPage() {
           </button>
         </form>
         <p className="auth-card__footer">
+          <Link to="/forgot-password">Forgot password?</Link>
+          <br />
           New here? <Link to="/sign-up">Create an account</Link>
         </p>
       </div>

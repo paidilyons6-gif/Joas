@@ -11,6 +11,7 @@ import {
 import { useAuth } from "../../lib/auth";
 import { isMember } from "../../lib/access";
 import { demoStore } from "../../lib/demo";
+import { syncToolDraftsRemote } from "../../lib/draftsRepo";
 
 export function ToolPage() {
   const { toolId } = useParams();
@@ -31,21 +32,22 @@ export function ToolPage() {
       <p className="eyebrow">{tool.badge}</p>
       <h1>{tool.title}</h1>
       <p className="portal-lede">{tool.blurb}</p>
-      <ToolBody id={tool.id} />
+      <ToolBody id={tool.id} userId={user.id} />
     </div>
   );
 }
 
-function ToolBody({ id }: { id: ToolId }) {
-  if (id === "offer-builder") return <OfferBuilder />;
-  if (id === "ideal-client") return <IdealClient />;
-  if (id === "launch-planner") return <LaunchPlanner />;
-  return <CeoScorecard />;
+function ToolBody({ id, userId }: { id: ToolId; userId: string }) {
+  if (id === "offer-builder") return <OfferBuilder userId={userId} />;
+  if (id === "ideal-client") return <IdealClient userId={userId} />;
+  if (id === "launch-planner") return <LaunchPlanner userId={userId} />;
+  return <CeoScorecard userId={userId} />;
 }
 
 function useDraft<T extends Record<string, string>>(
   key: "offer-builder" | "ideal-client" | "ceo-scorecard",
   defaults: T,
+  userId: string,
 ) {
   const saved = demoStore.getToolDrafts()[key] as T | undefined;
   const [draft, setDraft] = useState<T>({ ...defaults, ...saved });
@@ -61,17 +63,19 @@ function useDraft<T extends Record<string, string>>(
 
   function saveNow() {
     demoStore.saveToolDraft(key, draft);
-    setSavedNote("Saved on this device ♡");
+    void syncToolDraftsRemote(userId);
+    setSavedNote("Saved ♡");
     window.setTimeout(() => setSavedNote(""), 2000);
   }
 
   return { draft, update, saveNow, savedNote };
 }
 
-function OfferBuilder() {
+function OfferBuilder({ userId }: { userId: string }) {
   const { draft, update, saveNow, savedNote } = useDraft(
     "offer-builder",
     defaultOfferDraft,
+    userId,
   );
 
   return (
@@ -114,10 +118,11 @@ function OfferBuilder() {
   );
 }
 
-function IdealClient() {
+function IdealClient({ userId }: { userId: string }) {
   const { draft, update, saveNow, savedNote } = useDraft(
     "ideal-client",
     defaultClientDraft,
+    userId,
   );
 
   return (
@@ -151,7 +156,7 @@ function IdealClient() {
   );
 }
 
-function LaunchPlanner() {
+function LaunchPlanner({ userId }: { userId: string }) {
   const saved = demoStore.getToolDrafts()["launch-planner"];
   const [checked, setChecked] = useState<string[]>(saved?.checked || []);
   const [note, setNote] = useState("");
@@ -168,6 +173,7 @@ function LaunchPlanner() {
 
   function save() {
     demoStore.saveToolDraft("launch-planner", { checked });
+    void syncToolDraftsRemote(userId);
     setNote("Progress saved ♡");
     window.setTimeout(() => setNote(""), 2000);
   }
@@ -220,13 +226,14 @@ function LaunchPlanner() {
   );
 }
 
-function CeoScorecard() {
+function CeoScorecard({ userId }: { userId: string }) {
   const { draft, update, saveNow, savedNote } = useDraft(
     "ceo-scorecard",
     {
       ...defaultScorecard,
       weekOf: defaultScorecard.weekOf || new Date().toISOString().slice(0, 10),
     },
+    userId,
   );
 
   return (

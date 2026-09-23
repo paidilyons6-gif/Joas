@@ -1,4 +1,4 @@
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import {
   allLessonsMerged,
   getAllTracks,
@@ -12,7 +12,8 @@ import { isMember } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 
 export function PortalHome() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
+  const [params] = useSearchParams();
   if (!user) return <Navigate to="/sign-in" replace />;
 
   const member = isMember(user.plan);
@@ -25,9 +26,47 @@ export function PortalHome() {
   const pct = total ? Math.round((done / total) * 100) : 0;
   const next = nextLessonMerged(user.completedLessons);
   const tracks = getAllTracks();
+  const checkoutSuccess = params.get("checkout") === "success";
+
+  const checklist = [
+    {
+      id: "lesson",
+      label: "Complete your first free lesson",
+      done: done > 0,
+      to: "/portal/courses/startup/startup-1",
+    },
+    {
+      id: "calc",
+      label: "Run the Pricing Power calculator",
+      done: false,
+      to: "/portal/calculators/pricing",
+    },
+    {
+      id: "upgrade",
+      label: "Unlock membership when ready",
+      done: member,
+      to: "/pricing",
+    },
+  ];
 
   return (
     <div className="portal-page">
+      {checkoutSuccess && (
+        <div className="upgrade-banner" role="status">
+          <div>
+            <h2>You&apos;re in ♡</h2>
+            <p>
+              {member
+                ? "Membership is active — dive into Money, Launch, and the full toolkit."
+                : "If you just paid, refresh in a moment while Stripe confirms."}
+            </p>
+          </div>
+          <button className="btn btn--primary" type="button" onClick={() => void refresh()}>
+            Refresh access
+          </button>
+        </div>
+      )}
+
       <div className="portal-page__head-row">
         <div>
           <p className="eyebrow">Portal home</p>
@@ -35,8 +74,8 @@ export function PortalHome() {
             Your business <em>village</em>
           </h1>
           <p className="portal-lede">
-            Laptop-ready learning portal — courses, calculators, and tools.
-            {admin ? " You can create new courses in Studio." : ""}
+            Courses, calculators, toolkit, vault, and community — ready to build.
+            {admin ? " Studio lets you edit every program." : ""}
           </p>
         </div>
         {admin && (
@@ -45,6 +84,23 @@ export function PortalHome() {
           </Link>
         )}
       </div>
+
+      <section className="onboarding-card">
+        <h2>Start here</h2>
+        <ul className="check-list">
+          {checklist.map((item) => (
+            <li key={item.id}>
+              <Link
+                className={`check-item ${item.done ? "check-item--on" : ""}`}
+                to={item.to}
+              >
+                <span aria-hidden="true">{item.done ? "✓" : "○"}</span>
+                <span>{item.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <div className="stat-row stat-row--3">
         <div className="stat">

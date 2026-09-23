@@ -1,5 +1,5 @@
 import { COURSE_TRACKS, type CourseTrack } from "../data/courses";
-import { getAllTracks, getMergedTrack, studioStore } from "./studio";
+import { getAllTracks as getLocalTracks, getMergedTrack as getLocalMerged, studioStore } from "./studio";
 
 export function trackProgressFromTrack(track: CourseTrack, completed: string[]) {
   const total = track.lessons.length;
@@ -8,13 +8,13 @@ export function trackProgressFromTrack(track: CourseTrack, completed: string[]) 
 }
 
 export function allLessonsMerged(includeDrafts = false) {
-  return getAllTracks({ includeDrafts }).flatMap((t) =>
+  return getLocalTracks({ includeDrafts }).flatMap((t) =>
     t.lessons.map((l) => ({ ...l, trackId: t.id, trackTitle: t.title })),
   );
 }
 
 export function nextLessonMerged(completed: string[]) {
-  for (const track of getAllTracks()) {
+  for (const track of getLocalTracks()) {
     for (const lesson of track.lessons) {
       if (!completed.includes(lesson.id)) {
         return { track, lesson };
@@ -26,7 +26,7 @@ export function nextLessonMerged(completed: string[]) {
 
 export {
   COURSE_TRACKS,
-  getAllTracks,
-  getMergedTrack,
+  getLocalTracks as getAllTracks,
+  getLocalMerged as getMergedTrack,
   studioStore,
 };

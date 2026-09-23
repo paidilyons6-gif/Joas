@@ -50,7 +50,8 @@ export function SiteLayout() {
               <Link to="/pricing">Pricing</Link>
               <Link to="/sign-up">Join</Link>
               <Link to="/portal">Portal</Link>
-              <Link to="/sign-in">Log in</Link>
+              <Link to="/privacy">Privacy</Link>
+              <Link to="/terms">Terms</Link>
             </nav>
           </div>
           <p className="footer__meta">

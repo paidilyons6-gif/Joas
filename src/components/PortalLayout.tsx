@@ -7,15 +7,16 @@ import { isAdminEmail } from "../lib/admin";
 import {
   DEFAULT_NAV,
   NAV_META,
-  studioStore,
   type NavSettings,
   type NavTopicId,
 } from "../lib/studio";
+import { fetchNavSettings } from "../lib/coursesRepo";
 
 const PATHS: Record<NavTopicId, string> = {
   home: "/portal",
   courses: "/portal/courses",
   vault: "/portal/resources",
+  village: "/portal/village",
   calculators: "/portal/calculators",
   toolkit: "/portal/tools",
   studio: "/portal/studio",
@@ -27,10 +28,13 @@ export function PortalLayout() {
   const member = isMember(user?.plan);
   const admin = isAdminEmail(user?.email);
   const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    setNav(studioStore.getNavSettings());
-    const onStorage = () => setNav(studioStore.getNavSettings());
+    void fetchNavSettings().then(setNav);
+    const onStorage = () => {
+      void fetchNavSettings().then(setNav);
+    };
     window.addEventListener("storage", onStorage);
     window.addEventListener("bbb-nav-updated", onStorage);
     return () => {
@@ -46,59 +50,86 @@ export function PortalLayout() {
 
   const groups = ["Learn", "Build", "Create", "You"] as const;
 
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
+  const navBody = (
+    <>
+      <div className="portal__brand">
+        <LogoLink />
+        <p className="portal__tag">Learning village</p>
+      </div>
+      <div className="portal__user">
+        <p className="portal__hello">Hey {user?.name?.split(" ")[0] || "you"} ♡</p>
+        <p className="portal__plan">
+          {member
+            ? user?.plan === "annual"
+              ? "Founders Year member"
+              : "Monthly member"
+            : "Free account · upgrade to unlock"}
+        </p>
+      </div>
+      <nav className="portal__nav" aria-label="Portal" onClick={closeMenu}>
+        {groups.map((group) => {
+          const items = NAV_META.filter(
+            (m) => m.group === group && visible(m.id),
+          );
+          if (!items.length) return null;
+          return (
+            <div className="portal__nav-group" key={group}>
+              <p className="portal__nav-label">{group}</p>
+              {items.map((item) => (
+                <NavLink
+                  key={item.id}
+                  to={PATHS[item.id]}
+                  end={item.id === "home"}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+          );
+        })}
+      </nav>
+      <div className="portal__side-foot">
+        {!member && (
+          <Link className="btn btn--primary portal__upgrade" to="/pricing" onClick={closeMenu}>
+            Upgrade →
+          </Link>
+        )}
+        <button
+          className="btn btn--ghost-ink portal__signout"
+          type="button"
+          onClick={() => void signOut()}
+        >
+          Log out
+        </button>
+      </div>
+    </>
+  );
+
   return (
-    <div className="portal">
-      <aside className="portal__side">
-        <div className="portal__brand">
-          <LogoLink />
-          <p className="portal__tag">Learning village</p>
-        </div>
-        <div className="portal__user">
-          <p className="portal__hello">Hey {user?.name?.split(" ")[0] || "you"} ♡</p>
-          <p className="portal__plan">
-            {member
-              ? user?.plan === "annual"
-                ? "Founders Year member"
-                : "Monthly member"
-              : "Free account · upgrade to unlock"}
-          </p>
-        </div>
-        <nav className="portal__nav" aria-label="Portal">
-          {groups.map((group) => {
-            const items = NAV_META.filter(
-              (m) => m.group === group && visible(m.id),
-            );
-            if (!items.length) return null;
-            return (
-              <div className="portal__nav-group" key={group}>
-                <p className="portal__nav-label">{group}</p>
-                {items.map((item) => (
-                  <NavLink
-                    key={item.id}
-                    to={PATHS[item.id]}
-                    end={item.id === "home"}
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
-              </div>
-            );
-          })}
-        </nav>
-        <div className="portal__side-foot">
-          {!member && (
-            <Link className="btn btn--primary portal__upgrade" to="/pricing">
-              Upgrade →
-            </Link>
-          )}
-          <button
-            className="btn btn--ghost-ink portal__signout"
-            type="button"
-            onClick={() => void signOut()}
-          >
-            Log out
-          </button>
-        </div>
+    <div className={`portal ${menuOpen ? "portal--menu-open" : ""}`}>
+      <button
+        className="portal__menu-btn"
+        type="button"
+        aria-expanded={menuOpen}
+        aria-controls="portal-side"
+        onClick={() => setMenuOpen((v) => !v)}
+      >
+        {menuOpen ? "Close menu" : "Menu"}
+      </button>
+      {menuOpen && (
+        <button
+          className="portal__backdrop"
+          type="button"
+          aria-label="Close menu"
+          onClick={closeMenu}
+        />
+      )}
+      <aside className="portal__side" id="portal-side">
+        {navBody}
       </aside>
       <div className="portal__workspace">
         <header className="portal__topbar">

@@ -14,6 +14,11 @@ import {
   type StudioLesson,
   type StudioTrack,
 } from "../../lib/studio";
+import {
+  deleteStudioTrackRemote,
+  saveNavSettingsRemote,
+  saveStudioTrackRemote,
+} from "../../lib/coursesRepo";
 
 export function StudioPage() {
   const { user } = useAuth();
@@ -36,9 +41,10 @@ export function StudioPage() {
 
   function createCourse() {
     const track = emptyTrack();
-    studioStore.upsertTrack(track);
-    refresh();
-    navigate(`/portal/studio/${track.id}`);
+    void saveStudioTrackRemote(track).then(() => {
+      refresh();
+      navigate(`/portal/studio/${track.id}`);
+    });
   }
 
   function editProgram(editableId: string, source: "builtin" | "studio") {
@@ -56,8 +62,7 @@ export function StudioPage() {
       return;
     }
     if (!confirm("Delete this custom course? This cannot be undone.")) return;
-    studioStore.deleteTrack(id);
-    refresh();
+    void deleteStudioTrackRemote(id).then(() => refresh());
   }
 
   function toggleNav(id: NavTopicId) {
@@ -70,10 +75,10 @@ export function StudioPage() {
   }
 
   function saveNav() {
-    studioStore.saveNavSettings(nav);
-    window.dispatchEvent(new Event("bbb-nav-updated"));
-    setNavSaved("Menu topics updated ♡");
-    window.setTimeout(() => setNavSaved(""), 2000);
+    void saveNavSettingsRemote(nav).then(() => {
+      setNavSaved("Menu topics updated ♡");
+      window.setTimeout(() => setNavSaved(""), 2000);
+    });
   }
 
   return (
@@ -252,9 +257,10 @@ export function StudioEditorPage() {
 
   function onSave(event: FormEvent) {
     event.preventDefault();
-    studioStore.upsertTrack(current);
-    setSaved("Program & lessons saved ♡");
-    window.setTimeout(() => setSaved(""), 2200);
+    void saveStudioTrackRemote(current).then(() => {
+      setSaved("Program & lessons saved ♡");
+      window.setTimeout(() => setSaved(""), 2200);
+    });
   }
 
   function publishToggle() {
@@ -268,9 +274,10 @@ export function StudioEditorPage() {
         : "Draft",
     };
     setTrack(next);
-    studioStore.upsertTrack(next);
-    setSaved(next.published ? "Live for members ♡" : "Hidden as draft");
-    window.setTimeout(() => setSaved(""), 2200);
+    void saveStudioTrackRemote(next).then(() => {
+      setSaved(next.published ? "Live for members ♡" : "Hidden as draft");
+      window.setTimeout(() => setSaved(""), 2200);
+    });
   }
 
   return (

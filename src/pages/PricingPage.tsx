@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { PLANS, type PlanId } from "../data/plans";
 import { useAuth } from "../lib/auth";
 import { startCheckout } from "../lib/payments";
@@ -8,8 +8,15 @@ import { Reveal } from "../components/Reveal";
 export function PricingPage() {
   const { user, activatePlan } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [busy, setBusy] = useState<PlanId | null>(null);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (params.get("checkout") === "cancel") {
+      setMessage("Checkout cancelled — no charge. Pick a plan whenever you're ready.");
+    }
+  }, [params]);
 
   async function choose(plan: PlanId) {
     setMessage("");
@@ -23,7 +30,7 @@ export function PricingPage() {
       const result = await startCheckout(plan, user.email);
       if (result.demo) {
         await activatePlan(plan);
-        navigate("/portal");
+        navigate("/portal?checkout=success");
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Checkout failed");
@@ -43,7 +50,7 @@ export function PricingPage() {
             </h1>
             <p className="section__copy">
               Free to create an account. Subscribe when you&apos;re ready to
-              unlock the full training portal, resources, and member tools.
+              unlock courses, calculators, toolkit, vault, and the village feed.
             </p>
           </Reveal>
         </div>

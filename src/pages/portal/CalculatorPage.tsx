@@ -15,6 +15,7 @@ import { CalcField, CalcShell, ResultStat } from "../../components/calc/CalcShel
 import { useAuth } from "../../lib/auth";
 import { isMember } from "../../lib/access";
 import { demoStore } from "../../lib/demo";
+import { syncCalcStateRemote } from "../../lib/draftsRepo";
 
 function num(v: string | number, fallback = 0) {
   const n = typeof v === "number" ? v : Number(v);
@@ -33,10 +34,17 @@ export function CalculatorPage() {
     return <Navigate to="/pricing" replace />;
   }
 
-  return <CalculatorBody id={meta.id} title={meta.title} blurb={meta.blurb} />;
+  return (
+    <CalculatorBody
+      id={meta.id}
+      title={meta.title}
+      blurb={meta.blurb}
+      userId={user.id}
+    />
+  );
 }
 
-function useCalcInputs(id: CalcId, defaults: Record<string, number>) {
+function useCalcInputs(id: CalcId, defaults: Record<string, number>, userId: string) {
   const saved = demoStore.getCalcState()[id] || {};
   const initial: Record<string, string> = {};
   for (const [key, value] of Object.entries(defaults)) {
@@ -50,7 +58,11 @@ function useCalcInputs(id: CalcId, defaults: Record<string, number>) {
       payload[key] = num(value);
     }
     demoStore.saveCalcState(id, payload);
-  }, [id, values]);
+    const t = window.setTimeout(() => {
+      void syncCalcStateRemote(userId);
+    }, 600);
+    return () => window.clearTimeout(t);
+  }, [id, values, userId]);
 
   function set(key: string, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -63,26 +75,28 @@ function CalculatorBody({
   id,
   title,
   blurb,
+  userId,
 }: {
   id: CalcId;
   title: string;
   blurb: string;
+  userId: string;
 }) {
-  if (id === "pricing") return <PricingCalc title={title} blurb={blurb} />;
-  if (id === "breakeven") return <BreakevenCalc title={title} blurb={blurb} />;
-  if (id === "revenue-goal") return <RevenueCalc title={title} blurb={blurb} />;
-  if (id === "runway") return <RunwayCalc title={title} blurb={blurb} />;
-  if (id === "profit") return <ProfitCalc title={title} blurb={blurb} />;
-  return <OfferStackCalc title={title} blurb={blurb} />;
+  if (id === "pricing") return <PricingCalc title={title} blurb={blurb} userId={userId} />;
+  if (id === "breakeven") return <BreakevenCalc title={title} blurb={blurb} userId={userId} />;
+  if (id === "revenue-goal") return <RevenueCalc title={title} blurb={blurb} userId={userId} />;
+  if (id === "runway") return <RunwayCalc title={title} blurb={blurb} userId={userId} />;
+  if (id === "profit") return <ProfitCalc title={title} blurb={blurb} userId={userId} />;
+  return <OfferStackCalc title={title} blurb={blurb} userId={userId} />;
 }
 
-function PricingCalc({ title, blurb }: { title: string; blurb: string }) {
+function PricingCalc({ title, blurb, userId }: { title: string; blurb: string; userId: string }) {
   const { values, set } = useCalcInputs("pricing", {
     cost: 40,
     hours: 4,
     hourlyWorth: 75,
     marginPct: 55,
-  });
+  }, userId);
   const result = useMemo(
     () =>
       calcPricing({
@@ -122,12 +136,12 @@ function PricingCalc({ title, blurb }: { title: string; blurb: string }) {
   );
 }
 
-function BreakevenCalc({ title, blurb }: { title: string; blurb: string }) {
+function BreakevenCalc({ title, blurb, userId }: { title: string; blurb: string; userId: string }) {
   const { values, set } = useCalcInputs("breakeven", {
     fixedCosts: 2500,
     price: 1500,
     variableCost: 200,
-  });
+  }, userId);
   const result = useMemo(
     () =>
       calcBreakeven({
@@ -163,12 +177,12 @@ function BreakevenCalc({ title, blurb }: { title: string; blurb: string }) {
   );
 }
 
-function RevenueCalc({ title, blurb }: { title: string; blurb: string }) {
+function RevenueCalc({ title, blurb, userId }: { title: string; blurb: string; userId: string }) {
   const { values, set } = useCalcInputs("revenue-goal", {
     monthlyGoal: 8000,
     price: 2000,
     closeRatePct: 20,
-  });
+  }, userId);
   const result = useMemo(
     () =>
       calcRevenueGoal({
@@ -200,11 +214,11 @@ function RevenueCalc({ title, blurb }: { title: string; blurb: string }) {
   );
 }
 
-function RunwayCalc({ title, blurb }: { title: string; blurb: string }) {
+function RunwayCalc({ title, blurb, userId }: { title: string; blurb: string; userId: string }) {
   const { values, set } = useCalcInputs("runway", {
     cash: 12000,
     monthlyBurn: 3000,
-  });
+  }, userId);
   const result = useMemo(
     () =>
       calcRunway({
@@ -234,12 +248,12 @@ function RunwayCalc({ title, blurb }: { title: string; blurb: string }) {
   );
 }
 
-function ProfitCalc({ title, blurb }: { title: string; blurb: string }) {
+function ProfitCalc({ title, blurb, userId }: { title: string; blurb: string; userId: string }) {
   const { values, set } = useCalcInputs("profit", {
     revenue: 10000,
     cogs: 1500,
     expenses: 3500,
-  });
+  }, userId);
   const result = useMemo(
     () =>
       calcProfit({
@@ -270,7 +284,7 @@ function ProfitCalc({ title, blurb }: { title: string; blurb: string }) {
   );
 }
 
-function OfferStackCalc({ title, blurb }: { title: string; blurb: string }) {
+function OfferStackCalc({ title, blurb, userId }: { title: string; blurb: string; userId: string }) {
   const { values, set } = useCalcInputs("offer-stack", {
     entryPrice: 47,
     entryQty: 20,
@@ -278,7 +292,7 @@ function OfferStackCalc({ title, blurb }: { title: string; blurb: string }) {
     coreQty: 4,
     premiumPrice: 4000,
     premiumQty: 1,
-  });
+  }, userId);
   const result = useMemo(
     () =>
       calcOfferStack({

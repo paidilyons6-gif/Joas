@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { getMergedTrack } from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
 import { canAccessLesson } from "../../lib/access";
+import { loadDrafts, saveLessonNote } from "../../lib/draftsRepo";
 
 export function LessonPage() {
   const { trackId, lessonId } = useParams();
@@ -20,6 +22,23 @@ export function LessonPage() {
   const idx = track.lessons.findIndex((l) => l.id === lesson.id);
   const prev = track.lessons[idx - 1];
   const next = track.lessons[idx + 1];
+  const lessonKey = lesson.id;
+
+  const [notes, setNotes] = useState("");
+  const [noteStatus, setNoteStatus] = useState("");
+
+  useEffect(() => {
+    void loadDrafts(user.id).then((d) => {
+      setNotes(d.lessonNotes[lessonKey] || "");
+    });
+  }, [user.id, lessonKey]);
+
+  async function persistNotes() {
+    if (!user) return;
+    await saveLessonNote(user.id, lessonKey, notes);
+    setNoteStatus("Notes saved ♡");
+    window.setTimeout(() => setNoteStatus(""), 2000);
+  }
 
   return (
     <div className="portal-page lesson-player lesson-player--desktop">
@@ -48,6 +67,29 @@ export function LessonPage() {
               <p>{section.body}</p>
             </section>
           ))}
+
+          <section className="lesson-panel">
+            <h2>Your notes</h2>
+            <label className="calc-field">
+              <span className="visually-hidden">Lesson notes</span>
+              <textarea
+                rows={5}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Capture ideas, decisions, and follow-ups…"
+              />
+            </label>
+            <div className="account-actions">
+              <button
+                className="btn btn--ghost-ink"
+                type="button"
+                onClick={() => void persistNotes()}
+              >
+                Save notes
+              </button>
+              {noteStatus && <p className="form-status">{noteStatus}</p>}
+            </div>
+          </section>
         </div>
 
         <aside className="lesson-rail">

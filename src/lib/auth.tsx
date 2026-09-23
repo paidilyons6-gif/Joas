@@ -146,20 +146,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const activatePlan = useCallback(
     async (plan: "monthly" | "annual") => {
+      // Demo unlock only — live entitlements come from Stripe webhook
       if (!live) {
         setUser(toAuthUser(demoStore.setPlan(plan), "demo"));
         return;
       }
-      const supabase = getSupabase();
-      if (!supabase || !user) throw new Error("Not signed in");
-      const { error } = await supabase
-        .from("profiles")
-        .update({ plan })
-        .eq("id", user.id);
-      if (error) throw error;
-      await refresh();
+      throw new Error(
+        "Live membership unlocks after Stripe checkout completes. Use demo mode (no Supabase keys) to preview instantly.",
+      );
     },
-    [live, refresh, user],
+    [live],
   );
 
   const toggleLesson = useCallback(
