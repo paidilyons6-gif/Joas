@@ -1,7 +1,8 @@
 import type { Handler } from "@netlify/functions";
 import Stripe from "stripe";
 
-const stripeSecret = process.env.STRIPE_SECRET_KEY;
+const stripeSecret =
+  process.env.STRIPE_SECRET_KEY || process.env.stripe_secret_key;
 const siteUrl = process.env.URL || process.env.DEPLOY_PRIME_URL || "http://localhost:8888";
 
 export const handler: Handler = async (event) => {

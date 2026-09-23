@@ -2,7 +2,8 @@ import type { Handler } from "@netlify/functions";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-const stripeSecret = process.env.STRIPE_SECRET_KEY;
+const stripeSecret =
+  process.env.STRIPE_SECRET_KEY || process.env.stripe_secret_key;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

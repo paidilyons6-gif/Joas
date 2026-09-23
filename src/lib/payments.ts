@@ -24,13 +24,33 @@ async function postCheckout(payload: Record<string, unknown>) {
   window.location.assign(data.url);
 }
 
-/** One-time The Office unlock via Stripe Checkout. */
+/**
+ * One-time The Office unlock via Stripe Checkout.
+ * Tries the Netlify function first (publishable key not required for redirect Checkout).
+ * Falls back to demo unlock only when Stripe isn't configured (503).
+ */
 export async function startOfficeCheckout(email?: string) {
-  if (!hasStripe()) {
-    return { demo: true as const };
+  try {
+    await postCheckout({ kind: "office", productId: "office", email });
+    return { demo: false as const };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (
+      !hasStripe() &&
+      (message.includes("not configured") || message.includes("503") || message.includes("Failed to fetch"))
+    ) {
+      return { demo: true as const };
+    }
+    // If function is up but misconfigured, surface the error
+    if (message.includes("not configured") || message.includes("Missing Stripe price")) {
+      throw error;
+    }
+    // Local static preview without functions → demo
+    if (message.includes("Failed to fetch") || message.includes("404")) {
+      return { demo: true as const };
+    }
+    throw error;
   }
-  await postCheckout({ kind: "office", productId: "office", email });
-  return { demo: false as const };
 }
 
 /** One-time program checkout (HOTMESS etc.) on the website. */
@@ -38,11 +58,21 @@ export async function startProgramCheckout(
   programId: string,
   email?: string,
 ) {
-  if (!hasStripe()) {
-    return { demo: true as const };
+  try {
+    await postCheckout({
+      kind: "program",
+      productId: programId,
+      programId,
+      email,
+    });
+    return { demo: false as const };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("Failed to fetch") || message.includes("404")) {
+      return { demo: true as const };
+    }
+    throw error;
   }
-  await postCheckout({ kind: "program", productId: programId, programId, email });
-  return { demo: false as const };
 }
 
 export async function startCheckout(plan: PlanId, email: string) {
