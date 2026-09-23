@@ -1,9 +1,5 @@
 const DEFAULT_ADMINS = [
-  "becca.member.test@gmail.com",
-  "paidilyons6@gmail.com",
-  "becky@bodiesbybecca.com",
-  "becca@bodiesbybecca.com",
-  "rebecca@bodiesbybecca.com",
+  "r.lyons1@icloud.com",
 ];
 
 export function isAdminEmail(email?: string | null) {
