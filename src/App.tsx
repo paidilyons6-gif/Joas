@@ -16,6 +16,7 @@ import { CalculatorsPage } from "./pages/portal/CalculatorsPage";
 import { CalculatorPage } from "./pages/portal/CalculatorPage";
 import { ResourcesPage } from "./pages/portal/ResourcesPage";
 import { AccountPage } from "./pages/portal/AccountPage";
+import { StudioPage, StudioEditorPage } from "./pages/portal/StudioPage";
 import type { ReactNode } from "react";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -55,6 +56,8 @@ export default function App() {
             <Route path="calculators/:calcId" element={<CalculatorPage />} />
             <Route path="resources" element={<ResourcesPage />} />
             <Route path="account" element={<AccountPage />} />
+            <Route path="studio" element={<StudioPage />} />
+            <Route path="studio/:trackId" element={<StudioEditorPage />} />
             <Route path="training" element={<Navigate to="/portal/courses" replace />} />
             <Route path="training/:moduleId" element={<Navigate to="/portal/courses" replace />} />
           </Route>

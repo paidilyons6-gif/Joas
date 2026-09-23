@@ -19,7 +19,18 @@ Marketing site + elite member portal — courses, financial calculators, startup
 - Payments: Stripe Checkout via Netlify Functions
 - Host: Netlify (`netlify.toml` included)
 
-## Backend (Supabase)
+## Studio (create courses)
+
+Becca can create Village-style courses at `/portal/studio` when signed in with an admin email.
+
+Set admin emails in `.env`:
+
+```bash
+VITE_ADMIN_EMAILS=your@email.com,another@email.com
+```
+
+Defaults include common Becca emails for local testing. Published studio courses appear in **Courses** for members.
+
 
 Project: **Businessbybecca** (`utnsdavbxbnacseqerjr`, eu-west-1)
 

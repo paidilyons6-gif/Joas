@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from "react-router-dom";
-import { getTrack, trackProgress } from "../../data/courses";
+import { getMergedTrack, trackProgressFromTrack } from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
 import { canAccessLesson, isMember } from "../../lib/access";
 
@@ -8,7 +8,7 @@ export function TrackPage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/sign-in" replace />;
 
-  const track = getTrack(trackId || "");
+  const track = getMergedTrack(trackId || "");
   if (!track) return <Navigate to="/portal/courses" replace />;
 
   const member = isMember(user.plan);
@@ -16,7 +16,7 @@ export function TrackPage() {
     return <Navigate to="/pricing" replace />;
   }
 
-  const progress = trackProgress(track.id, user.completedLessons);
+  const progress = trackProgressFromTrack(track, user.completedLessons);
 
   return (
     <div className="portal-page">
@@ -33,12 +33,15 @@ export function TrackPage() {
         {progress.done}/{progress.total} lessons complete
       </p>
 
-      <div className="training-list">
+      <div className="training-list training-list--desktop">
         {track.lessons.map((lesson, index) => {
           const locked = !canAccessLesson(lesson.membersOnly, user.plan);
           const done = user.completedLessons.includes(lesson.id);
           return (
-            <article key={lesson.id} className={`training-row ${done ? "training-row--done" : ""}`}>
+            <article
+              key={lesson.id}
+              className={`training-row ${done ? "training-row--done" : ""}`}
+            >
               <div>
                 <p className="module-card__phase">
                   Lesson {index + 1}

@@ -1,38 +1,50 @@
 import { Link, Navigate } from "react-router-dom";
 import {
-  COURSE_TRACKS,
-  allLessons,
-  nextLesson,
-  trackProgress,
-} from "../../data/courses";
+  allLessonsMerged,
+  getAllTracks,
+  nextLessonMerged,
+  trackProgressFromTrack,
+} from "../../lib/courseCatalog";
 import { CALCULATORS } from "../../data/calculators";
 import { TOOLS } from "../../data/tools";
 import { useAuth } from "../../lib/auth";
 import { isMember } from "../../lib/access";
+import { isAdminEmail } from "../../lib/admin";
 
 export function PortalHome() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/sign-in" replace />;
 
   const member = isMember(user.plan);
-  const lessons = allLessons();
+  const admin = isAdminEmail(user.email);
+  const lessons = allLessonsMerged();
   const done = user.completedLessons.filter((id) =>
     lessons.some((l) => l.id === id),
   ).length;
   const total = lessons.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
-  const next = nextLesson(user.completedLessons);
+  const next = nextLessonMerged(user.completedLessons);
+  const tracks = getAllTracks();
 
   return (
     <div className="portal-page">
-      <p className="eyebrow">Portal home</p>
-      <h1>
-        Your business <em>village</em>
-      </h1>
-      <p className="portal-lede">
-        Courses, calculators, and startup tools — like the village, but for
-        business.
-      </p>
+      <div className="portal-page__head-row">
+        <div>
+          <p className="eyebrow">Portal home</p>
+          <h1>
+            Your business <em>village</em>
+          </h1>
+          <p className="portal-lede">
+            Laptop-ready learning portal — courses, calculators, and tools.
+            {admin ? " You can create new courses in Studio." : ""}
+          </p>
+        </div>
+        {admin && (
+          <Link className="btn btn--primary" to="/portal/studio">
+            Open Studio →
+          </Link>
+        )}
+      </div>
 
       <div className="stat-row stat-row--3">
         <div className="stat">
@@ -49,7 +61,7 @@ export function PortalHome() {
           <p className="stat__label">Access</p>
           <p className="stat__value">{member ? "Member" : "Free"}</p>
           <p className="stat__meta">
-            {member ? "Full portal unlocked" : "Upgrade for Money + Launch tracks"}
+            {member ? "Full village unlocked" : "Upgrade for Money + Launch tracks"}
           </p>
         </div>
         <div className="stat">
@@ -93,9 +105,9 @@ export function PortalHome() {
       )}
 
       <h2 className="portal-subhead">Course tracks</h2>
-      <div className="module-grid">
-        {COURSE_TRACKS.map((track) => {
-          const progress = trackProgress(track.id, user.completedLessons);
+      <div className="module-grid module-grid--desktop">
+        {tracks.map((track) => {
+          const progress = trackProgressFromTrack(track, user.completedLessons);
           const locked = track.membersOnly && !member;
           return (
             <Link
@@ -126,12 +138,18 @@ export function PortalHome() {
           <h3>Pricing power</h3>
           <p>Set a price with margin math.</p>
         </Link>
-        <Link className="pin-card" to={member ? "/portal/calculators/breakeven" : "/pricing"}>
+        <Link
+          className="pin-card"
+          to={member ? "/portal/calculators/breakeven" : "/pricing"}
+        >
           <p className="module-card__phase">Calculator</p>
           <h3>Break-even</h3>
           <p>Know your number to cover costs.</p>
         </Link>
-        <Link className="pin-card" to={member ? "/portal/tools/offer-builder" : "/pricing"}>
+        <Link
+          className="pin-card"
+          to={member ? "/portal/tools/offer-builder" : "/pricing"}
+        >
           <p className="module-card__phase">Toolkit</p>
           <h3>Offer builder</h3>
           <p>Draft who, promise, and price.</p>

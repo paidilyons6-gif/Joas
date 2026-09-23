@@ -1,27 +1,39 @@
 import { Link, Navigate } from "react-router-dom";
-import { COURSE_TRACKS, trackProgress } from "../../data/courses";
+import { getAllTracks, trackProgressFromTrack } from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
 import { isMember } from "../../lib/access";
+import { isAdminEmail } from "../../lib/admin";
 
 export function CoursesPage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/sign-in" replace />;
   const member = isMember(user.plan);
+  const admin = isAdminEmail(user.email);
+  const tracks = getAllTracks({ includeDrafts: false });
 
   return (
     <div className="portal-page">
-      <p className="eyebrow">Courses</p>
-      <h1>
-        Train like you mean <em>business</em>
-      </h1>
-      <p className="portal-lede">
-        Three elite tracks — startup foundations, money &amp; margins, and
-        launch &amp; sales.
-      </p>
+      <div className="portal-page__head-row">
+        <div>
+          <p className="eyebrow">Courses</p>
+          <h1>
+            Train like you mean <em>business</em>
+          </h1>
+          <p className="portal-lede">
+            Village-style learning paths — startup, money, launch, plus any
+            courses Becca publishes in Studio.
+          </p>
+        </div>
+        {admin && (
+          <Link className="btn btn--primary" to="/portal/studio">
+            Create course →
+          </Link>
+        )}
+      </div>
 
-      <div className="module-grid">
-        {COURSE_TRACKS.map((track) => {
-          const progress = trackProgress(track.id, user.completedLessons);
+      <div className="module-grid module-grid--desktop">
+        {tracks.map((track) => {
+          const progress = trackProgressFromTrack(track, user.completedLessons);
           const locked = track.membersOnly && !member;
           const minutes = track.lessons.reduce((sum, l) => sum + l.duration, 0);
           return (
@@ -38,9 +50,7 @@ export function CoursesPage() {
               <div className="progress-bar" aria-hidden="true">
                 <span style={{ width: `${progress.pct}%` }} />
               </div>
-              <p className="module-card__meta">
-                {progress.pct}% complete
-              </p>
+              <p className="module-card__meta">{progress.pct}% complete</p>
               {locked ? (
                 <Link className="btn btn--primary" to="/pricing">
                   Unlock track →

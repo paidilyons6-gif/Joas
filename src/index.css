@@ -1673,3 +1673,261 @@ a.module-card:hover {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ——— Laptop portal shell ——— */
+@media (min-width: 1100px) {
+  .portal {
+    grid-template-columns: 17.5rem minmax(0, 1fr);
+    min-height: 100svh;
+  }
+
+  .portal__side {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: auto;
+    padding: 1.75rem 1.35rem;
+  }
+
+  .portal__workspace {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .portal__main {
+    width: min(100%, 1120px);
+    margin: 0 auto;
+    padding: 1.75rem 2.5rem 3rem;
+  }
+
+  .module-grid--desktop {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .training-list--desktop .training-row {
+    padding: 1.35rem 1.5rem;
+  }
+}
+
+.portal__brand {
+  margin-bottom: 0.35rem;
+}
+
+.portal__tag {
+  margin-top: 0.45rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--soft);
+}
+
+.portal__user {
+  padding: 0.85rem 0 0.35rem;
+  border-bottom: 1px solid rgba(248, 248, 246, 0.12);
+  margin-bottom: 0.35rem;
+}
+
+.portal__hello {
+  margin-top: 0;
+}
+
+.portal__nav-label {
+  margin: 0.85rem 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(248, 248, 246, 0.4);
+}
+
+.portal__side-foot {
+  margin-top: auto;
+  display: grid;
+  gap: 0.55rem;
+  padding-top: 1rem;
+}
+
+.portal__upgrade {
+  justify-content: center;
+}
+
+.portal__signout {
+  margin-top: 0 !important;
+  width: 100%;
+  justify-content: center;
+}
+
+.portal__topbar {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .portal__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 2.5rem;
+    border-bottom: 1px solid rgba(26, 26, 26, 0.08);
+    background: rgba(248, 248, 246, 0.92);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+}
+
+.portal__topbar-kicker {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--signature);
+}
+
+.portal__topbar-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.portal__topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.portal-page__head-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.lesson-desktop-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 1000px) {
+  .lesson-desktop-grid {
+    grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 0.75fr);
+    align-items: start;
+  }
+
+  .lesson-rail {
+    position: sticky;
+    top: 5.5rem;
+    display: grid;
+    gap: 0.85rem;
+  }
+}
+
+/* Studio */
+.studio-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  margin: 1rem 0 1.5rem;
+  background: linear-gradient(120deg, rgba(255, 230, 0, 0.35), rgba(255, 193, 227, 0.55));
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+}
+
+.studio-hero h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.studio-hero p {
+  color: var(--ink-muted);
+}
+
+.studio-empty {
+  text-align: center;
+  padding: 2.5rem 1.25rem;
+  background: var(--white);
+  border: 1.5px dashed rgba(26, 26, 26, 0.18);
+}
+
+.studio-empty h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+}
+
+.studio-empty p {
+  color: var(--ink-muted);
+  margin-bottom: 1rem;
+}
+
+.studio-editor__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.studio-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 1100px) {
+  .studio-layout {
+    grid-template-columns: 18rem minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.studio-sidebar,
+.studio-canvas {
+  background: var(--white);
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+  padding: 1.2rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.studio-lesson-list {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.studio-lesson-tab {
+  text-align: left;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(26, 26, 26, 0.1);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--clean);
+}
+
+.studio-lesson-tab.is-active {
+  border-color: var(--signature);
+  background: rgba(255, 193, 227, 0.45);
+}
+
+/* Marketing desktop hero content width */
+@media (min-width: 1100px) {
+  .hero__content {
+    padding-bottom: 6.5rem;
+  }
+
+  .nav {
+    padding-inline: 3rem;
+  }
+}

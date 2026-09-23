@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { openBillingPortal } from "../../lib/payments";
+import { isAdminEmail } from "../../lib/admin";
 
 export function AccountPage() {
   const { user, signOut, mode } = useAuth();
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const admin = isAdminEmail(user?.email);
 
   if (!user) return <Navigate to="/sign-in" replace />;
 
@@ -71,6 +73,11 @@ export function AccountPage() {
       </div>
 
       <div className="account-actions">
+        {admin && (
+          <Link className="btn btn--primary" to="/portal/studio">
+            Open course Studio →
+          </Link>
+        )}
         {user.plan === "none" ? (
           <Link className="btn btn--primary" to="/pricing">
             Upgrade membership →
