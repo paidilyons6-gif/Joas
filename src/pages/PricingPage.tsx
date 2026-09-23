@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { appStoreUrl, playStoreUrl } from "../data/plans";
 import { useAuth } from "../lib/auth";
 import {
   activateMembershipDemo,
   startOfficeCheckout,
+  startSubscriptionCheckout,
 } from "../lib/payments";
-import { hasStripe } from "../lib/demo";
 import { Reveal } from "../components/Reveal";
 import { isMember } from "../lib/access";
+import type { PlanId } from "../data/plans";
 
 export function PricingPage() {
   const { user, activatePlan } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const member = isMember(user?.plan);
-  const stripeReady = hasStripe();
 
   useEffect(() => {
     if (params.get("checkout") === "cancel") {
@@ -25,15 +24,23 @@ export function PricingPage() {
     }
   }, [params]);
 
-  async function buyOffice() {
-    setMessage("");
+  async function requireUser(planHint: PlanId | "office") {
     if (!user) {
-      navigate("/sign-up", { state: { plan: "monthly" } });
-      return;
+      navigate("/sign-up", {
+        state: { plan: planHint === "office" ? "monthly" : planHint },
+      });
+      return null;
     }
-    setBusy(true);
+    return user;
+  }
+
+  async function buyOneTime() {
+    setMessage("");
+    const u = await requireUser("office");
+    if (!u) return;
+    setBusy("office");
     try {
-      const result = await startOfficeCheckout(user.email);
+      const result = await startOfficeCheckout(u.email);
       if (result.demo) {
         await activateMembershipDemo("monthly", activatePlan);
         navigate("/portal?checkout=success");
@@ -41,7 +48,25 @@ export function PricingPage() {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Checkout failed");
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  }
+
+  async function buySub(plan: PlanId) {
+    setMessage("");
+    const u = await requireUser(plan);
+    if (!u) return;
+    setBusy(plan);
+    try {
+      const result = await startSubscriptionCheckout(plan, u.email);
+      if (result.demo) {
+        await activateMembershipDemo(plan, activatePlan);
+        navigate("/portal?checkout=success");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Checkout failed");
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -50,14 +75,14 @@ export function PricingPage() {
       <section className="section page-hero">
         <div className="section__inner">
           <Reveal>
-            <p className="eyebrow">Access</p>
+            <p className="eyebrow">The Office</p>
             <h1 className="section__title">
-              Unlock <em>The Office</em>
+              Subscribe or pay <em>once</em>
             </h1>
             <p className="section__copy">
-              Create a free account, then unlock everything with a one-time
-              Office purchase on this site — or BodiesByBecca membership in the
-              app (App Store / Play) after challenges end in October.
+              Create a free account, then unlock The Office with a monthly or
+              yearly subscription — or a one-time purchase. Same portal access
+              either way.
             </p>
           </Reveal>
         </div>
@@ -65,84 +90,95 @@ export function PricingPage() {
 
       <section className="section pricing">
         <div className="section__inner pricing__grid">
-          <Reveal className="price-card price-card--featured">
-            <p className="price-card__badge">Website · one-time</p>
-            <h2>The Office</h2>
+          <Reveal className="price-card">
+            <p className="price-card__badge">Subscription</p>
+            <h2>Monthly</h2>
             <p className="price-card__price">
-              <span>One-time</span>
-              {" "}via Stripe
+              <span>$49</span>/month
             </p>
             <ul>
-              <li>Full Office portal unlock</li>
-              <li>All courses, calculators & toolkit</li>
-              <li>Vault + community</li>
-              <li>Pay once on this website</li>
+              <li>Full Office access</li>
+              <li>Courses, tools, vault, community</li>
+              <li>Cancel anytime in Stripe billing</li>
+              <li>Renews automatically</li>
             </ul>
             {member ? (
               <Link className="btn btn--ink" to="/portal">
-                You&apos;re unlocked · open portal →
+                You&apos;re unlocked →
               </Link>
             ) : (
               <button
                 className="btn btn--primary"
                 type="button"
-                disabled={busy}
-                onClick={() => void buyOffice()}
+                disabled={busy !== null}
+                onClick={() => void buySub("monthly")}
               >
-                {busy
-                  ? "Opening…"
-                  : stripeReady
-                    ? "Buy The Office →"
-                    : "Unlock (demo) →"}
+                {busy === "monthly" ? "Opening…" : "Subscribe monthly →"}
+              </button>
+            )}
+          </Reveal>
+
+          <Reveal className="price-card price-card--featured">
+            <p className="price-card__badge">Best value</p>
+            <h2>Yearly</h2>
+            <p className="price-card__price">
+              <span>$397</span>/year
+            </p>
+            <ul>
+              <li>Everything in monthly</li>
+              <li>~2 months free vs monthly</li>
+              <li>Full Office access</li>
+              <li>Renews yearly</li>
+            </ul>
+            {member ? (
+              <Link className="btn btn--ink" to="/portal">
+                You&apos;re unlocked →
+              </Link>
+            ) : (
+              <button
+                className="btn btn--primary"
+                type="button"
+                disabled={busy !== null}
+                onClick={() => void buySub("annual")}
+              >
+                {busy === "annual" ? "Opening…" : "Subscribe yearly →"}
               </button>
             )}
           </Reveal>
 
           <Reveal className="price-card">
-            <p className="price-card__badge">App · recurring</p>
-            <h2>BodiesByBecca</h2>
+            <p className="price-card__badge">One-time</p>
+            <h2>Pay once</h2>
             <p className="price-card__price">
-              <span>In-app</span>
-              {" "}membership
+              <span>$197</span>
             </p>
             <ul>
-              <li>BodiesByBecca membership</li>
-              <li>Billed via App Store or Play Store</li>
-              <li>After challenges end (October)</li>
-              <li>Cancel in your device subscriptions</li>
+              <li>Full Office unlock</li>
+              <li>No recurring charge</li>
+              <li>Same courses & tools</li>
+              <li>One payment on this site</li>
             </ul>
-            <div className="price-card__stores">
-              <a
+            {member ? (
+              <Link className="btn btn--ink" to="/portal">
+                You&apos;re unlocked →
+              </Link>
+            ) : (
+              <button
                 className="btn btn--primary"
-                href={appStoreUrl()}
-                target="_blank"
-                rel="noreferrer"
+                type="button"
+                disabled={busy !== null}
+                onClick={() => void buyOneTime()}
               >
-                App Store →
-              </a>
-              <a
-                className="btn btn--ink"
-                href={playStoreUrl()}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Play Store →
-              </a>
-            </div>
+                {busy === "office" ? "Opening…" : "Buy once →"}
+              </button>
+            )}
           </Reveal>
         </div>
 
         {message && <p className="form-status">{message}</p>}
         <p className="pricing__note">
-          Programs like <Link to="/programs">HOTMESS</Link> are sold separately
-          on the site.
-          {!stripeReady && (
-            <>
-              {" "}
-              Demo mode: Office unlock works on this device until Stripe price
-              IDs are set on Netlify.
-            </>
-          )}
+          BodiesByBecca app membership (App Store / Play) stays available after
+          October challenges — this page is website billing for The Office.
         </p>
       </section>
     </main>

@@ -1,5 +1,4 @@
 import type { PlanId } from "../data/plans";
-import { hasStripe } from "./demo";
 
 /** Demo-only portal unlock. */
 export async function activateMembershipDemo(
@@ -24,28 +23,12 @@ async function postCheckout(payload: Record<string, unknown>) {
   window.location.assign(data.url);
 }
 
-/**
- * One-time The Office unlock via Stripe Checkout.
- * Tries the Netlify function first (publishable key not required for redirect Checkout).
- * Falls back to demo unlock only when Stripe isn't configured (503).
- */
-export async function startOfficeCheckout(email?: string) {
+async function tryCheckout(payload: Record<string, unknown>) {
   try {
-    await postCheckout({ kind: "office", productId: "office", email });
+    await postCheckout(payload);
     return { demo: false as const };
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    if (
-      !hasStripe() &&
-      (message.includes("not configured") || message.includes("503") || message.includes("Failed to fetch"))
-    ) {
-      return { demo: true as const };
-    }
-    // If function is up but misconfigured, surface the error
-    if (message.includes("not configured") || message.includes("Missing Stripe price")) {
-      throw error;
-    }
-    // Local static preview without functions → demo
     if (message.includes("Failed to fetch") || message.includes("404")) {
       return { demo: true as const };
     }
@@ -53,31 +36,38 @@ export async function startOfficeCheckout(email?: string) {
   }
 }
 
-/** One-time program checkout (HOTMESS etc.) on the website. */
+/** One-time The Office unlock. */
+export async function startOfficeCheckout(email?: string) {
+  return tryCheckout({ kind: "office", productId: "office", email });
+}
+
+/** Recurring Office membership (monthly | annual). */
+export async function startSubscriptionCheckout(
+  plan: PlanId,
+  email?: string,
+) {
+  return tryCheckout({
+    kind: "subscription",
+    productId: plan,
+    plan,
+    email,
+  });
+}
+
 export async function startProgramCheckout(
   programId: string,
   email?: string,
 ) {
-  try {
-    await postCheckout({
-      kind: "program",
-      productId: programId,
-      programId,
-      email,
-    });
-    return { demo: false as const };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message.includes("Failed to fetch") || message.includes("404")) {
-      return { demo: true as const };
-    }
-    throw error;
-  }
+  return tryCheckout({
+    kind: "program",
+    productId: programId,
+    programId,
+    email,
+  });
 }
 
 export async function startCheckout(plan: PlanId, email: string) {
-  void plan;
-  return startOfficeCheckout(email);
+  return startSubscriptionCheckout(plan, email);
 }
 
 export async function openBillingPortal(email: string) {

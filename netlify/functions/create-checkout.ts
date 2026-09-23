@@ -8,8 +8,32 @@ const siteUrl =
 
 const PRICE_ENV: Record<string, string | undefined> = {
   office: process.env.STRIPE_PRICE_OFFICE,
+  monthly: process.env.STRIPE_PRICE_MONTHLY,
+  annual: process.env.STRIPE_PRICE_ANNUAL,
   hotmess: process.env.STRIPE_PRICE_HOTMESS,
 };
+
+type CheckoutKind = "office" | "monthly" | "annual" | "hotmess";
+
+function resolveKind(body: {
+  kind?: string;
+  productId?: string;
+  programId?: string;
+  plan?: string;
+}): CheckoutKind | null {
+  const raw = (
+    body.productId ||
+    body.programId ||
+    body.plan ||
+    body.kind ||
+    ""
+  ).toLowerCase();
+  if (raw === "office" || raw === "onetime" || raw === "one-time") return "office";
+  if (raw === "monthly" || raw === "month") return "monthly";
+  if (raw === "annual" || raw === "yearly" || raw === "year") return "annual";
+  if (raw === "hotmess") return "hotmess";
+  return null;
+}
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -28,27 +52,23 @@ export const handler: Handler = async (event) => {
       kind?: string;
       productId?: string;
       programId?: string;
+      plan?: string;
       email?: string;
     };
 
-    const productId = (
-      body.productId ||
-      body.programId ||
-      (body.kind === "office" ? "office" : "")
-    ).toLowerCase();
-
-    if (productId !== "office" && productId !== "hotmess") {
+    const kind = resolveKind(body);
+    if (!kind) {
       return {
         statusCode: 400,
-        body: 'Use productId "office" (one-time Office access) or "hotmess".',
+        body: 'Use productId "office" (one-time), "monthly", "annual", or "hotmess".',
       };
     }
 
-    const priceId = PRICE_ENV[productId];
+    const priceId = PRICE_ENV[kind];
     if (!priceId) {
       return {
         statusCode: 500,
-        body: `Missing Stripe price. Set STRIPE_PRICE_${productId.toUpperCase()} on Netlify (run npm run stripe:setup locally to create products).`,
+        body: `Missing Stripe price. Set STRIPE_PRICE_${kind.toUpperCase()} on Netlify.`,
       };
     }
 
@@ -63,28 +83,32 @@ export const handler: Handler = async (event) => {
       if (existing.data[0]) customerId = existing.data[0].id;
     }
 
-    const successPath =
-      productId === "office"
-        ? "/portal?checkout=success"
-        : `/programs?checkout=success&program=${productId}`;
+    const isSubscription = kind === "monthly" || kind === "annual";
+    const unlocksOffice = kind === "office" || isSubscription;
+    const planMeta =
+      kind === "annual" ? "annual" : kind === "monthly" || kind === "office" ? "monthly" : "";
 
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
+      mode: isSubscription ? "subscription" : "payment",
       ...(customerId
         ? { customer: customerId }
         : { customer_email: body.email }),
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${siteUrl}${successPath}`,
-      cancel_url:
-        productId === "office"
-          ? `${siteUrl}/pricing?checkout=cancel`
-          : `${siteUrl}/programs?checkout=cancel`,
+      success_url: unlocksOffice
+        ? `${siteUrl}/portal?checkout=success`
+        : `${siteUrl}/programs?checkout=success&program=${kind}`,
+      cancel_url: unlocksOffice
+        ? `${siteUrl}/pricing?checkout=cancel`
+        : `${siteUrl}/programs?checkout=cancel`,
       allow_promotion_codes: true,
       metadata: {
-        kind: productId === "office" ? "office" : "program",
-        productId,
-        plan: productId === "office" ? "monthly" : "",
+        kind: unlocksOffice ? (isSubscription ? "subscription" : "office") : "program",
+        productId: kind,
+        plan: planMeta,
       },
+      ...(isSubscription
+        ? { subscription_data: { metadata: { plan: planMeta } } }
+        : {}),
     });
 
     return {
