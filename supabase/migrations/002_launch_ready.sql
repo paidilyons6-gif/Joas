@@ -33,7 +33,7 @@ create table if not exists public.course_tracks (
   id text primary key,
   title text not null,
   blurb text not null default '',
-  badge text not null default 'Village course',
+  badge text not null default 'Office course',
   members_only boolean not null default true,
   published boolean not null default false,
   sort_order int not null default 0,
@@ -107,7 +107,7 @@ create table if not exists public.site_settings (
 );
 
 insert into public.site_settings (id, nav)
-values ('main', '{"home":true,"courses":true,"vault":true,"calculators":true,"toolkit":true,"village":true,"studio":true,"account":true}'::jsonb)
+values ('main', '{"home":true,"courses":true,"vault":true,"calculators":true,"toolkit":true,"office":true,"studio":true,"account":true}'::jsonb)
 on conflict (id) do nothing;
 
 alter table public.site_settings enable row level security;
@@ -145,7 +145,7 @@ create policy "Users manage own drafts"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
--- Village community feed
+-- Office community feed (table name retained for compatibility)
 create table if not exists public.village_posts (
   id uuid primary key default gen_random_uuid(),
   author_id uuid not null references auth.users (id) on delete cascade,

@@ -19,7 +19,7 @@ export type NavTopicId =
   | "vault"
   | "calculators"
   | "toolkit"
-  | "village"
+  | "office"
   | "studio"
   | "account";
 
@@ -34,7 +34,7 @@ export const DEFAULT_NAV: NavSettings = {
   vault: true,
   calculators: true,
   toolkit: true,
-  village: true,
+  office: true,
   studio: true,
   account: true,
 };
@@ -48,7 +48,7 @@ export const NAV_META: {
   { id: "home", label: "Home", group: "Learn" },
   { id: "courses", label: "Courses", group: "Learn" },
   { id: "vault", label: "Vault", group: "Learn" },
-  { id: "village", label: "Village", group: "Learn" },
+  { id: "office", label: "Office", group: "Learn" },
   { id: "calculators", label: "Calculators", group: "Build" },
   { id: "toolkit", label: "Toolkit", group: "Build" },
   { id: "studio", label: "Studio", group: "Create", adminOnly: true },
@@ -73,7 +73,13 @@ function readNav(): NavSettings {
   try {
     const raw = localStorage.getItem(NAV_KEY);
     if (!raw) return { ...DEFAULT_NAV };
-    return { ...DEFAULT_NAV, ...(JSON.parse(raw) as NavSettings) };
+    const parsed = JSON.parse(raw) as Record<string, boolean>;
+    const { village, ...rest } = parsed;
+    const merged = { ...DEFAULT_NAV, ...rest } as NavSettings;
+    if (typeof village === "boolean" && rest.office === undefined) {
+      merged.office = village;
+    }
+    return merged;
   } catch {
     return { ...DEFAULT_NAV };
   }
@@ -138,7 +144,7 @@ function toCourseTrack(t: StudioTrack): CourseTrack {
     id: t.id,
     title: t.title,
     blurb: t.blurb,
-    badge: t.badge || (t.published ? "Village course" : "Draft"),
+    badge: t.badge || (t.published ? "Office course" : "Draft"),
     membersOnly: t.membersOnly,
     lessons: t.lessons,
   };
@@ -243,7 +249,7 @@ export function emptyTrack(): StudioTrack {
   return {
     id,
     title: "Untitled course",
-    blurb: "Describe what members will learn in this village course.",
+    blurb: "Describe what members will learn in this office course.",
     badge: "Draft",
     membersOnly: true,
     published: false,

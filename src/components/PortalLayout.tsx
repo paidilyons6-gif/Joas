@@ -16,7 +16,7 @@ const PATHS: Record<NavTopicId, string> = {
   home: "/portal",
   courses: "/portal/courses",
   vault: "/portal/resources",
-  village: "/portal/village",
+  office: "/portal/office",
   calculators: "/portal/calculators",
   toolkit: "/portal/tools",
   studio: "/portal/studio",
@@ -58,7 +58,7 @@ export function PortalLayout() {
     <>
       <div className="portal__brand">
         <LogoLink />
-        <p className="portal__tag">Learning village</p>
+        <p className="portal__tag">The office</p>
       </div>
       <div className="portal__user">
         <p className="portal__hello">Hey {user?.name?.split(" ")[0] || "you"} ♡</p>

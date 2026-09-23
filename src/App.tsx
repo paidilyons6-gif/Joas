@@ -20,7 +20,7 @@ import { CalculatorPage } from "./pages/portal/CalculatorPage";
 import { ResourcesPage } from "./pages/portal/ResourcesPage";
 import { AccountPage } from "./pages/portal/AccountPage";
 import { StudioPage, StudioEditorPage } from "./pages/portal/StudioPage";
-import { VillagePage } from "./pages/portal/VillagePage";
+import { OfficePage } from "./pages/portal/OfficePage";
 import type { ReactNode } from "react";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -63,7 +63,8 @@ export default function App() {
               <Route path="calculators" element={<CalculatorsPage />} />
               <Route path="calculators/:calcId" element={<CalculatorPage />} />
               <Route path="resources" element={<ResourcesPage />} />
-              <Route path="village" element={<VillagePage />} />
+              <Route path="office" element={<OfficePage />} />
+              <Route path="village" element={<Navigate to="/portal/office" replace />} />
               <Route path="account" element={<AccountPage />} />
               <Route path="studio" element={<StudioPage />} />
               <Route path="studio/:trackId" element={<StudioEditorPage />} />

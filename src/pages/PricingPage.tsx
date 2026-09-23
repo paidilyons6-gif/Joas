@@ -50,7 +50,7 @@ export function PricingPage() {
             </h1>
             <p className="section__copy">
               Free to create an account. Subscribe when you&apos;re ready to
-              unlock courses, calculators, toolkit, vault, and the village feed.
+              unlock courses, calculators, toolkit, vault, and the office feed.
             </p>
           </Reveal>
         </div>

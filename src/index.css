@@ -2081,8 +2081,8 @@ a.module-card:hover {
   }
 }
 
-/* ——— Village feed ——— */
-.village-composer {
+/* ——— Office feed ——— */
+.office-composer {
   display: grid;
   gap: 0.85rem;
   margin: 1.25rem 0 1.75rem;
@@ -2091,12 +2091,12 @@ a.module-card:hover {
   border: 1.5px solid rgba(26, 26, 26, 0.08);
 }
 
-.village-feed {
+.office-feed {
   display: grid;
   gap: 0.85rem;
 }
 
-.village-post {
+.office-post {
   padding: 1.15rem 1.25rem;
   background: var(--white);
   border: 1.5px solid rgba(26, 26, 26, 0.08);
@@ -2104,7 +2104,7 @@ a.module-card:hover {
   gap: 0.65rem;
 }
 
-.village-post__meta {
+.office-post__meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
@@ -2112,17 +2112,17 @@ a.module-card:hover {
   justify-content: space-between;
 }
 
-.village-post__meta strong {
+.office-post__meta strong {
   font-family: var(--font-display);
   font-weight: 800;
 }
 
-.village-post__meta time {
+.office-post__meta time {
   font-size: 0.82rem;
   color: var(--ink-muted);
 }
 
-.village-post p {
+.office-post p {
   white-space: pre-wrap;
   color: var(--ink);
 }

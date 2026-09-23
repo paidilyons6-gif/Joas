@@ -10,7 +10,7 @@ import {
 } from "../../lib/villageRepo";
 import { isMember } from "../../lib/access";
 
-export function VillagePage() {
+export function OfficePage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/sign-in" replace />;
 
@@ -57,9 +57,9 @@ export function VillagePage() {
 
   return (
     <div className="portal-page">
-      <p className="eyebrow">The village</p>
+      <p className="eyebrow">The office</p>
       <h1>
-        Like the village, but for <em>business</em>
+        Like the office, but for <em>business</em>
       </h1>
       <p className="portal-lede">
         Share wins, ask questions, and get unstuck with other mom founders.
@@ -69,7 +69,7 @@ export function VillagePage() {
       {!member && (
         <div className="upgrade-banner">
           <div>
-            <h2>Full village energy unlocks with membership</h2>
+            <h2>Full office energy unlocks with membership</h2>
             <p>You can still read the vibe — upgrade to post and go deeper.</p>
           </div>
           <Link className="btn btn--primary" to="/pricing">
@@ -79,9 +79,9 @@ export function VillagePage() {
       )}
 
       {member && (
-        <form className="village-composer" onSubmit={(e) => void onSubmit(e)}>
+        <form className="office-composer" onSubmit={(e) => void onSubmit(e)}>
           <label className="calc-field">
-            <span>Share with the village</span>
+            <span>Share with the office</span>
             <textarea
               rows={3}
               value={body}
@@ -93,12 +93,12 @@ export function VillagePage() {
           </label>
           {error && <p className="form-error">{error}</p>}
           <button className="btn btn--primary" type="submit" disabled={busy}>
-            {busy ? "Posting…" : "Post to village →"}
+            {busy ? "Posting…" : "Post to the office →"}
           </button>
         </form>
       )}
 
-      <div className="village-feed">
+      <div className="office-feed">
         {posts.length === 0 ? (
           <div className="studio-empty">
             <h3>No posts yet</h3>
@@ -106,8 +106,8 @@ export function VillagePage() {
           </div>
         ) : (
           posts.map((post) => (
-            <article key={post.id} className="village-post">
-              <div className="village-post__meta">
+            <article key={post.id} className="office-post">
+              <div className="office-post__meta">
                 <strong>{post.authorName}</strong>
                 <time dateTime={post.createdAt}>
                   {new Date(post.createdAt).toLocaleString()}

@@ -28,7 +28,7 @@ export function HomePage() {
           <h1>
             <Logo variant="hero" />
           </h1>
-          <p className="hero__headline">Like the village, but for business.</p>
+          <p className="hero__headline">Like the office, but for business.</p>
           <p className="hero__lede">
             The support system for women building companies — training,
             community, and a portal that helps you ship, not just dream.
@@ -51,10 +51,10 @@ export function HomePage() {
             <h2 className="manifesto__title" id="manifesto-title">
               Build the damn business.
             </h2>
-            <p className="manifesto__accent">Like the village, but for business ♡</p>
+            <p className="manifesto__accent">Like the office, but for business ♡</p>
             <p className="section__copy">
               Practical tools. Real conversations. Big results. Business by
-              Becca is your village for offers, launches, and growth — so you
+              Becca is your office for offers, launches, and growth — so you
               don&apos;t have to figure it out alone.
             </p>
             <ul className="checklist">
@@ -78,7 +78,7 @@ export function HomePage() {
             </h2>
             <p className="section__copy">
               Sign up free, subscribe when you&apos;re ready, and train inside
-              your private portal — your business village for education,
+              your private portal — your business office for education,
               community, resources, and freedom.
             </p>
           </Reveal>
@@ -109,7 +109,7 @@ export function HomePage() {
         <div className="band__veil" aria-hidden="true" />
         <Reveal className="band__content">
           <h2 id="band-title">
-            Your village for <em>bigger</em> plans.
+            Your office for <em>bigger</em> plans.
           </h2>
           <p>
             Create your account, join membership, and open a portal built for
@@ -127,7 +127,7 @@ export function HomePage() {
             </h2>
             <p className="section__copy">
               Elite courses, financial calculators, and startup worksheets —
-              your village for building and getting paid.
+              your office for building and getting paid.
             </p>
           </Reveal>
           <div className="offer__rows">

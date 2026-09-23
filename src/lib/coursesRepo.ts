@@ -213,7 +213,13 @@ export async function fetchNavSettings(): Promise<NavSettings> {
     .eq("id", "main")
     .maybeSingle();
   if (!data?.nav) return studioStore.getNavSettings();
-  return { ...DEFAULT_NAV, ...(data.nav as NavSettings) };
+  const raw = data.nav as Record<string, boolean>;
+  const { village, ...rest } = raw;
+  const merged = { ...DEFAULT_NAV, ...rest } as NavSettings;
+  if (typeof village === "boolean" && rest.office === undefined) {
+    merged.office = village;
+  }
+  return merged;
 }
 
 export async function saveNavSettingsRemote(nav: NavSettings) {

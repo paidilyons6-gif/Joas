@@ -15,7 +15,7 @@ export function PrivacyPage() {
             details are processed by Stripe — we do not store full card numbers.
           </p>
           <p>
-            We use your data to deliver the Learning Village portal, improve the
+            We use your data to deliver The Office portal, improve the
             product, and communicate about your membership. We do not sell your
             personal information.
           </p>
@@ -52,7 +52,7 @@ export function TermsPage() {
             redistribute course materials.
           </p>
           <p>
-            Village posts must stay respectful. We may remove content that is
+            Office posts must stay respectful. We may remove content that is
             abusive, spammy, or illegal. These terms may update as the product
             grows.
           </p>

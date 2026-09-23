@@ -1,8 +1,8 @@
 # Business by Becca
 
-**Like the village, but for business.**
+**Like the office, but for business.**
 
-Marketing site + member portal — courses, calculators, toolkit, vault, village feed, Studio CMS, signup/login, and Stripe subscriptions.
+Marketing site + member portal — courses, calculators, toolkit, vault, office feed, Studio CMS, signup/login, and Stripe subscriptions.
 
 ## What’s included
 
@@ -11,7 +11,7 @@ Marketing site + member portal — courses, calculators, toolkit, vault, village
 - **Calculators:** Pricing, break-even, revenue goal, runway, profit, offer stack
 - **Toolkit:** Offer builder, ideal client, launch planner, CEO scorecard
 - **Vault:** Copyable scripts and templates
-- **Village:** Member community feed
+- **The Office:** Member community feed
 - **Access:** Free preview + membership (`$49/mo` or `$397/yr`)
 - **Modes:** Demo (localStorage) works with zero keys; live uses Supabase + Stripe
 
@@ -33,7 +33,7 @@ npm run dev
 1. Create an account (demo accepts any password)
 2. Open `/portal` — free lessons + Pricing calculator + CEO scorecard
 3. **Pricing** → pick a plan (demo unlocks instantly; live Checkout when Stripe is set)
-4. Explore Courses, Calculators, Toolkit, Vault, Village
+4. Explore Courses, Calculators, Toolkit, Vault, Office
 5. Admin email opens **Studio** to edit programs and nav topics
 
 ## Supabase migrations
@@ -41,7 +41,7 @@ npm run dev
 Run in order in the SQL editor:
 
 1. `supabase/migrations/001_profiles.sql`
-2. `supabase/migrations/002_launch_ready.sql` — courses CMS, drafts, village, admin flag, plan protection
+2. `supabase/migrations/002_launch_ready.sql` — courses CMS, drafts, office feed, admin flag, plan protection
 
 Project: **Businessbybecca** (`utnsdavbxbnacseqerjr`)
 

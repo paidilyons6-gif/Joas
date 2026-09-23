@@ -71,7 +71,7 @@ export function PortalHome() {
         <div>
           <p className="eyebrow">Portal home</p>
           <h1>
-            Your business <em>village</em>
+            Your business <em>office</em>
           </h1>
           <p className="portal-lede">
             Courses, calculators, toolkit, vault, and community — ready to build.
@@ -117,7 +117,7 @@ export function PortalHome() {
           <p className="stat__label">Access</p>
           <p className="stat__value">{member ? "Member" : "Free"}</p>
           <p className="stat__meta">
-            {member ? "Full village unlocked" : "Upgrade for Money + Launch tracks"}
+            {member ? "Full office unlocked" : "Upgrade for Money + Launch tracks"}
           </p>
         </div>
         <div className="stat">
