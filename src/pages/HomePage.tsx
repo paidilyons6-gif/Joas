@@ -31,7 +31,7 @@ export function HomePage() {
       <section
         className="hero"
         id="top"
-        aria-label="Business by Becca"
+        aria-label="The Office — BusinessByBecca"
         style={{ ["--hero-image" as string]: `url(${HERO_IMAGE})` }}
       >
         <div className="hero__media" aria-hidden="true" />

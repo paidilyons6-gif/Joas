@@ -14,10 +14,8 @@ export function Logo({
 
   return (
     <span className={className}>
-      <span className="logo__business">Business</span>
-      <span className="logo__by">
-        by Becca <span aria-hidden="true">♡</span>
-      </span>
+      <span className="logo__office">The Office</span>
+      <span className="logo__business">BusinessByBecca</span>
     </span>
   );
 }
@@ -30,7 +28,7 @@ export function LogoLink({
   to?: string;
 }) {
   return (
-    <Link to={to} aria-label="Business by Becca home">
+    <Link to={to} aria-label="The Office — BusinessByBecca home">
       <Logo variant={variant} />
     </Link>
   );

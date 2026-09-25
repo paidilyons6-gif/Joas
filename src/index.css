@@ -83,42 +83,43 @@ button {
   line-height: 1;
 }
 
-.logo__business {
+.logo__office {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.05rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink);
 }
 
-.logo__by {
-  font-family: var(--font-accent);
-  font-style: italic;
+.logo__business {
+  font-family: var(--font-body);
   font-weight: 500;
-  font-size: 1.15rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
   color: var(--signature);
-  margin-top: -0.05rem;
+  margin-top: 0.2rem;
 }
 
-.logo__by span {
-  font-style: normal;
-}
-
-.logo--light .logo__business {
+.logo--light .logo__office {
   color: var(--white);
 }
 
-.logo--hero .logo__business {
+.logo--light .logo__business {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.logo--hero .logo__office {
   font-size: clamp(2.6rem, 10vw, 6.75rem);
   letter-spacing: -0.02em;
   color: var(--white);
 }
 
-.logo--hero .logo__by {
-  font-size: clamp(1.85rem, 5.5vw, 3.6rem);
+.logo--hero .logo__business {
+  font-size: clamp(0.95rem, 2.8vw, 1.35rem);
+  letter-spacing: 0.08em;
   color: var(--soft);
-  margin-top: 0.15rem;
+  margin-top: 0.35rem;
 }
 
 /* ——— Nav ——— */
@@ -926,11 +927,18 @@ button {
   width: 100%;
 }
 
-.pricing-faq {
-  margin: 3rem auto 0;
-  max-width: 40rem;
-  padding-top: 2rem;
-  border-top: 1px solid rgba(26, 26, 26, 0.1);
+.studio-price-row {
+  display: grid;
+  gap: 0.75rem;
+  align-items: end;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(26, 26, 26, 0.08);
+}
+
+@media (min-width: 640px) {
+  .studio-price-row {
+    grid-template-columns: 1fr auto;
+  }
 }
 
 .pricing-faq h2 {
@@ -1072,8 +1080,12 @@ button {
   gap: 0.75rem;
 }
 
-.portal__side .logo__business {
+.portal__side .logo__office {
   color: var(--white);
+}
+
+.portal__side .logo__business {
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .portal__hello {

@@ -25,28 +25,108 @@ import {
   DEFAULT_SITE_COPY,
   type SiteCopy,
 } from "../../lib/siteCopy";
+import {
+  fetchLivePricing,
+  setLivePrice,
+  type LivePricing,
+} from "../../lib/livePricing";
+import { PRICING_OFFER_META, type PricingOfferKey } from "../../lib/sitePricing";
+
+const PRICE_SECRET_KEY = "bbb_studio_price_secret";
 
 export function StudioPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  if (!user) return <Navigate to="/sign-in" replace />;
-  if (!isAdminEmail(user.email)) return <Navigate to="/portal" replace />;
-
   const [programs, setPrograms] = useState(listProgramsForStudio());
   const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
   const [navSaved, setNavSaved] = useState("");
   const [copy, setCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY);
   const [copySaved, setCopySaved] = useState("");
+  const [live, setLive] = useState<LivePricing | null>(null);
+  const [priceDrafts, setPriceDrafts] = useState<Record<PricingOfferKey, string>>({
+    monthly: "49",
+    annual: "397",
+    lifetime: "597",
+    hotmess: "97",
+  });
+  const [priceSecret, setPriceSecret] = useState(() => {
+    try {
+      return sessionStorage.getItem(PRICE_SECRET_KEY) || "";
+    } catch {
+      return "";
+    }
+  });
+  const [priceBusy, setPriceBusy] = useState<string | null>(null);
+  const [priceMsg, setPriceMsg] = useState("");
+
+  const isAdmin = !!user && isAdminEmail(user.email);
 
   function refresh() {
     setPrograms(listProgramsForStudio());
     setNav(studioStore.getNavSettings());
   }
 
+  function refreshLivePrices() {
+    void fetchLivePricing().then((offers) => {
+      setLive(offers);
+      if (!offers) return;
+      setPriceDrafts({
+        monthly: String((offers.monthly?.amountCents || 4900) / 100),
+        annual: String((offers.annual?.amountCents || 39700) / 100),
+        lifetime: String((offers.lifetime?.amountCents || 59700) / 100),
+        hotmess: String((offers.hotmess?.amountCents || 9700) / 100),
+      });
+    });
+  }
+
   useEffect(() => {
+    if (!isAdmin) return;
     refresh();
     void fetchSiteCopy().then(setCopy);
-  }, []);
+    refreshLivePrices();
+  }, [isAdmin]);
+
+  if (!user) return <Navigate to="/sign-in" replace />;
+  if (!isAdmin) return <Navigate to="/portal" replace />;
+
+  const adminEmail = user.email;
+
+  async function savePrice(kind: PricingOfferKey) {
+    setPriceMsg("");
+    const amount = Number(priceDrafts[kind]);
+    if (!Number.isFinite(amount) || amount < 1) {
+      setPriceMsg("Enter a valid dollar amount.");
+      return;
+    }
+    if (!priceSecret.trim()) {
+      setPriceMsg("Enter your Studio pricing password first.");
+      return;
+    }
+    setPriceBusy(kind);
+    try {
+      try {
+        sessionStorage.setItem(PRICE_SECRET_KEY, priceSecret.trim());
+      } catch {
+        /* ignore */
+      }
+      const result = await setLivePrice({
+        kind,
+        amountDollars: amount,
+        email: adminEmail,
+        secret: priceSecret.trim(),
+      });
+      setPriceMsg(
+        result.unchanged
+          ? `${PRICING_OFFER_META[kind].title} was already ${result.priceLabel}.`
+          : `${PRICING_OFFER_META[kind].title} is now ${result.priceLabel} — live on the site ♡`,
+      );
+      refreshLivePrices();
+    } catch (error) {
+      setPriceMsg(error instanceof Error ? error.message : "Price update failed");
+    } finally {
+      setPriceBusy(null);
+    }
+  }
 
   function createCourse() {
     const track = emptyTrack();
@@ -107,9 +187,82 @@ export function StudioPage() {
         Edit programs &amp; <em>writing</em>
       </h1>
       <p className="portal-lede">
-        Change homepage copy, courses, lessons, and which menu topics members
-        see — signed in as admin ({user.email}).
+        Change homepage copy, prices, courses, lessons, and which menu topics
+        members see — signed in as admin ({user.email}).
       </p>
+
+      <section className="studio-nav-settings">
+        <h2 className="portal-subhead">Prices (subscriptions &amp; programs)</h2>
+        <p className="portal-lede">
+          Change the dollar amount below and save — Stripe and the public
+          pricing page update together. You need the Studio pricing password
+          once per browser session.
+        </p>
+        <div className="tool-form">
+          <label className="calc-field">
+            <span>Studio pricing password</span>
+            <input
+              type="password"
+              autoComplete="off"
+              value={priceSecret}
+              onChange={(e) => setPriceSecret(e.target.value)}
+              placeholder="Ask Padraig if you don’t have it yet"
+            />
+          </label>
+          {(
+            ["monthly", "annual", "lifetime", "hotmess"] as PricingOfferKey[]
+          ).map((key) => {
+            const meta = PRICING_OFFER_META[key];
+            const liveKey = key;
+            const current =
+              live?.[liveKey]?.priceLabel ||
+              (key === "monthly"
+                ? "$49"
+                : key === "annual"
+                  ? "$397"
+                  : key === "lifetime"
+                    ? "$597"
+                    : "$97");
+            return (
+              <div key={key} className="studio-price-row">
+                <label className="calc-field">
+                  <span>
+                    {meta.title}{" "}
+                    <small style={{ color: "var(--ink-muted)" }}>
+                      · {meta.kind} · live {current}
+                    </small>
+                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={priceDrafts[key]}
+                    onChange={(e) =>
+                      setPriceDrafts((prev) => ({
+                        ...prev,
+                        [key]: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <button
+                  className="btn btn--ink"
+                  type="button"
+                  disabled={priceBusy !== null}
+                  onClick={() => void savePrice(key)}
+                >
+                  {priceBusy === key ? "Saving…" : "Save price →"}
+                </button>
+              </div>
+            );
+          })}
+          {priceMsg && <p className="form-status">{priceMsg}</p>}
+          <p className="portal-lede" style={{ marginTop: "0.5rem" }}>
+            Tip: existing subscribers keep their old rate until they change
+            plans. New checkouts use the new amount immediately.
+          </p>
+        </div>
+      </section>
 
       <section className="studio-nav-settings">
         <h2 className="portal-subhead">Homepage writing</h2>
@@ -266,15 +419,14 @@ export function StudioEditorPage() {
   const { trackId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  if (!user) return <Navigate to="/sign-in" replace />;
-  if (!isAdminEmail(user.email)) return <Navigate to="/portal" replace />;
-
   const existing = trackId ? studioStore.getTrack(trackId) : null;
   const [track, setTrack] = useState<StudioTrack | null>(existing);
   const [activeLesson, setActiveLesson] = useState(0);
   const [saved, setSaved] = useState("");
+  const isAdmin = !!user && isAdminEmail(user.email);
 
   useEffect(() => {
+    if (!isAdmin) return;
     if (!trackId) {
       navigate("/portal/studio");
       return;
@@ -289,8 +441,10 @@ export function StudioEditorPage() {
       }
     }
     setTrack(found);
-  }, [trackId, navigate]);
+  }, [trackId, navigate, isAdmin]);
 
+  if (!user) return <Navigate to="/sign-in" replace />;
+  if (!isAdmin) return <Navigate to="/portal" replace />;
   if (!track) return <div className="loading-screen">Loading program…</div>;
 
   const current = track;

@@ -3,12 +3,22 @@ import { PROGRAMS } from "../data/programs";
 import { useAuth } from "../lib/auth";
 import { startProgramCheckout } from "../lib/payments";
 import { Reveal } from "../components/Reveal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  fetchLivePricing,
+  hotmessDisplay,
+  type LivePricing,
+} from "../lib/livePricing";
 
 export function ProgramsPage() {
   const { user } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [live, setLive] = useState<LivePricing | null>(null);
+
+  useEffect(() => {
+    void fetchLivePricing().then(setLive);
+  }, []);
 
   async function buy(programId: string) {
     setMessage("");
@@ -20,7 +30,7 @@ export function ProgramsPage() {
       );
       if (result.demo) {
         setMessage(
-          "Demo mode: program checkout opens when Stripe + program price IDs are set. Membership stays in the Bodies by Becca app.",
+          "Demo mode: program checkout opens when Stripe + program price IDs are set.",
         );
       }
     } catch (error) {
@@ -29,6 +39,8 @@ export function ProgramsPage() {
       setBusy(null);
     }
   }
+
+  const hotmess = hotmessDisplay(live);
 
   return (
     <main className="page">
@@ -56,11 +68,13 @@ export function ProgramsPage() {
               )}
               <h2>{program.name}</h2>
               <p className="price-card__price">
-                <span>{program.priceLabel}</span>
+                <span>
+                  {program.id === "hotmess"
+                    ? hotmess.priceLabel
+                    : program.priceLabel}
+                </span>
               </p>
-              <p style={{ color: "var(--ink-muted)", marginBottom: "1rem" }}>
-                {program.blurb}
-              </p>
+              <p className="price-card__blurb">{program.blurb}</p>
               <ul>
                 {program.features.map((f) => (
                   <li key={f}>{f}</li>
@@ -79,8 +93,8 @@ export function ProgramsPage() {
         </div>
         {message && <p className="form-status">{message}</p>}
         <p className="pricing__note">
-          Looking for ongoing membership? That&apos;s{" "}
-          <Link to="/pricing">BodiesByBecca in the app</Link>.
+          Looking for Office membership? See{" "}
+          <Link to="/pricing">subscriptions &amp; lifetime</Link>.
         </p>
       </section>
     </main>

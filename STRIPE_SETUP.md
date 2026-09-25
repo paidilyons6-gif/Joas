@@ -1,8 +1,15 @@
 # Stripe setup (The Office + HOTMESS)
 
-I **cannot** read Netlify env vars from this agent or use secret keys from chat.
+## Changing prices (Becky / Studio)
 
-## Option A — Dashboard (fastest)
+1. Sign in as admin → **Portal → Studio**
+2. Open **Prices (subscriptions & programs)**
+3. Enter the Studio pricing password (from Padraig)
+4. Type the new dollar amount → **Save price**
+
+The site labels and Stripe checkout update together. No Netlify redeploy needed.
+
+## Initial product setup (one-time)
 
 1. Stripe → **Products** → **Add product** (or edit existing **The Office**)
 2. **The Office — prices** (same product, three prices)

@@ -1,19 +1,12 @@
 import type { Handler } from "@netlify/functions";
-import Stripe from "stripe";
+import {
+  getStripe,
+  resolvePriceId,
+  type CheckoutKind,
+} from "./_stripePrices";
 
-const stripeSecret =
-  process.env.STRIPE_SECRET_KEY || process.env.stripe_secret_key;
 const siteUrl =
   process.env.URL || process.env.DEPLOY_PRIME_URL || "http://localhost:8888";
-
-const PRICE_ENV: Record<string, string | undefined> = {
-  office: process.env.STRIPE_PRICE_OFFICE,
-  monthly: process.env.STRIPE_PRICE_MONTHLY,
-  annual: process.env.STRIPE_PRICE_ANNUAL,
-  hotmess: process.env.STRIPE_PRICE_HOTMESS,
-};
-
-type CheckoutKind = "office" | "monthly" | "annual" | "hotmess";
 
 function resolveKind(body: {
   kind?: string;
@@ -28,7 +21,8 @@ function resolveKind(body: {
     body.kind ||
     ""
   ).toLowerCase();
-  if (raw === "office" || raw === "onetime" || raw === "one-time") return "office";
+  if (raw === "office" || raw === "onetime" || raw === "one-time" || raw === "lifetime")
+    return "office";
   if (raw === "monthly" || raw === "month") return "monthly";
   if (raw === "annual" || raw === "yearly" || raw === "year") return "annual";
   if (raw === "hotmess") return "hotmess";
@@ -40,7 +34,8 @@ export const handler: Handler = async (event) => {
     return { statusCode: 405, body: "Method not allowed" };
   }
 
-  if (!stripeSecret) {
+  const stripe = getStripe();
+  if (!stripe) {
     return {
       statusCode: 503,
       body: "Stripe is not configured. Set STRIPE_SECRET_KEY on Netlify.",
@@ -60,19 +55,17 @@ export const handler: Handler = async (event) => {
     if (!kind) {
       return {
         statusCode: 400,
-        body: 'Use productId "office" (one-time), "monthly", "annual", or "hotmess".',
+        body: 'Use productId "office" (lifetime), "monthly", "annual", or "hotmess".',
       };
     }
 
-    const priceId = PRICE_ENV[kind];
+    const priceId = await resolvePriceId(stripe, kind);
     if (!priceId) {
       return {
         statusCode: 500,
-        body: `Missing Stripe price. Set STRIPE_PRICE_${kind.toUpperCase()} on Netlify.`,
+        body: `Missing Stripe price for ${kind}.`,
       };
     }
-
-    const stripe = new Stripe(stripeSecret);
 
     let customerId: string | undefined;
     if (body.email) {
@@ -85,7 +78,6 @@ export const handler: Handler = async (event) => {
 
     const isSubscription = kind === "monthly" || kind === "annual";
     const unlocksOffice = kind === "office" || isSubscription;
-    // Lifetime one-time maps to annual in profiles (permanent unlock flag).
     const planMeta =
       kind === "annual" || kind === "office"
         ? "annual"

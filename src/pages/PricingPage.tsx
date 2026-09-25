@@ -10,6 +10,7 @@ import { Reveal } from "../components/Reveal";
 import { isMember } from "../lib/access";
 import type { PlanId } from "../data/plans";
 import { OFFICE_OFFERS, type OfficeOfferId } from "../data/officeOffers";
+import { fetchLivePricing, officeDisplay, type LivePricing } from "../lib/livePricing";
 
 export function PricingPage() {
   const { user, activatePlan } = useAuth();
@@ -17,6 +18,7 @@ export function PricingPage() {
   const [params] = useSearchParams();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [live, setLive] = useState<LivePricing | null>(null);
   const member = isMember(user?.plan);
 
   useEffect(() => {
@@ -24,6 +26,10 @@ export function PricingPage() {
       setMessage("Checkout cancelled — no charge.");
     }
   }, [params]);
+
+  useEffect(() => {
+    void fetchLivePricing().then(setLive);
+  }, []);
 
   async function requireUser(planHint: PlanId | "office") {
     if (!user) {
@@ -127,6 +133,7 @@ export function PricingPage() {
         <div className="section__inner pricing__grid">
           {order.map((id) => {
             const offer = OFFICE_OFFERS[id];
+            const display = officeDisplay(id, live);
             return (
               <Reveal
                 key={id}
@@ -135,10 +142,10 @@ export function PricingPage() {
                 <p className="price-card__badge">{offer.badge}</p>
                 <h2>{offer.name}</h2>
                 <p className="price-card__price">
-                  <span>{offer.priceLabel}</span>
-                  {offer.priceSuffix}
+                  <span>{display.priceLabel}</span>
+                  {display.priceSuffix}
                 </p>
-                <p className="price-card__blurb">{offer.blurb}</p>
+                <p className="price-card__blurb">{display.blurb}</p>
                 <ul>
                   {offer.features.map((feature) => (
                     <li key={feature}>{feature}</li>
