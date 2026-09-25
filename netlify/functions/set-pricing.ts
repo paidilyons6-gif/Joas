@@ -17,7 +17,6 @@ function mapKind(raw: string): CheckoutKind | null {
   if (v === "lifetime" || v === "office" || v === "onetime") return "office";
   if (v === "monthly" || v === "month") return "monthly";
   if (v === "annual" || v === "yearly" || v === "year") return "annual";
-  if (v === "hotmess") return "hotmess";
   return null;
 }
 
@@ -60,7 +59,7 @@ export const handler: Handler = async (event) => {
     if (!kind) {
       return {
         statusCode: 400,
-        body: 'kind must be "monthly", "annual", "lifetime", or "hotmess".',
+        body: 'kind must be "monthly", "annual", or "lifetime".',
       };
     }
 

@@ -185,24 +185,6 @@ button {
   background: #e82078;
 }
 
-.demo-banner {
-  background: var(--energy);
-  color: var(--ink);
-  text-align: center;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 0.85rem;
-  padding: 0.55rem 1rem;
-}
-
-.nav--overlay + .demo-banner {
-  position: absolute;
-  top: 4.5rem;
-  left: 0;
-  right: 0;
-  z-index: 25;
-}
-
 /* ——— Hero ——— */
 .hero {
   position: relative;

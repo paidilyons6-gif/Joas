@@ -9,41 +9,19 @@ import {
 } from "../lib/studioProducts";
 import { hasProgram } from "../lib/access";
 
-const FALLBACK: StudioProduct[] = [
-  {
-    id: "hotmess",
-    slug: "hotmess",
-    name: "HOTMESS",
-    blurb:
-      "A Bodies by Becca program you buy on the site — unlock it and train inside The Office.",
-    badge: "Program",
-    features: [
-      "One-time or subscription (set in Studio)",
-      "Unlocks this program in your portal",
-      "Becky manages price & copy in Studio",
-    ],
-    amountCents: 9700,
-    priceLabel: "$97",
-    priceId: "",
-    productId: "",
-    lookupKey: "bbb_hotmess_onetime",
-    active: true,
-    interval: "one_time",
-  },
-];
-
 export function ProgramsPage() {
   const { user, grantProgram } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const [products, setProducts] = useState<StudioProduct[]>(FALLBACK);
+  const [products, setProducts] = useState<StudioProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void fetchStudioProducts().then((list) => {
-      if (list.length) setProducts(list.filter((p) => p.active));
-    });
+    void fetchStudioProducts()
+      .then((list) => setProducts(list.filter((p) => p.active)))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -61,10 +39,14 @@ export function ProgramsPage() {
             setMessage(`You’re in — ${program} is unlocked in your portal ♡`);
             navigate("/portal", { replace: true });
           } else {
-            setMessage("Payment received — sign in with the same email to open your program.");
+            setMessage(
+              "Payment received — sign in with the same email to open your program.",
+            );
           }
         } catch {
-          setMessage("Payment received. Refresh or sign in to see your program.");
+          setMessage(
+            "Payment received. Refresh or sign in to see your program.",
+          );
         }
       })();
     }
@@ -114,6 +96,12 @@ export function ProgramsPage() {
 
       <section className="section pricing">
         <div className="section__inner pricing__grid">
+          {loading && <p className="pricing__note">Loading programs…</p>}
+          {!loading && products.length === 0 && (
+            <p className="pricing__note">
+              No programs listed yet. Becky adds them in Studio.
+            </p>
+          )}
           {products.map((program) => {
             const owned = hasProgram(user?.programs, program.id);
             return (

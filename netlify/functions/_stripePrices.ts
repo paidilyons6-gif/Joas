@@ -1,20 +1,18 @@
 import Stripe from "stripe";
 
 export type OfficeKind = "office" | "monthly" | "annual";
-export type CheckoutKind = OfficeKind | "hotmess";
+export type CheckoutKind = OfficeKind;
 
 export const PRICE_LOOKUP: Record<CheckoutKind, string> = {
   office: "bbb_office_lifetime",
   monthly: "bbb_office_monthly",
   annual: "bbb_office_annual",
-  hotmess: "bbb_hotmess_onetime",
 };
 
 export const PRICE_ENV_KEYS: Record<CheckoutKind, string> = {
   office: "STRIPE_PRICE_OFFICE",
   monthly: "STRIPE_PRICE_MONTHLY",
   annual: "STRIPE_PRICE_ANNUAL",
-  hotmess: "STRIPE_PRICE_HOTMESS",
 };
 
 export type SellableProduct = {
@@ -55,7 +53,6 @@ export function slugify(input: string) {
 }
 
 export function programLookupKey(slug: string) {
-  if (slug === "hotmess") return "bbb_hotmess_onetime";
   return `bbb_program_${slug}`;
 }
 
@@ -185,12 +182,7 @@ export async function listSellableProducts(
       active: opts?.includeInactive ? undefined : true,
     });
     for (const product of batch.data) {
-      const role = product.metadata.bbb_role;
-      const isProgram =
-        role === "program" ||
-        product.metadata.bbb_slug === "hotmess" ||
-        product.metadata.lookup === "bbb_hotmess_onetime";
-      if (!isProgram) continue;
+      if (product.metadata.bbb_role !== "program") continue;
       if (!opts?.includeInactive && !product.active) continue;
       const price = await activePriceForProduct(stripe, product);
       if (!price) continue;
@@ -210,7 +202,7 @@ export async function findSellableBySlug(
   const normalized = slugify(slug);
   if (!normalized) return null;
 
-  // Prefer lookup key (fast path for HOTMESS + new programs)
+  // Prefer lookup key for Studio programs
   const lookup = programLookupKey(normalized);
   const byLookup = await stripe.prices.list({
     lookup_keys: [lookup],
@@ -220,46 +212,10 @@ export async function findSellableBySlug(
   if (byLookup.data[0]) {
     const price = byLookup.data[0];
     const product = await stripe.products.retrieve(String(price.product));
+    if (!product.active) return null;
     return toSellable(product, price);
   }
 
   const all = await listSellableProducts(stripe, { includeInactive: false });
   return all.find((p) => p.slug === normalized) || null;
-}
-
-export async function ensureHotmessTagged(stripe: Stripe) {
-  const priceId = await resolvePriceId(stripe, "hotmess");
-  if (!priceId) return;
-  const price = await stripe.prices.retrieve(priceId);
-  const product = await stripe.products.retrieve(String(price.product));
-  if (
-    product.metadata.bbb_role === "program" &&
-    product.metadata.bbb_slug === "hotmess"
-  ) {
-    return;
-  }
-  await stripe.products.update(product.id, {
-    metadata: {
-      ...product.metadata,
-      bbb: "true",
-      bbb_role: "program",
-      bbb_slug: "hotmess",
-      bbb_lookup: "bbb_hotmess_onetime",
-      bbb_badge: product.metadata.bbb_badge || "Program",
-      bbb_blurb:
-        product.metadata.bbb_blurb ||
-        product.description ||
-        "HOTMESS program — sold on the website.",
-      bbb_features:
-        product.metadata.bbb_features ||
-        serializeFeatures([
-          "Sold on the website",
-          "Separate from BodiesByBecca app membership",
-          "One-time Stripe checkout",
-        ]),
-    },
-  });
-  if (!product.default_price) {
-    await stripe.products.update(product.id, { default_price: price.id });
-  }
 }

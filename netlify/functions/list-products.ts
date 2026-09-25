@@ -1,9 +1,5 @@
 import type { Handler } from "@netlify/functions";
-import {
-  ensureHotmessTagged,
-  getStripe,
-  listSellableProducts,
-} from "./_stripePrices";
+import { getStripe, listSellableProducts } from "./_stripePrices";
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "GET") {
@@ -16,7 +12,6 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    await ensureHotmessTagged(stripe);
     const includeInactive =
       event.queryStringParameters?.all === "1" ||
       event.queryStringParameters?.all === "true";

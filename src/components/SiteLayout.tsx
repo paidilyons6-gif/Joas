@@ -3,7 +3,7 @@ import { LogoLink } from "./Logo";
 import { useAuth } from "../lib/auth";
 
 export function SiteLayout() {
-  const { user, mode } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
   const isHome = location.pathname === "/";
 
@@ -27,13 +27,6 @@ export function SiteLayout() {
           )}
         </nav>
       </header>
-
-      {mode === "demo" && (
-        <div className="demo-banner" role="status">
-          Demo mode — accounts work on this device. Buy a program to unlock
-          portal content; Becky manages products in Studio.
-        </div>
-      )}
 
       <Outlet />
 

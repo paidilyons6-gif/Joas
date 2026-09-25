@@ -57,8 +57,8 @@ export function PortalHome() {
           <div>
             <h2>Shop programs</h2>
             <p>
-              HOTMESS and anything Becky adds in Studio — pay once or subscribe,
-              then train here.
+              Programs Becky publishes in Studio — pay once or subscribe, then
+              train here.
             </p>
           </div>
           <Link className="btn btn--primary" to="/programs">

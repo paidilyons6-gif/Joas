@@ -349,7 +349,7 @@ export function StudioPage() {
               onChange={(e) =>
                 setProductDraft((prev) => ({ ...prev, name: e.target.value }))
               }
-              placeholder="e.g. HOTMESS"
+              placeholder="e.g. Launch Lab"
             />
           </label>
           <label className="calc-field">

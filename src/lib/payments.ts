@@ -41,21 +41,26 @@ export async function startProgramCheckout(
   });
 }
 
-/** @deprecated Office membership removed */
-export async function startOfficeCheckout(email?: string) {
-  void email;
-  return tryCheckout({ productId: "hotmess" });
+/** @deprecated */
+export async function startOfficeCheckout(_email?: string) {
+  void _email;
+  throw new Error("Office membership is retired. Buy a program on /programs.");
 }
 
 /** @deprecated */
-export async function startSubscriptionCheckout(plan: PlanId, email?: string) {
-  void plan;
-  return startProgramCheckout("hotmess", email);
+export async function startSubscriptionCheckout(
+  _plan: PlanId,
+  _email?: string,
+) {
+  void _plan;
+  void _email;
+  throw new Error("Office membership is retired. Buy a program on /programs.");
 }
 
 export async function startCheckout(plan: PlanId, email: string) {
   void plan;
-  return startProgramCheckout("hotmess", email);
+  void email;
+  throw new Error("Office membership is retired. Buy a program on /programs.");
 }
 
 export async function openBillingPortal(email: string) {

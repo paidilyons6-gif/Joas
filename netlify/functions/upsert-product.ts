@@ -1,6 +1,5 @@
 import type { Handler } from "@netlify/functions";
 import {
-  ensureHotmessTagged,
   formatDollars,
   getStripe,
   programLookupKey,
@@ -60,7 +59,6 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    await ensureHotmessTagged(stripe);
     const body = JSON.parse(event.body || "{}") as {
       email?: string;
       secret?: string;

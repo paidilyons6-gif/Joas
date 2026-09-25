@@ -1,7 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { getStripe, loadOfferSnapshot, type CheckoutKind } from "./_stripePrices";
 
-const KINDS: CheckoutKind[] = ["monthly", "annual", "office", "hotmess"];
+const KINDS: CheckoutKind[] = ["monthly", "annual", "office"];
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "GET") {

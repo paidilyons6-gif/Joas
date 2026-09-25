@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Creates Stripe products/prices for The Office (one-time + subscriptions) + HOTMESS.
+ * Creates Stripe products/prices for The Office (legacy) — programs are created in Studio.
  * Run locally with your key in .env (gitignored) — never paste keys into chat.
  *
  *   echo 'STRIPE_SECRET_KEY=sk_live_...' >> .env
@@ -101,32 +101,6 @@ async function ensurePrice(opts) {
   return { priceId: price.id, created: true };
 }
 
-async function ensureOneTimeProduct(opts) {
-  const { name, description, amountCents, lookupKey } = opts;
-  const existing = await findPriceByLookup(lookupKey);
-  if (existing) {
-    return {
-      productId: String(existing.product),
-      priceId: existing.id,
-      created: false,
-    };
-  }
-
-  const product = await stripe.products.create({
-    name,
-    description,
-    metadata: { bbb: "true", lookup: lookupKey },
-  });
-  const price = await stripe.prices.create({
-    product: product.id,
-    unit_amount: amountCents,
-    currency: "usd",
-    lookup_key: lookupKey,
-    metadata: { bbb: "true", lookup: lookupKey },
-  });
-  return { productId: product.id, priceId: price.id, created: true };
-}
-
 const officeProduct = await ensureOfficeProduct();
 
 const office = await ensurePrice({
@@ -149,13 +123,6 @@ const annual = await ensurePrice({
   recurring: { interval: "year" },
 });
 
-const hotmess = await ensureOneTimeProduct({
-  name: "HOTMESS",
-  description: "HOTMESS program — sold on the website.",
-  amountCents: 9700, // $97
-  lookupKey: "bbb_hotmess_onetime",
-});
-
 console.log(`
 Stripe products ready.
 
@@ -164,7 +131,6 @@ Add these to Netlify → Site configuration → Environment variables:
   STRIPE_PRICE_OFFICE=${office.priceId}
   STRIPE_PRICE_MONTHLY=${monthly.priceId}
   STRIPE_PRICE_ANNUAL=${annual.priceId}
-  STRIPE_PRICE_HOTMESS=${hotmess.priceId}
 
 Also ensure you already have:
   STRIPE_SECRET_KEY=(your secret key)
@@ -178,5 +144,6 @@ Then Trigger deploy (clear cache).
 Office lifetime: ${office.created ? "created" : "reused"}  ${office.priceId}
 Office monthly:  ${monthly.created ? "created" : "reused"}  ${monthly.priceId}
 Office yearly:   ${annual.created ? "created" : "reused"}  ${annual.priceId}
-HOTMESS:         ${hotmess.created ? "created" : "reused"} ${hotmess.priceId}
+
+Programs: create in Studio (Portal → Studio) — no setup script needed.
 `);

@@ -55,7 +55,7 @@ export const handler: Handler = async (event) => {
     if (!raw || raw === "program" || raw === "subscription") {
       return {
         statusCode: 400,
-        body: 'Send productId with the program slug (e.g. "hotmess").',
+        body: 'Send productId with the program slug (e.g. "launch-lab").',
       };
     }
 

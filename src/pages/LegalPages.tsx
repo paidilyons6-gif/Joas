@@ -11,19 +11,19 @@ export function PrivacyPage() {
         <div className="legal-copy">
           <p>
             Business by Becca collects the account information you provide
-            (name, email) to run memberships, courses, and support. BodiesByBecca
-            membership payments are processed by Apple or Google through the
-            Bodies by Becca app. Program purchases on this website (e.g. HOTMESS)
-            may be processed by Stripe — we do not store full card numbers.
+            (name, email) to run programs, courses, and support. Program
+            purchases on this website may be processed by Stripe — we do not
+            store full card numbers.
           </p>
           <p>
-            We use your data to deliver The Office portal and BodiesByBecca
-            membership access, improve the product, and communicate about your
-            account. We do not sell your personal information.
+            We use your data to deliver The Office portal, improve the product,
+            and communicate about your account. We do not sell your personal
+            information.
           </p>
           <p>
             You can request access or deletion of your account data by emailing
-            the site admin. Demo-mode data stays on your device in local storage.
+            the site admin. Local demo data stays on your device in browser
+            storage.
           </p>
           <p>
             <Link to="/">← Back home</Link>
@@ -49,16 +49,14 @@ export function TermsPage() {
             offer, and market — we do not guarantee income outcomes.
           </p>
           <p>
-            Memberships renew through the Apple App Store or Google Play until
-            cancelled in your device settings. Challenges may run on a seasonal
-            calendar (including through October). Website programs such as
-            HOTMESS are separate purchases. Content remains for active members.
-            Do not share login credentials or redistribute course materials.
+            Website programs are sold separately (one-time or subscription).
+            Content remains available for active purchasers. Do not share login
+            credentials or redistribute course materials.
           </p>
           <p>
             Community posts in The Office must stay respectful. We may remove
             content that is abusive, spammy, or illegal. These terms may update
-            as the product grows.
+            over time; continued use means you accept the current version.
           </p>
           <p>
             <Link to="/">← Back home</Link>
