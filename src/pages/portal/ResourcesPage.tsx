@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { RESOURCES } from "../../data/resources";
 import { useAuth } from "../../lib/auth";
-import { isMember } from "../../lib/access";
+import { hasAnyProgram } from "../../lib/access";
 
 export function ResourcesPage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/sign-in" replace />;
-  const member = isMember(user.plan);
+  const member = hasAnyProgram(user.programs);
   const [copied, setCopied] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -37,7 +37,7 @@ export function ResourcesPage() {
             <h2>Most vault items unlock with membership</h2>
             <p>Free preview includes CEO weekly habits.</p>
           </div>
-          <Link className="btn btn--primary" to="/pricing">
+          <Link className="btn btn--primary" to="/programs">
             Upgrade →
           </Link>
         </div>
@@ -59,7 +59,7 @@ export function ResourcesPage() {
                   <p>{resource.blurb}</p>
                 </div>
                 {locked ? (
-                  <Link className="btn btn--primary" to="/pricing">
+                  <Link className="btn btn--primary" to="/programs">
                     Unlock →
                   </Link>
                 ) : (

@@ -1,31 +1,25 @@
-import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
-import { appStoreUrl, playStoreUrl } from "../../data/plans";
+import { hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 
 export function AccountPage() {
   const { user, signOut, mode } = useAuth();
-  const [message, setMessage] = useState("");
   const admin = isAdminEmail(user?.email);
 
   if (!user) return <Navigate to="/sign-in" replace />;
 
-  function manageMembership() {
-    setMessage(
-      "BodiesByBecca membership is managed in the Bodies by Becca app — Apple App Store or Google Play subscriptions.",
-    );
-  }
+  const unlocked = hasAnyProgram(user.programs);
 
   return (
     <div className="portal-page">
       <p className="eyebrow">Account</p>
       <h1>
-        Your <em>membership</em>
+        Your <em>account</em>
       </h1>
       <p className="portal-lede">
-        Profile and BodiesByBecca access for The Office. Programs like HOTMESS
-        are sold separately on the website.
+        Free account plus any programs you&apos;ve purchased. Becky manages
+        products and prices in Studio.
       </p>
 
       <div className="account-panel">
@@ -38,26 +32,18 @@ export function AccountPage() {
           <strong>{user.email}</strong>
         </div>
         <div className="account-row">
-          <span>Plan</span>
+          <span>Programs</span>
           <strong>
-            {user.plan === "none"
-              ? "Free account"
-              : user.plan === "annual"
-                ? "BodiesByBecca yearly"
-                : "BodiesByBecca monthly"}
+            {unlocked ? user.programs.join(", ") : "None yet — shop to unlock"}
           </strong>
         </div>
         <div className="account-row">
-          <span>Unlocked</span>
+          <span>Portal</span>
           <strong>
-            {user.plan === "none"
-              ? "Account only — BodiesByBecca membership unlocks The Office"
-              : "All courses · calculators · toolkit · vault · The Office"}
+            {unlocked || admin
+              ? "Courses · tools · vault · The Office"
+              : "Locked until you buy a program"}
           </strong>
-        </div>
-        <div className="account-row">
-          <span>Billing</span>
-          <strong>App Store / Play Store</strong>
         </div>
         <div className="account-row">
           <span>Mode</span>
@@ -68,35 +54,20 @@ export function AccountPage() {
       <div className="account-actions">
         {admin && (
           <Link className="btn btn--primary" to="/portal/studio">
-            Open course Studio →
+            Open Studio →
           </Link>
         )}
-        {user.plan === "none" ? (
-          <>
-            <a className="btn btn--primary" href={appStoreUrl()} target="_blank" rel="noreferrer">
-              App Store →
-            </a>
-            <a className="btn btn--ink" href={playStoreUrl()} target="_blank" rel="noreferrer">
-              Play Store →
-            </a>
-            <Link className="btn btn--ghost-ink" to="/programs">
-              Shop HOTMESS →
-            </Link>
-          </>
-        ) : (
-          <button
-            className="btn btn--primary"
-            type="button"
-            onClick={manageMembership}
-          >
-            Manage in app
-          </button>
-        )}
-        <button className="btn btn--ghost-ink" type="button" onClick={() => void signOut()}>
+        <Link className="btn btn--ink" to="/programs">
+          {unlocked ? "Browse more programs →" : "Shop programs →"}
+        </Link>
+        <button
+          className="btn btn--ghost-ink"
+          type="button"
+          onClick={() => void signOut()}
+        >
           Log out
         </button>
       </div>
-      {message && <p className="form-status">{message}</p>}
     </div>
   );
 }

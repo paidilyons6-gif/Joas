@@ -2,7 +2,7 @@ import { NavLink, Outlet, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { LogoLink } from "./Logo";
 import { useAuth } from "../lib/auth";
-import { isMember } from "../lib/access";
+import { hasAnyProgram } from "../lib/access";
 import { isAdminEmail } from "../lib/admin";
 import {
   DEFAULT_NAV,
@@ -25,7 +25,7 @@ const PATHS: Record<NavTopicId, string> = {
 
 export function PortalLayout() {
   const { user, signOut } = useAuth();
-  const member = isMember(user?.plan);
+  const unlocked = hasAnyProgram(user?.programs);
   const admin = isAdminEmail(user?.email);
   const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -45,8 +45,7 @@ export function PortalLayout() {
 
   function visible(id: NavTopicId) {
     if (id === "studio" && !admin) return false;
-    // Free accounts: only Home + Account (content stays locked until membership)
-    if (!member && !admin && id !== "home" && id !== "account") return false;
+    if (!unlocked && !admin && id !== "home" && id !== "account") return false;
     return nav[id] !== false;
   }
 
@@ -56,6 +55,13 @@ export function PortalLayout() {
     setMenuOpen(false);
   }
 
+  const ownedLabel =
+    user?.programs?.length === 1
+      ? `Program: ${user.programs[0]}`
+      : user?.programs?.length
+        ? `${user.programs.length} programs unlocked`
+        : "Free account · buy a program to unlock";
+
   const navBody = (
     <>
       <div className="portal__brand">
@@ -63,13 +69,7 @@ export function PortalLayout() {
       </div>
       <div className="portal__user">
         <p className="portal__hello">Hey {user?.name?.split(" ")[0] || "you"} ♡</p>
-        <p className="portal__plan">
-          {member
-            ? user?.plan === "annual"
-              ? "BodiesByBecca yearly"
-              : "BodiesByBecca member"
-            : "Free account · content locked"}
-        </p>
+        <p className="portal__plan">{ownedLabel}</p>
       </div>
       <nav className="portal__nav" aria-label="Portal" onClick={closeMenu}>
         {groups.map((group) => {
@@ -94,17 +94,17 @@ export function PortalLayout() {
         })}
       </nav>
       <div className="portal__side-foot">
-        {!member && (
-          <Link className="btn btn--primary portal__upgrade" to="/pricing" onClick={closeMenu}>
-            BodiesByBecca →
+        {!unlocked && (
+          <Link
+            className="btn btn--primary portal__upgrade"
+            to="/programs"
+            onClick={closeMenu}
+          >
+            Shop programs →
           </Link>
         )}
-        <button
-          className="btn btn--ghost-ink portal__signout"
-          type="button"
-          onClick={() => void signOut()}
-        >
-          Log out
+        <button className="btn btn--ghost-ink" type="button" onClick={() => void signOut()}>
+          Sign out
         </button>
       </div>
     </>
@@ -112,56 +112,55 @@ export function PortalLayout() {
 
   return (
     <div className={`portal ${menuOpen ? "portal--menu-open" : ""}`}>
-      <button
-        className="portal__menu-btn"
-        type="button"
-        aria-expanded={menuOpen}
-        aria-controls="portal-side"
-        onClick={() => setMenuOpen((v) => !v)}
-      >
-        {menuOpen ? "Close menu" : "Menu"}
-      </button>
-      {menuOpen && (
-        <button
-          className="portal__backdrop"
-          type="button"
-          aria-label="Close menu"
-          onClick={closeMenu}
-        />
-      )}
-      <aside className="portal__side" id="portal-side">
-        {navBody}
-      </aside>
-      <div className="portal__workspace">
+      <aside className="portal__side">{navBody}</aside>
+      <div className="portal__main">
         <header className="portal__topbar">
+          <button
+            className="portal__menu-btn"
+            type="button"
+            aria-expanded={menuOpen}
+            aria-label="Open menu"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            Menu
+          </button>
           <div>
-            <p className="portal__topbar-kicker">Business by Becca</p>
+            <p className="portal__topbar-kicker">The Office</p>
             <p className="portal__topbar-title">
-              {member || admin ? "Your laptop learning portal" : "Membership required to unlock"}
+              {unlocked || admin
+                ? "Your laptop learning portal"
+                : "Buy a program to unlock"}
             </p>
           </div>
           <div className="portal__topbar-actions">
             {admin && visible("studio") && (
-              <Link className="btn btn--primary" to="/portal/studio">
-                Edit programs →
+              <Link className="btn btn--ghost-ink" to="/portal/studio">
+                Studio →
               </Link>
             )}
-            {member && visible("courses") && (
-              <Link className="btn btn--ghost-ink" to="/portal/courses">
-                Browse courses
-              </Link>
-            )}
-            {!member && !admin && (
-              <Link className="btn btn--primary" to="/pricing">
-                Get membership →
+            {!unlocked && !admin && (
+              <Link className="btn btn--primary" to="/programs">
+                Programs →
               </Link>
             )}
           </div>
         </header>
-        <main className="portal__main">
+        <div className="portal__content">
           <Outlet />
-        </main>
+        </div>
       </div>
+      {menuOpen && (
+        <div className="portal__drawer" role="dialog" aria-label="Portal menu">
+          <button
+            className="portal__drawer-close"
+            type="button"
+            onClick={closeMenu}
+          >
+            Close
+          </button>
+          {navBody}
+        </div>
+      )}
     </div>
   );
 }

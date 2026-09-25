@@ -1,7 +1,7 @@
 import { Link, Navigate, useParams } from "react-router-dom";
 import { getMergedTrack, trackProgressFromTrack } from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
-import { canAccessLesson, isMember } from "../../lib/access";
+import { canAccessLesson, hasAnyProgram } from "../../lib/access";
 
 export function TrackPage() {
   const { trackId } = useParams();
@@ -11,9 +11,9 @@ export function TrackPage() {
   const track = getMergedTrack(trackId || "");
   if (!track) return <Navigate to="/portal/courses" replace />;
 
-  const member = isMember(user.plan);
+  const member = hasAnyProgram(user.programs);
   if (track.membersOnly && !member) {
-    return <Navigate to="/pricing" replace />;
+    return <Navigate to="/programs" replace />;
   }
 
   const progress = trackProgressFromTrack(track, user.completedLessons);
@@ -35,7 +35,7 @@ export function TrackPage() {
 
       <div className="training-list training-list--desktop">
         {track.lessons.map((lesson, index) => {
-          const locked = !canAccessLesson(lesson.membersOnly, user.plan);
+          const locked = !canAccessLesson(lesson.membersOnly, user.programs);
           const done = user.completedLessons.includes(lesson.id);
           return (
             <article
@@ -54,7 +54,7 @@ export function TrackPage() {
                 </p>
               </div>
               {locked ? (
-                <Link className="btn btn--primary" to="/pricing">
+                <Link className="btn btn--primary" to="/programs">
                   Unlock →
                 </Link>
               ) : (

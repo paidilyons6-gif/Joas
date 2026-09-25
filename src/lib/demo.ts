@@ -2,7 +2,10 @@ export type DemoUser = {
   id: string;
   email: string;
   name: string;
+  /** @deprecated Office membership — prefer programs */
   plan: "none" | "monthly" | "annual";
+  /** Program slugs the user has purchased */
+  programs: string[];
   createdAt: string;
   completedLessons: string[];
 };
@@ -20,11 +23,28 @@ const SESSION_KEY = "bbb_demo_session_v1";
 const DRAFTS_KEY = "bbb_tool_drafts_v1";
 const CALC_KEY = "bbb_calc_state_v1";
 
+function normalizeUser(raw: Partial<DemoUser> & { email: string }): DemoUser {
+  const programs = Array.isArray(raw.programs) ? raw.programs : [];
+  // Migrate old Office plan → treat as owning a legacy "office" entitlement only if needed
+  return {
+    id: raw.id || crypto.randomUUID(),
+    email: raw.email,
+    name: raw.name || "Member",
+    plan: raw.plan || "none",
+    programs,
+    createdAt: raw.createdAt || new Date().toISOString(),
+    completedLessons: Array.isArray(raw.completedLessons)
+      ? raw.completedLessons
+      : [],
+  };
+}
+
 function readUser(): DemoUser | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as DemoUser;
+    const parsed = JSON.parse(raw) as Partial<DemoUser> & { email: string };
+    return normalizeUser(parsed);
   } catch {
     return null;
   }
@@ -49,14 +69,15 @@ export const demoStore = {
   getUser: readUser,
   signUp(input: { email: string; name: string; password: string }): DemoUser {
     void input.password;
-    const user: DemoUser = {
+    const user = normalizeUser({
       id: crypto.randomUUID(),
       email: input.email.trim().toLowerCase(),
       name: input.name.trim() || "Member",
       plan: "none",
+      programs: [],
       createdAt: new Date().toISOString(),
       completedLessons: [],
-    };
+    });
     writeUser(user);
     return user;
   },
@@ -66,14 +87,15 @@ export const demoStore = {
     if (existing && existing.email === input.email.trim().toLowerCase()) {
       return existing;
     }
-    const user: DemoUser = {
+    const user = normalizeUser({
       id: crypto.randomUUID(),
       email: input.email.trim().toLowerCase(),
       name: input.email.split("@")[0] || "Member",
       plan: existing?.plan ?? "none",
+      programs: existing?.programs ?? [],
       createdAt: existing?.createdAt ?? new Date().toISOString(),
       completedLessons: existing?.completedLessons ?? [],
-    };
+    });
     writeUser(user);
     return user;
   },
@@ -81,13 +103,25 @@ export const demoStore = {
     writeUser(null);
   },
   update(user: DemoUser) {
-    writeUser(user);
-    return user;
+    writeUser(normalizeUser(user));
+    return readUser()!;
   },
   setPlan(plan: DemoUser["plan"]) {
     const user = readUser();
     if (!user) throw new Error("Not signed in");
     return this.update({ ...user, plan });
+  },
+  grantProgram(slug: string) {
+    const user = readUser();
+    if (!user) throw new Error("Not signed in");
+    const id = slug.trim().toLowerCase();
+    if (!id) return user;
+    if (user.programs.includes(id)) return user;
+    return this.update({ ...user, programs: [...user.programs, id] });
+  },
+  hasProgram(slug: string) {
+    const user = readUser();
+    return Boolean(user?.programs.includes(slug.trim().toLowerCase()));
   },
   toggleLesson(lessonId: string) {
     const user = readUser();

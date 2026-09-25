@@ -9,7 +9,7 @@ import {
   type ToolId,
 } from "../../data/tools";
 import { useAuth } from "../../lib/auth";
-import { isMember } from "../../lib/access";
+import { hasAnyProgram } from "../../lib/access";
 import { demoStore } from "../../lib/demo";
 import { syncToolDraftsRemote } from "../../lib/draftsRepo";
 
@@ -20,8 +20,8 @@ export function ToolPage() {
 
   const tool = getTool(toolId || "");
   if (!tool) return <Navigate to="/portal/tools" replace />;
-  if (tool.membersOnly && !isMember(user.plan)) {
-    return <Navigate to="/pricing" replace />;
+  if (tool.membersOnly && !hasAnyProgram(user.programs)) {
+    return <Navigate to="/programs" replace />;
   }
 
   return (

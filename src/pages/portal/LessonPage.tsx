@@ -14,8 +14,8 @@ export function LessonPage() {
   const lesson = track?.lessons.find((l) => l.id === lessonId);
   if (!track || !lesson) return <Navigate to="/portal/courses" replace />;
 
-  if (!canAccessLesson(lesson.membersOnly, user.plan)) {
-    return <Navigate to="/pricing" replace />;
+  if (!canAccessLesson(lesson.membersOnly, user.programs)) {
+    return <Navigate to="/programs" replace />;
   }
 
   const done = user.completedLessons.includes(lesson.id);

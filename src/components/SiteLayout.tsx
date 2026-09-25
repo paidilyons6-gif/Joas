@@ -13,7 +13,6 @@ export function SiteLayout() {
         <LogoLink variant={isHome ? "light" : "default"} />
         <nav className="nav__links" aria-label="Primary">
           <NavLink to="/programs">Programs</NavLink>
-          <NavLink to="/pricing">Membership</NavLink>
           {user ? (
             <Link className="nav__cta" to="/portal">
               Open portal →
@@ -31,9 +30,8 @@ export function SiteLayout() {
 
       {mode === "demo" && (
         <div className="demo-banner" role="status">
-          Demo mode — accounts work on this device. BodiesByBecca membership
-          bills in the app (App Store / Play). Programs like HOTMESS sell on
-          this site.
+          Demo mode — accounts work on this device. Buy a program to unlock
+          portal content; Becky manages products in Studio.
         </div>
       )}
 
@@ -50,7 +48,6 @@ export function SiteLayout() {
             </div>
             <nav className="footer__nav" aria-label="Footer">
               <Link to="/programs">Programs</Link>
-              <Link to="/pricing">Membership</Link>
               <Link to="/sign-up">Join</Link>
               <Link to="/portal">Portal</Link>
               <Link to="/privacy">Privacy</Link>

@@ -28,7 +28,7 @@ export const DEFAULT_SITE_COPY: SiteCopy = {
     "The support system for women building companies — training, community, and a portal that helps you ship, not just dream.",
   heroCtaGuest: "Let's do this →",
   heroCtaMember: "Open your portal →",
-  heroCtaSecondary: "Membership",
+  heroCtaSecondary: "Programs",
   manifestoEyebrow: "Becky Lyons",
   manifestoTitle: "Build the damn business.",
   manifestoAccent: "Your seat at The Office ♡",
@@ -46,16 +46,16 @@ export const DEFAULT_SITE_COPY: SiteCopy = {
   pillarsTitle: "Ambitious. Unfiltered.",
   pillarsTitleEm: "Yours.",
   pillarsCopy:
-    "Sign up free, get BodiesByBecca membership when you're ready, and train inside The Office — education, community, resources, and freedom in one place.",
+    "Sign up free, buy the program you want, and train inside The Office — education, community, and tools in one place.",
   bandTitle: "Bigger plans start in",
   bandTitleEm: "The Office.",
   bandCopy:
-    "Create your account, open The Office with BodiesByBecca membership (App Store / Play), and keep selling programs like HOTMESS on the site.",
+    "Create your account, pick a program on the site, and unlock your seat. Becky adds and prices programs in Studio.",
   offerEyebrow: "Inside The Office",
   offerTitle: "Progress over",
   offerTitleEm: "perfection.",
   offerCopy:
-    "Elite courses, financial calculators, and startup worksheets — everything you need to build and get paid.",
+    "Elite courses, financial calculators, and startup worksheets — unlocked when you buy a program.",
 };
 
 const COPY_KEY = "bbb_site_copy_v1";

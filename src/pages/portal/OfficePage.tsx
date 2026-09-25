@@ -8,7 +8,7 @@ import {
   listVillagePosts,
   type VillagePost,
 } from "../../lib/villageRepo";
-import { isMember } from "../../lib/access";
+import { hasAnyProgram } from "../../lib/access";
 
 export function OfficePage() {
   const { user } = useAuth();
@@ -19,7 +19,7 @@ export function OfficePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const admin = isAdminEmail(user.email);
-  const member = isMember(user.plan);
+  const member = hasAnyProgram(user.programs);
 
   async function refresh() {
     setPosts(await listVillagePosts());
@@ -69,10 +69,10 @@ export function OfficePage() {
       {!member && (
         <div className="upgrade-banner">
           <div>
-            <h2>Membership unlocks posting in The Office</h2>
+            <h2>A program unlocks posting in The Office</h2>
             <p>You can still browse — upgrade when you&apos;re ready to join in.</p>
           </div>
-          <Link className="btn btn--primary" to="/pricing">
+          <Link className="btn btn--primary" to="/programs">
             Upgrade →
           </Link>
         </div>

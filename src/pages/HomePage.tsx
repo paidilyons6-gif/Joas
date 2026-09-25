@@ -46,7 +46,7 @@ export function HomePage() {
             <Link className="btn btn--primary" to={user ? "/portal" : "/sign-up"}>
               {user ? copy.heroCtaMember : copy.heroCtaGuest}
             </Link>
-            <Link className="btn btn--ghost" to="/pricing">
+            <Link className="btn btn--ghost" to="/programs">
               {copy.heroCtaSecondary}
             </Link>
           </div>
@@ -151,7 +151,7 @@ export function HomePage() {
             <Link className="btn btn--primary" to="/programs">
               Shop programs →
             </Link>
-            <Link className="btn btn--ink" to="/pricing">
+            <Link className="btn btn--ink" to="/programs">
               BodiesByBecca membership
             </Link>
           </div>

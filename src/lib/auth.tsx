@@ -14,7 +14,9 @@ export type AuthUser = {
   id: string;
   email: string;
   name: string;
+  /** @deprecated Prefer programs */
   plan: "none" | "monthly" | "annual";
+  programs: string[];
   completedLessons: string[];
   mode: "demo" | "live";
 };
@@ -26,7 +28,7 @@ type AuthContextValue = {
   signUp: (input: { email: string; password: string; name: string }) => Promise<void>;
   signIn: (input: { email: string; password: string }) => Promise<void>;
   signOut: () => Promise<void>;
-  activatePlan: (plan: "monthly" | "annual") => Promise<void>;
+  grantProgram: (slug: string) => Promise<void>;
   toggleLesson: (lessonId: string) => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -39,6 +41,7 @@ function toAuthUser(user: DemoUser, mode: "demo" | "live"): AuthUser {
     email: user.email,
     name: user.name,
     plan: user.plan,
+    programs: user.programs || [],
     completedLessons: user.completedLessons,
     mode,
   };
@@ -73,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, plan, completed_lessons")
+      .select("full_name, plan, completed_lessons, programs")
       .eq("id", sessionUser.id)
       .maybeSingle();
 
@@ -82,6 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: sessionUser.email ?? "",
       name: profile?.full_name || sessionUser.user_metadata?.full_name || "Member",
       plan: (profile?.plan as AuthUser["plan"]) || "none",
+      programs: Array.isArray(profile?.programs)
+        ? (profile.programs as string[])
+        : [],
       completedLessons: (profile?.completed_lessons as string[]) || [],
       mode: "live",
     });
@@ -144,18 +150,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, [live]);
 
-  const activatePlan = useCallback(
-    async (plan: "monthly" | "annual") => {
-      // Demo unlock only — live entitlements come from Stripe webhook
+  const grantProgram = useCallback(
+    async (slug: string) => {
+      const id = slug.trim().toLowerCase();
+      if (!id) return;
       if (!live) {
-        setUser(toAuthUser(demoStore.setPlan(plan), "demo"));
+        setUser(toAuthUser(demoStore.grantProgram(id), "demo"));
         return;
       }
-        throw new Error(
-          "BodiesByBecca membership is billed in the App Store / Play Store. Use demo mode to preview portal unlock, or link the same email after you subscribe in the app.",
-        );
+      if (!user) throw new Error("Not signed in");
+      if (user.programs.includes(id)) return;
+      const next = [...user.programs, id];
+      const supabase = getSupabase();
+      const { error } = await supabase!
+        .from("profiles")
+        .update({ programs: next })
+        .eq("id", user.id);
+      // If column missing, still update local session for UX
+      if (error) {
+        console.warn(error.message);
+      }
+      setUser({ ...user, programs: next });
     },
-    [live],
+    [live, user],
   );
 
   const toggleLesson = useCallback(
@@ -188,11 +205,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signIn,
       signOut,
-      activatePlan,
+      grantProgram,
       toggleLesson,
       refresh,
     }),
-    [user, loading, live, signUp, signIn, signOut, activatePlan, toggleLesson, refresh],
+    [user, loading, live, signUp, signIn, signOut, grantProgram, toggleLesson, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

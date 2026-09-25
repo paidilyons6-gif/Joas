@@ -6,7 +6,7 @@ export function SignUpPage() {
   const { signUp, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const plan = (location.state as { plan?: string } | null)?.plan;
+  const program = (location.state as { program?: string } | null)?.program;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,7 +17,7 @@ export function SignUpPage() {
   if (user) {
     return (
       <Navigate
-        to={plan === "monthly" || plan === "annual" ? `/pricing?plan=${plan}` : "/portal"}
+        to={program ? `/programs` : "/portal"}
         replace
       />
     );
@@ -29,11 +29,7 @@ export function SignUpPage() {
     setBusy(true);
     try {
       await signUp({ name, email, password });
-      navigate(
-        plan === "monthly" || plan === "annual"
-          ? `/pricing?plan=${plan}`
-          : "/portal",
-      );
+      navigate(program ? "/programs" : "/portal");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign up");
     } finally {
@@ -49,9 +45,9 @@ export function SignUpPage() {
           Create your <em>account</em>
         </h1>
         <p className="auth-card__lede">
-          {plan === "monthly" || plan === "annual"
-            ? "Create your free site account, then get BodiesByBecca membership in the App Store or Play Store to unlock The Office."
-            : "Create a free account. BodiesByBecca membership (in the app) unlocks The Office. Programs like HOTMESS sell on the site."}
+          {program
+            ? `Create your free account, then buy ${program} to unlock it in The Office.`
+            : "Create a free account. Buy a program to unlock courses and tools inside The Office."}
         </p>
         <form className="auth-form" onSubmit={(e) => void onSubmit(e)}>
           <label>

@@ -1,13 +1,13 @@
 import { Link, Navigate } from "react-router-dom";
 import { getAllTracks, trackProgressFromTrack } from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
-import { isMember } from "../../lib/access";
+import { hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 
 export function CoursesPage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/sign-in" replace />;
-  const member = isMember(user.plan);
+  const member = hasAnyProgram(user.programs);
   const admin = isAdminEmail(user.email);
   const tracks = getAllTracks({ includeDrafts: false });
 
@@ -52,7 +52,7 @@ export function CoursesPage() {
               </div>
               <p className="module-card__meta">{progress.pct}% complete</p>
               {locked ? (
-                <Link className="btn btn--primary" to="/pricing">
+                <Link className="btn btn--primary" to="/programs">
                   Unlock track →
                 </Link>
               ) : (

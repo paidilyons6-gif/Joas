@@ -13,6 +13,8 @@ const ADMIN_EMAILS = (process.env.VITE_ADMIN_EMAILS || "r.lyons1@icloud.com")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
+type BillingInterval = "one_time" | "month" | "year";
+
 function requireAdmin(body: { email?: string; secret?: string }) {
   const secret = process.env.STUDIO_PRICE_SECRET;
   if (!secret) {
@@ -40,6 +42,13 @@ function requireAdmin(body: { email?: string; secret?: string }) {
   return { ok: true as const };
 }
 
+function parseInterval(raw: unknown): BillingInterval {
+  const v = String(raw || "one_time").toLowerCase();
+  if (v === "month" || v === "monthly") return "month";
+  if (v === "year" || v === "yearly" || v === "annual") return "year";
+  return "one_time";
+}
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method not allowed" };
@@ -62,6 +71,7 @@ export const handler: Handler = async (event) => {
       badge?: string;
       features?: string[] | string;
       amountDollars?: number | string;
+      interval?: string;
       active?: boolean;
     };
 
@@ -85,6 +95,7 @@ export const handler: Handler = async (event) => {
       return { statusCode: 400, body: "Enter a dollar amount of at least 1." };
     }
     const amountCents = Math.round(dollars * 100);
+    const interval = parseInterval(body.interval);
 
     const features = Array.isArray(body.features)
       ? body.features
@@ -104,6 +115,7 @@ export const handler: Handler = async (event) => {
       bbb_badge: badge,
       bbb_blurb: blurb.slice(0, 490),
       bbb_features: serializeFeatures(features),
+      bbb_interval: interval,
     };
 
     let productId = body.productId;
@@ -117,7 +129,6 @@ export const handler: Handler = async (event) => {
         metadata,
       });
     } else {
-      // Reuse existing slug if present
       const existingPrices = await stripe.prices.list({
         lookup_keys: [lookupKey],
         active: true,
@@ -147,40 +158,59 @@ export const handler: Handler = async (event) => {
       active: true,
       limit: 20,
     });
-    const currentOneTime = currentPrices.data.find((p) => !p.recurring);
-    let priceId = currentOneTime?.id;
 
-    if (!currentOneTime || currentOneTime.unit_amount !== amountCents) {
-      if (currentOneTime) {
-        // Move lookup key onto the new price
-        const createdPrice = await stripe.prices.create({
-          product: productId,
-          unit_amount: amountCents,
-          currency: "usd",
-          lookup_key: lookupKey,
-          transfer_lookup_key: true,
-          nickname: `${name} — one-time`,
-          metadata: { bbb: "true", lookup: lookupKey, role: "program" },
-        });
-        await stripe.prices.update(currentOneTime.id, { active: false });
-        priceId = createdPrice.id;
-      } else {
-        const createdPrice = await stripe.prices.create({
-          product: productId,
-          unit_amount: amountCents,
-          currency: "usd",
-          lookup_key: lookupKey,
-          nickname: `${name} — one-time`,
-          metadata: { bbb: "true", lookup: lookupKey, role: "program" },
-        });
-        priceId = createdPrice.id;
+    const matchesInterval = (p: (typeof currentPrices.data)[0]) => {
+      if (interval === "one_time") return !p.recurring;
+      return p.recurring?.interval === interval;
+    };
+
+    const current = currentPrices.data.find(matchesInterval);
+    const amountMatches = current?.unit_amount === amountCents;
+    let priceId = current?.id;
+
+    const needsNew =
+      !current ||
+      !amountMatches ||
+      (interval === "one_time" ? !!current.recurring : !current.recurring);
+
+    if (needsNew) {
+      // Archive other active prices so default is clear
+      for (const p of currentPrices.data) {
+        if (p.active) await stripe.prices.update(p.id, { active: false });
       }
+
+      const createdPrice = await stripe.prices.create({
+        product: productId!,
+        unit_amount: amountCents,
+        currency: "usd",
+        lookup_key: lookupKey,
+        transfer_lookup_key: true,
+        nickname:
+          interval === "month"
+            ? `${name} — monthly`
+            : interval === "year"
+              ? `${name} — yearly`
+              : `${name} — one-time`,
+        ...(interval === "one_time"
+          ? {}
+          : { recurring: { interval } }),
+        metadata: {
+          bbb: "true",
+          lookup: lookupKey,
+          role: "program",
+          interval,
+        },
+      });
+      priceId = createdPrice.id;
     }
 
     await stripe.products.update(productId!, {
       default_price: priceId,
       active: body.active !== false,
     });
+
+    const suffix =
+      interval === "month" ? "/mo" : interval === "year" ? "/yr" : "";
 
     return {
       statusCode: 200,
@@ -196,11 +226,12 @@ export const handler: Handler = async (event) => {
           badge,
           features,
           amountCents,
-          priceLabel: formatDollars(amountCents),
+          priceLabel: `${formatDollars(amountCents)}${suffix}`,
           priceId,
           productId,
           lookupKey,
           active: body.active !== false,
+          interval,
         },
       }),
     };

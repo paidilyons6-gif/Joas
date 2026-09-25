@@ -1,12 +1,12 @@
 import { Link, Navigate } from "react-router-dom";
 import { TOOLS } from "../../data/tools";
 import { useAuth } from "../../lib/auth";
-import { isMember } from "../../lib/access";
+import { hasAnyProgram } from "../../lib/access";
 
 export function ToolsPage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/sign-in" replace />;
-  const member = isMember(user.plan);
+  const member = hasAnyProgram(user.programs);
 
   return (
     <div className="portal-page">
@@ -26,7 +26,7 @@ export function ToolsPage() {
             <Link
               key={tool.id}
               className={`module-card ${locked ? "module-card--locked" : ""}`}
-              to={locked ? "/pricing" : `/portal/tools/${tool.id}`}
+              to={locked ? "/programs" : `/portal/tools/${tool.id}`}
             >
               <p className="module-card__phase">{tool.badge}</p>
               <h3>{tool.title}</h3>

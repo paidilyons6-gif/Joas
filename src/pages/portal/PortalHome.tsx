@@ -3,12 +3,9 @@ import {
   allLessonsMerged,
   getAllTracks,
   nextLessonMerged,
-  trackProgressFromTrack,
 } from "../../lib/courseCatalog";
-import { CALCULATORS } from "../../data/calculators";
-import { TOOLS } from "../../data/tools";
 import { useAuth } from "../../lib/auth";
-import { isMember } from "../../lib/access";
+import { hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 
 export function PortalHome() {
@@ -16,7 +13,7 @@ export function PortalHome() {
   const [params] = useSearchParams();
   if (!user) return <Navigate to="/sign-in" replace />;
 
-  const member = isMember(user.plan);
+  const unlocked = hasAnyProgram(user.programs);
   const admin = isAdminEmail(user.email);
   const lessons = allLessonsMerged();
   const done = user.completedLessons.filter((id) =>
@@ -28,16 +25,20 @@ export function PortalHome() {
   const tracks = getAllTracks();
   const checkoutSuccess = params.get("checkout") === "success";
 
-  if (!member && !admin) {
+  if (!unlocked && !admin) {
     return (
       <div className="portal-page">
         {checkoutSuccess && (
           <div className="upgrade-banner" role="status">
             <div>
-              <h2>Thanks for subscribing ♡</h2>
-              <p>If access isn&apos;t open yet, refresh after your app subscription syncs.</p>
+              <h2>Thanks for your purchase ♡</h2>
+              <p>If your program isn&apos;t open yet, tap refresh.</p>
             </div>
-            <button className="btn btn--primary" type="button" onClick={() => void refresh()}>
+            <button
+              className="btn btn--primary"
+              type="button"
+              onClick={() => void refresh()}
+            >
               Refresh access
             </button>
           </div>
@@ -45,34 +46,24 @@ export function PortalHome() {
 
         <p className="eyebrow">Your account</p>
         <h1>
-          You&apos;re in — get <em>BodiesByBecca</em>
+          Welcome to <em>The Office</em>
         </h1>
         <p className="portal-lede">
-          Free accounts can sign up anytime. Courses, calculators, toolkit, vault,
-          and The Office unlock with BodiesByBecca membership (App Store / Play).
+          Your free account is ready. Pick a program to unlock courses, tools,
+          and community inside The Office.
         </p>
 
         <div className="upgrade-banner">
           <div>
-            <h2>Unlock with BodiesByBecca</h2>
-            <p>Subscribe in the app after challenges end in October — then open The Office here.</p>
+            <h2>Shop programs</h2>
+            <p>
+              HOTMESS and anything Becky adds in Studio — pay once or subscribe,
+              then train here.
+            </p>
           </div>
-          <Link className="btn btn--primary" to="/pricing">
-            Membership →
+          <Link className="btn btn--primary" to="/programs">
+            Browse programs →
           </Link>
-        </div>
-
-        <div className="stat-row stat-row--3">
-          <div className="stat">
-            <p className="stat__label">Courses</p>
-            <p className="stat__value">{tracks.length}</p>
-            <p className="stat__meta">BodiesByBecca membership</p>
-          </div>
-          <div className="stat">
-            <p className="stat__label">Access</p>
-            <p className="stat__value">Free</p>
-            <p className="stat__meta">Subscribe in the app to open everything</p>
-          </div>
         </div>
 
         <div className="account-actions" style={{ marginTop: "1.5rem" }}>
@@ -90,9 +81,13 @@ export function PortalHome() {
         <div className="upgrade-banner" role="status">
           <div>
             <h2>You&apos;re in ♡</h2>
-            <p>BodiesByBecca membership is active — dive into courses, tools, and The Office.</p>
+            <p>Your program is unlocked — dive into courses, tools, and The Office.</p>
           </div>
-          <button className="btn btn--primary" type="button" onClick={() => void refresh()}>
+          <button
+            className="btn btn--primary"
+            type="button"
+            onClick={() => void refresh()}
+          >
             Refresh access
           </button>
         </div>
@@ -106,7 +101,7 @@ export function PortalHome() {
           </h1>
           <p className="portal-lede">
             Courses, calculators, toolkit, vault, and community — ready to build.
-            {admin ? " Studio lets you edit every program." : ""}
+            {admin ? " Studio lets you create & price programs." : ""}
           </p>
         </div>
         {admin && (
@@ -118,90 +113,61 @@ export function PortalHome() {
 
       <div className="stat-row stat-row--3">
         <div className="stat">
-          <p className="stat__label">Course progress</p>
+          <p className="stat__label">Progress</p>
           <p className="stat__value">{pct}%</p>
           <p className="stat__meta">
-            {done} of {total} lessons
+            {done}/{total} lessons
           </p>
-          <div className="progress-bar" aria-hidden="true">
-            <span style={{ width: `${pct}%` }} />
-          </div>
         </div>
         <div className="stat">
-          <p className="stat__label">Access</p>
-          <p className="stat__value">Member</p>
-          <p className="stat__meta">Full Office unlocked</p>
+          <p className="stat__label">Courses</p>
+          <p className="stat__value">{tracks.length}</p>
+          <p className="stat__meta">In your library</p>
         </div>
         <div className="stat">
-          <p className="stat__label">Tools ready</p>
-          <p className="stat__value">{CALCULATORS.length + TOOLS.length}</p>
-          <p className="stat__meta">Calculators + worksheets</p>
+          <p className="stat__label">Programs</p>
+          <p className="stat__value">{user.programs.length || "—"}</p>
+          <p className="stat__meta">
+            {user.programs.length ? user.programs.join(", ") : "Unlocked"}
+          </p>
         </div>
       </div>
 
       {next && (
-        <div className="continue-card">
+        <div className="upgrade-banner">
           <div>
-            <p className="eyebrow">Continue where you left off</p>
-            <h2>{next.lesson.title}</h2>
-            <p>
-              {next.track.title} · {next.lesson.duration} min
-            </p>
+            <h2>Continue: {next.lesson.title}</h2>
+            <p>{next.track.title}</p>
           </div>
           <Link
             className="btn btn--primary"
             to={`/portal/courses/${next.track.id}/${next.lesson.id}`}
           >
-            Resume lesson →
+            Resume →
           </Link>
         </div>
       )}
 
-      <h2 className="portal-subhead">Course tracks</h2>
-      <div className="module-grid module-grid--desktop">
-        {tracks.map((track) => {
-          const progress = trackProgressFromTrack(track, user.completedLessons);
-          return (
-            <Link
-              key={track.id}
-              className="module-card"
-              to={`/portal/courses/${track.id}`}
-            >
-              <p className="module-card__phase">{track.badge}</p>
-              <h3>{track.title}</h3>
-              <p>{track.blurb}</p>
-              <div className="progress-bar progress-bar--sm" aria-hidden="true">
-                <span style={{ width: `${progress.pct}%` }} />
-              </div>
-              <p className="module-card__meta">
-                {progress.done}/{progress.total} lessons · {progress.pct}%
-              </p>
-            </Link>
-          );
-        })}
-      </div>
-
-      <h2 className="portal-subhead">Pinned tools</h2>
       <div className="pin-grid">
-        <Link className="pin-card" to="/portal/calculators/pricing">
-          <p className="module-card__phase">Calculator</p>
-          <h3>Pricing power</h3>
-          <p>Set a price with margin math.</p>
+        <Link className="pin-card" to="/portal/courses">
+          <p className="pin-card__label">Learn</p>
+          <h3>Courses</h3>
         </Link>
-        <Link className="pin-card" to="/portal/calculators/breakeven">
-          <p className="module-card__phase">Calculator</p>
-          <h3>Break-even</h3>
-          <p>Know your number to cover costs.</p>
+        <Link className="pin-card" to="/portal/tools">
+          <p className="pin-card__label">Build</p>
+          <h3>Toolkit</h3>
         </Link>
-        <Link className="pin-card" to="/portal/tools/offer-builder">
-          <p className="module-card__phase">Toolkit</p>
-          <h3>Offer builder</h3>
-          <p>Draft who, promise, and price.</p>
+        <Link className="pin-card" to="/portal/calculators">
+          <p className="pin-card__label">Build</p>
+          <h3>Calculators</h3>
         </Link>
-        <Link className="pin-card" to="/portal/tools/ceo-scorecard">
-          <p className="module-card__phase">Toolkit</p>
-          <h3>CEO scorecard</h3>
-          <p>Weekly check-in for founders.</p>
+        <Link className="pin-card" to="/portal/office">
+          <p className="pin-card__label">Community</p>
+          <h3>The Office</h3>
+        </Link>
+        <Link className="pin-card" to="/programs">
+          <p className="pin-card__label">Shop</p>
+          <h3>More programs</h3>
         </Link>
       </div>
     </div>

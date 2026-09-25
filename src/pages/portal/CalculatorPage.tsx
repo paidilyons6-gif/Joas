@@ -13,7 +13,7 @@ import {
 } from "../../data/calculators";
 import { CalcField, CalcShell, ResultStat } from "../../components/calc/CalcShell";
 import { useAuth } from "../../lib/auth";
-import { isMember } from "../../lib/access";
+import { hasAnyProgram } from "../../lib/access";
 import { demoStore } from "../../lib/demo";
 import { syncCalcStateRemote } from "../../lib/draftsRepo";
 
@@ -30,8 +30,8 @@ export function CalculatorPage() {
   const meta = getCalculator(calcId || "");
   if (!meta) return <Navigate to="/portal/calculators" replace />;
 
-  if (meta.membersOnly && !isMember(user.plan)) {
-    return <Navigate to="/pricing" replace />;
+  if (meta.membersOnly && !hasAnyProgram(user.programs)) {
+    return <Navigate to="/programs" replace />;
   }
 
   return (

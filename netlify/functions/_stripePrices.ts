@@ -30,6 +30,8 @@ export type SellableProduct = {
   productId: string;
   lookupKey: string;
   active: boolean;
+  /** one_time | month | year */
+  interval: "one_time" | "month" | "year";
 };
 
 export function getStripe() {
@@ -141,6 +143,17 @@ function toSellable(
     product.metadata.bbb_slug ||
     slugify(product.name) ||
     product.id.replace(/^prod_/, "").toLowerCase();
+  const intervalMeta = product.metadata.bbb_interval;
+  const interval: SellableProduct["interval"] =
+    price.recurring?.interval === "month"
+      ? "month"
+      : price.recurring?.interval === "year"
+        ? "year"
+        : intervalMeta === "month" || intervalMeta === "year"
+          ? intervalMeta
+          : "one_time";
+  const suffix =
+    interval === "month" ? "/mo" : interval === "year" ? "/yr" : "";
   return {
     id: slug,
     slug,
@@ -149,11 +162,12 @@ function toSellable(
     badge: product.metadata.bbb_badge || "Program",
     features: parseFeatures(product.metadata.bbb_features),
     amountCents: price.unit_amount || 0,
-    priceLabel: formatDollars(price.unit_amount || 0),
+    priceLabel: `${formatDollars(price.unit_amount || 0)}${suffix}`,
     priceId: price.id,
     productId: product.id,
     lookupKey: product.metadata.bbb_lookup || programLookupKey(slug),
     active: product.active,
+    interval,
   };
 }
 

@@ -1,13 +1,5 @@
 import type { PlanId } from "../data/plans";
 
-/** Demo-only portal unlock. */
-export async function activateMembershipDemo(
-  plan: PlanId,
-  activatePlan: (plan: PlanId) => Promise<void>,
-) {
-  await activatePlan(plan);
-}
-
 async function postCheckout(payload: Record<string, unknown>) {
   const res = await fetch("/.netlify/functions/create-checkout", {
     method: "POST",
@@ -36,24 +28,7 @@ async function tryCheckout(payload: Record<string, unknown>) {
   }
 }
 
-/** One-time The Office unlock. */
-export async function startOfficeCheckout(email?: string) {
-  return tryCheckout({ kind: "office", productId: "office", email });
-}
-
-/** Recurring Office membership (monthly | annual). */
-export async function startSubscriptionCheckout(
-  plan: PlanId,
-  email?: string,
-) {
-  return tryCheckout({
-    kind: "subscription",
-    productId: plan,
-    plan,
-    email,
-  });
-}
-
+/** Buy a program (one-time or subscription — set in Studio). */
 export async function startProgramCheckout(
   programId: string,
   email?: string,
@@ -66,11 +41,24 @@ export async function startProgramCheckout(
   });
 }
 
+/** @deprecated Office membership removed */
+export async function startOfficeCheckout(email?: string) {
+  void email;
+  return tryCheckout({ productId: "hotmess" });
+}
+
+/** @deprecated */
+export async function startSubscriptionCheckout(plan: PlanId, email?: string) {
+  void plan;
+  return startProgramCheckout("hotmess", email);
+}
+
 export async function startCheckout(plan: PlanId, email: string) {
-  return startSubscriptionCheckout(plan, email);
+  void plan;
+  return startProgramCheckout("hotmess", email);
 }
 
 export async function openBillingPortal(email: string) {
   void email;
-  return { demo: true as const, appStore: true as const };
+  return { demo: true as const };
 }

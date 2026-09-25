@@ -2,21 +2,10 @@ import type { Handler } from "@netlify/functions";
 import {
   findSellableBySlug,
   getStripe,
-  resolvePriceId,
-  type OfficeKind,
 } from "./_stripePrices";
 
 const siteUrl =
   process.env.URL || process.env.DEPLOY_PRIME_URL || "http://localhost:8888";
-
-function resolveOfficeKind(raw: string): OfficeKind | null {
-  const v = raw.toLowerCase();
-  if (v === "office" || v === "onetime" || v === "one-time" || v === "lifetime")
-    return "office";
-  if (v === "monthly" || v === "month") return "monthly";
-  if (v === "annual" || v === "yearly" || v === "year") return "annual";
-  return null;
-}
 
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
@@ -48,50 +37,38 @@ export const handler: Handler = async (event) => {
       ""
     ).toLowerCase();
 
-    if (!raw) {
+    // Ignore legacy Office membership kinds — programs only
+    if (
+      raw === "office" ||
+      raw === "monthly" ||
+      raw === "annual" ||
+      raw === "lifetime" ||
+      raw === "year" ||
+      raw === "month"
+    ) {
       return {
         statusCode: 400,
-        body: 'Send productId for Office ("monthly", "annual", "office") or a program slug.',
+        body: "Office membership is retired. Buy a program instead (productId = program slug).",
       };
     }
 
-    const officeKind = resolveOfficeKind(raw);
-    let priceId: string | null = null;
-    let isSubscription = false;
-    let unlocksOffice = false;
-    let planMeta = "";
-    let productId = raw;
-    let metaKind: "subscription" | "office" | "program" = "program";
-
-    if (officeKind) {
-      priceId = await resolvePriceId(stripe, officeKind);
-      isSubscription = officeKind === "monthly" || officeKind === "annual";
-      unlocksOffice = true;
-      planMeta =
-        officeKind === "annual" || officeKind === "office"
-          ? "annual"
-          : "monthly";
-      productId = officeKind;
-      metaKind = isSubscription ? "subscription" : "office";
-    } else {
-      const program = await findSellableBySlug(stripe, raw);
-      if (!program) {
-        return {
-          statusCode: 404,
-          body: `No active program found for "${raw}". Create it in Studio → Products.`,
-        };
-      }
-      priceId = program.priceId;
-      productId = program.slug;
-      metaKind = "program";
-    }
-
-    if (!priceId) {
+    if (!raw || raw === "program" || raw === "subscription") {
       return {
-        statusCode: 500,
-        body: `Missing Stripe price for ${productId}.`,
+        statusCode: 400,
+        body: 'Send productId with the program slug (e.g. "hotmess").',
       };
     }
+
+    const program = await findSellableBySlug(stripe, raw);
+    if (!program) {
+      return {
+        statusCode: 404,
+        body: `No active program found for "${raw}". Create it in Studio → Programs.`,
+      };
+    }
+
+    const isSubscription =
+      program.interval === "month" || program.interval === "year";
 
     let customerId: string | undefined;
     if (body.email) {
@@ -107,21 +84,21 @@ export const handler: Handler = async (event) => {
       ...(customerId
         ? { customer: customerId }
         : { customer_email: body.email }),
-      line_items: [{ price: priceId, quantity: 1 }],
-      success_url: unlocksOffice
-        ? `${siteUrl}/portal?checkout=success`
-        : `${siteUrl}/programs?checkout=success&program=${productId}`,
-      cancel_url: unlocksOffice
-        ? `${siteUrl}/pricing?checkout=cancel`
-        : `${siteUrl}/programs?checkout=cancel`,
+      line_items: [{ price: program.priceId, quantity: 1 }],
+      success_url: `${siteUrl}/programs?checkout=success&program=${program.slug}`,
+      cancel_url: `${siteUrl}/programs?checkout=cancel`,
       allow_promotion_codes: true,
       metadata: {
-        kind: metaKind,
-        productId,
-        plan: planMeta,
+        kind: "program",
+        productId: program.slug,
+        plan: "",
       },
       ...(isSubscription
-        ? { subscription_data: { metadata: { plan: planMeta } } }
+        ? {
+            subscription_data: {
+              metadata: { program: program.slug, kind: "program" },
+            },
+          }
         : {}),
     });
 

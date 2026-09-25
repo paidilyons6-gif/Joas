@@ -11,6 +11,7 @@ export type StudioProduct = {
   productId: string;
   lookupKey: string;
   active: boolean;
+  interval?: "one_time" | "month" | "year";
 };
 
 export async function fetchStudioProducts(opts?: {
@@ -37,6 +38,7 @@ export async function upsertStudioProduct(input: {
   badge: string;
   features: string[];
   amountDollars: number;
+  interval?: "one_time" | "month" | "year";
   active?: boolean;
 }) {
   const res = await fetch("/.netlify/functions/upsert-product", {

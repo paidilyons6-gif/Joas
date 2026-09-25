@@ -1,12 +1,12 @@
 import { Link, Navigate } from "react-router-dom";
 import { CALCULATORS } from "../../data/calculators";
 import { useAuth } from "../../lib/auth";
-import { isMember } from "../../lib/access";
+import { hasAnyProgram } from "../../lib/access";
 
 export function CalculatorsPage() {
   const { user } = useAuth();
   if (!user) return <Navigate to="/sign-in" replace />;
-  const member = isMember(user.plan);
+  const member = hasAnyProgram(user.programs);
 
   return (
     <div className="portal-page">
@@ -26,7 +26,7 @@ export function CalculatorsPage() {
             <Link
               key={calc.id}
               className={`module-card ${locked ? "module-card--locked" : ""}`}
-              to={locked ? "/pricing" : `/portal/calculators/${calc.id}`}
+              to={locked ? "/programs" : `/portal/calculators/${calc.id}`}
             >
               <p className="module-card__phase">{calc.badge}</p>
               <h3>{calc.title}</h3>

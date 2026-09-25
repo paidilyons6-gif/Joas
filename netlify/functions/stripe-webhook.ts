@@ -13,19 +13,46 @@ function adminClient() {
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 
-async function setPlanByEmail(
+async function grantProgramByEmail(
   email: string,
-  plan: "none" | "monthly" | "annual",
+  slug: string,
   stripeCustomerId?: string | null,
 ) {
   const supabase = adminClient();
-  if (!supabase) return;
-  const patch: Record<string, string> = { plan };
-  if (stripeCustomerId) patch.stripe_customer_id = stripeCustomerId;
-  await supabase
+  if (!supabase || !slug) return;
+
+  const { data: profile } = await supabase
     .from("profiles")
-    .update(patch)
-    .eq("email", email.toLowerCase());
+    .select("id, programs")
+    .eq("email", email.toLowerCase())
+    .maybeSingle();
+
+  if (!profile) return;
+
+  const current = Array.isArray(profile.programs)
+    ? (profile.programs as string[])
+    : [];
+  const next = current.includes(slug) ? current : [...current, slug];
+  const patch: Record<string, unknown> = { programs: next };
+  if (stripeCustomerId) patch.stripe_customer_id = stripeCustomerId;
+
+  await supabase.from("profiles").update(patch).eq("id", profile.id);
+}
+
+async function revokeProgramByEmail(email: string, slug: string) {
+  const supabase = adminClient();
+  if (!supabase || !slug) return;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, programs")
+    .eq("email", email.toLowerCase())
+    .maybeSingle();
+  if (!profile) return;
+  const current = Array.isArray(profile.programs)
+    ? (profile.programs as string[])
+    : [];
+  const next = current.filter((p) => p !== slug);
+  await supabase.from("profiles").update({ programs: next }).eq("id", profile.id);
 }
 
 export const handler: Handler = async (event) => {
@@ -68,23 +95,22 @@ export const handler: Handler = async (event) => {
         ? session.customer
         : session.customer?.id;
 
-    const kind = session.metadata?.kind;
-    const productId = session.metadata?.productId;
+    const slug =
+      session.metadata?.productId ||
+      session.metadata?.program ||
+      undefined;
 
-    // Lifetime one-time Office purchase unlocks as annual (permanent access).
-    if (email && (kind === "office" || productId === "office")) {
-      await setPlanByEmail(email, "annual", customerId);
-    } else if (email && session.metadata?.plan) {
-      const plan =
-        session.metadata.plan === "annual" ? "annual" : "monthly";
-      await setPlanByEmail(email, plan, customerId);
+    if (email && slug && session.metadata?.kind === "program") {
+      await grantProgramByEmail(email, slug, customerId);
     }
-    // HOTMESS program purchases do not change membership plan
   }
 
   if (stripeEvent.type === "customer.subscription.updated") {
     const sub = stripeEvent.data.object as Stripe.Subscription;
-    const plan = sub.metadata?.plan === "annual" ? "annual" : "monthly";
+    const slug = sub.metadata?.program;
+    if (!slug) {
+      return { statusCode: 200, body: JSON.stringify({ received: true }) };
+    }
     const customerId =
       typeof sub.customer === "string" ? sub.customer : sub.customer.id;
     const customer = await stripe.customers.retrieve(customerId);
@@ -93,21 +119,21 @@ export const handler: Handler = async (event) => {
         sub.status === "active" ||
         sub.status === "trialing" ||
         sub.status === "past_due";
-      await setPlanByEmail(
-        customer.email,
-        active ? plan : "none",
-        customerId,
-      );
+      if (active) await grantProgramByEmail(customer.email, slug, customerId);
+      else await revokeProgramByEmail(customer.email, slug);
     }
   }
 
   if (stripeEvent.type === "customer.subscription.deleted") {
     const sub = stripeEvent.data.object as Stripe.Subscription;
-    const customerId =
-      typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-    const customer = await stripe.customers.retrieve(customerId);
-    if (!("deleted" in customer) && customer.email) {
-      await setPlanByEmail(customer.email, "none", customerId);
+    const slug = sub.metadata?.program;
+    if (slug) {
+      const customerId =
+        typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+      const customer = await stripe.customers.retrieve(customerId);
+      if (!("deleted" in customer) && customer.email) {
+        await revokeProgramByEmail(customer.email, slug);
+      }
     }
   }
 
