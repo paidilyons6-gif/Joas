@@ -31,8 +31,24 @@ import {
   type LivePricing,
 } from "../../lib/livePricing";
 import { PRICING_OFFER_META, type PricingOfferKey } from "../../lib/sitePricing";
+import {
+  archiveStudioProduct,
+  fetchStudioProducts,
+  upsertStudioProduct,
+  type StudioProduct,
+} from "../../lib/studioProducts";
 
 const PRICE_SECRET_KEY = "bbb_studio_price_secret";
+
+type ProductDraft = {
+  productId?: string;
+  slug: string;
+  name: string;
+  blurb: string;
+  badge: string;
+  featuresText: string;
+  amountDollars: string;
+};
 
 export function StudioPage() {
   const { user } = useAuth();
@@ -58,6 +74,18 @@ export function StudioPage() {
   });
   const [priceBusy, setPriceBusy] = useState<string | null>(null);
   const [priceMsg, setPriceMsg] = useState("");
+  const [shopProducts, setShopProducts] = useState<StudioProduct[]>([]);
+  const [productDraft, setProductDraft] = useState<ProductDraft>({
+    slug: "",
+    name: "",
+    blurb: "",
+    badge: "Program",
+    featuresText: "",
+    amountDollars: "97",
+  });
+  const [productBusy, setProductBusy] = useState(false);
+  const [productMsg, setProductMsg] = useState("");
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
 
   const isAdmin = !!user && isAdminEmail(user.email);
 
@@ -79,17 +107,136 @@ export function StudioPage() {
     });
   }
 
+  function refreshShopProducts() {
+    void fetchStudioProducts({ all: true }).then(setShopProducts);
+  }
+
   useEffect(() => {
     if (!isAdmin) return;
     refresh();
     void fetchSiteCopy().then(setCopy);
     refreshLivePrices();
+    refreshShopProducts();
   }, [isAdmin]);
 
   if (!user) return <Navigate to="/sign-in" replace />;
   if (!isAdmin) return <Navigate to="/portal" replace />;
 
   const adminEmail = user.email;
+
+  function blankProductDraft(): ProductDraft {
+    return {
+      slug: "",
+      name: "",
+      blurb: "",
+      badge: "Program",
+      featuresText: "",
+      amountDollars: "97",
+    };
+  }
+
+  function editShopProduct(product: StudioProduct) {
+    setEditingSlug(product.slug);
+    setProductDraft({
+      productId: product.productId,
+      slug: product.slug,
+      name: product.name,
+      blurb: product.blurb,
+      badge: product.badge || "Program",
+      featuresText: product.features.join("\n"),
+      amountDollars: String((product.amountCents || 0) / 100),
+    });
+    setProductMsg(`Editing ${product.name}`);
+  }
+
+  async function saveShopProduct() {
+    setProductMsg("");
+    const amount = Number(productDraft.amountDollars);
+    if (!productDraft.name.trim()) {
+      setProductMsg("Give the product a name.");
+      return;
+    }
+    if (!Number.isFinite(amount) || amount < 1) {
+      setProductMsg("Enter a dollar amount of at least 1.");
+      return;
+    }
+    if (!priceSecret.trim()) {
+      setProductMsg("Enter your Studio pricing password first (above).");
+      return;
+    }
+    setProductBusy(true);
+    try {
+      try {
+        sessionStorage.setItem(PRICE_SECRET_KEY, priceSecret.trim());
+      } catch {
+        /* ignore */
+      }
+      const result = await upsertStudioProduct({
+        email: adminEmail,
+        secret: priceSecret.trim(),
+        productId: productDraft.productId,
+        slug: productDraft.slug || undefined,
+        name: productDraft.name.trim(),
+        blurb: productDraft.blurb.trim(),
+        badge: productDraft.badge.trim() || "Program",
+        features: productDraft.featuresText
+          .split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean),
+        amountDollars: amount,
+        active: true,
+      });
+      setProductMsg(
+        result.created
+          ? `${result.product.name} is live on /programs ♡`
+          : `${result.product.name} updated — live on /programs ♡`,
+      );
+      setProductDraft(blankProductDraft());
+      setEditingSlug(null);
+      refreshShopProducts();
+      refreshLivePrices();
+    } catch (error) {
+      setProductMsg(
+        error instanceof Error ? error.message : "Could not save product",
+      );
+    } finally {
+      setProductBusy(false);
+    }
+  }
+
+  async function archiveShopProduct(product: StudioProduct) {
+    if (!priceSecret.trim()) {
+      setProductMsg("Enter your Studio pricing password first.");
+      return;
+    }
+    if (
+      !confirm(
+        `Hide “${product.name}” from /programs? You can recreate it later.`,
+      )
+    ) {
+      return;
+    }
+    setProductBusy(true);
+    try {
+      await archiveStudioProduct({
+        email: adminEmail,
+        secret: priceSecret.trim(),
+        productId: product.productId,
+      });
+      setProductMsg(`${product.name} archived.`);
+      if (editingSlug === product.slug) {
+        setProductDraft(blankProductDraft());
+        setEditingSlug(null);
+      }
+      refreshShopProducts();
+    } catch (error) {
+      setProductMsg(
+        error instanceof Error ? error.message : "Could not archive product",
+      );
+    } finally {
+      setProductBusy(false);
+    }
+  }
 
   async function savePrice(kind: PricingOfferKey) {
     setPriceMsg("");
@@ -184,19 +331,19 @@ export function StudioPage() {
     <div className="portal-page">
       <p className="eyebrow">Studio</p>
       <h1>
-        Edit programs &amp; <em>writing</em>
+        Edit The Office &amp; <em>products</em>
       </h1>
       <p className="portal-lede">
-        Change homepage copy, prices, courses, lessons, and which menu topics
-        members see — signed in as admin ({user.email}).
+        Change homepage copy, Office prices, sellable products, courses, and
+        menu topics — signed in as admin ({user.email}).
       </p>
 
       <section className="studio-nav-settings">
-        <h2 className="portal-subhead">Prices (subscriptions &amp; programs)</h2>
+        <h2 className="portal-subhead">Office membership prices</h2>
         <p className="portal-lede">
-          Change the dollar amount below and save — Stripe and the public
-          pricing page update together. You need the Studio pricing password
-          once per browser session.
+          Monthly, yearly, and lifetime for The Office. Enter the Studio
+          password once, then save a new dollar amount — Stripe and /pricing
+          update together.
         </p>
         <div className="tool-form">
           <label className="calc-field">
@@ -209,58 +356,192 @@ export function StudioPage() {
               placeholder="Ask Padraig if you don’t have it yet"
             />
           </label>
-          {(
-            ["monthly", "annual", "lifetime", "hotmess"] as PricingOfferKey[]
-          ).map((key) => {
-            const meta = PRICING_OFFER_META[key];
-            const liveKey = key;
-            const current =
-              live?.[liveKey]?.priceLabel ||
-              (key === "monthly"
-                ? "$49"
-                : key === "annual"
-                  ? "$397"
-                  : key === "lifetime"
-                    ? "$597"
-                    : "$97");
-            return (
-              <div key={key} className="studio-price-row">
-                <label className="calc-field">
-                  <span>
-                    {meta.title}{" "}
-                    <small style={{ color: "var(--ink-muted)" }}>
-                      · {meta.kind} · live {current}
-                    </small>
-                  </span>
-                  <input
-                    type="number"
-                    min={1}
-                    step={1}
-                    value={priceDrafts[key]}
-                    onChange={(e) =>
-                      setPriceDrafts((prev) => ({
-                        ...prev,
-                        [key]: e.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <button
-                  className="btn btn--ink"
-                  type="button"
-                  disabled={priceBusy !== null}
-                  onClick={() => void savePrice(key)}
-                >
-                  {priceBusy === key ? "Saving…" : "Save price →"}
-                </button>
-              </div>
-            );
-          })}
+          {(["monthly", "annual", "lifetime"] as PricingOfferKey[]).map(
+            (key) => {
+              const meta = PRICING_OFFER_META[key];
+              const current =
+                live?.[key]?.priceLabel ||
+                (key === "monthly"
+                  ? "$49"
+                  : key === "annual"
+                    ? "$397"
+                    : "$597");
+              return (
+                <div key={key} className="studio-price-row">
+                  <label className="calc-field">
+                    <span>
+                      {meta.title}{" "}
+                      <small style={{ color: "var(--ink-muted)" }}>
+                        · {meta.kind} · live {current}
+                      </small>
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={priceDrafts[key]}
+                      onChange={(e) =>
+                        setPriceDrafts((prev) => ({
+                          ...prev,
+                          [key]: e.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                  <button
+                    className="btn btn--ink"
+                    type="button"
+                    disabled={priceBusy !== null}
+                    onClick={() => void savePrice(key)}
+                  >
+                    {priceBusy === key ? "Saving…" : "Save price →"}
+                  </button>
+                </div>
+              );
+            },
+          )}
           {priceMsg && <p className="form-status">{priceMsg}</p>}
-          <p className="portal-lede" style={{ marginTop: "0.5rem" }}>
-            Tip: existing subscribers keep their old rate until they change
-            plans. New checkouts use the new amount immediately.
-          </p>
+        </div>
+      </section>
+
+      <section className="studio-nav-settings">
+        <h2 className="portal-subhead">Sellable products</h2>
+        <p className="portal-lede">
+          Create and edit one-time programs on /programs (HOTMESS and anything
+          new). Same Studio password as above. Name, price, blurb, and bullet
+          features all go live when you save.
+        </p>
+        <div className="tool-form">
+          {shopProducts.length > 0 && (
+            <div className="module-grid" style={{ marginBottom: "1.25rem" }}>
+              {shopProducts.map((product) => (
+                <article
+                  key={product.productId}
+                  className="module-card"
+                  style={{ opacity: product.active ? 1 : 0.55 }}
+                >
+                  <p className="module-card__phase">
+                    {product.active ? product.badge || "Program" : "Archived"} ·{" "}
+                    {product.priceLabel}
+                  </p>
+                  <h3>{product.name}</h3>
+                  <p>{product.blurb || "No description yet."}</p>
+                  <div className="account-actions">
+                    <button
+                      className="btn btn--ink"
+                      type="button"
+                      disabled={productBusy}
+                      onClick={() => editShopProduct(product)}
+                    >
+                      Edit →
+                    </button>
+                    {product.active && (
+                      <button
+                        className="btn btn--ghost-ink"
+                        type="button"
+                        disabled={productBusy}
+                        onClick={() => void archiveShopProduct(product)}
+                      >
+                        Archive
+                      </button>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          <h3 className="portal-subhead" style={{ fontSize: "1.1rem" }}>
+            {editingSlug ? `Edit “${editingSlug}”` : "New product"}
+          </h3>
+          <label className="calc-field">
+            <span>Name</span>
+            <input
+              value={productDraft.name}
+              onChange={(e) =>
+                setProductDraft((prev) => ({ ...prev, name: e.target.value }))
+              }
+              placeholder="e.g. HOTMESS"
+            />
+          </label>
+          <label className="calc-field">
+            <span>Price (USD)</span>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={productDraft.amountDollars}
+              onChange={(e) =>
+                setProductDraft((prev) => ({
+                  ...prev,
+                  amountDollars: e.target.value,
+                }))
+              }
+            />
+          </label>
+          <label className="calc-field">
+            <span>Badge</span>
+            <input
+              value={productDraft.badge}
+              onChange={(e) =>
+                setProductDraft((prev) => ({ ...prev, badge: e.target.value }))
+              }
+              placeholder="Program"
+            />
+          </label>
+          <label className="calc-field">
+            <span>Short description</span>
+            <textarea
+              rows={3}
+              value={productDraft.blurb}
+              onChange={(e) =>
+                setProductDraft((prev) => ({ ...prev, blurb: e.target.value }))
+              }
+            />
+          </label>
+          <label className="calc-field">
+            <span>Features (one per line)</span>
+            <textarea
+              rows={4}
+              value={productDraft.featuresText}
+              onChange={(e) =>
+                setProductDraft((prev) => ({
+                  ...prev,
+                  featuresText: e.target.value,
+                }))
+              }
+              placeholder={"Sold on the website\nOne-time checkout"}
+            />
+          </label>
+          <div className="account-actions">
+            <button
+              className="btn btn--primary"
+              type="button"
+              disabled={productBusy}
+              onClick={() => void saveShopProduct()}
+            >
+              {productBusy
+                ? "Saving…"
+                : editingSlug
+                  ? "Save product →"
+                  : "Create product →"}
+            </button>
+            {editingSlug && (
+              <button
+                className="btn btn--ghost-ink"
+                type="button"
+                disabled={productBusy}
+                onClick={() => {
+                  setProductDraft(blankProductDraft());
+                  setEditingSlug(null);
+                  setProductMsg("");
+                }}
+              >
+                Cancel edit
+              </button>
+            )}
+          </div>
+          {productMsg && <p className="form-status">{productMsg}</p>}
         </div>
       </section>
 
@@ -338,10 +619,11 @@ export function StudioPage() {
 
       <div className="studio-hero">
         <div>
-          <h2>Programs on the site</h2>
+          <h2>Member courses (inside the portal)</h2>
           <p>
-            Edit Startup Foundations, Money &amp; Margins, Launch &amp; Sales, or
-            add new courses for members.
+            These are learning tracks for members — separate from sellable
+            products on /programs. Edit Startup Foundations, Money &amp;
+            Margins, Launch &amp; Sales, or add new courses.
           </p>
         </div>
         <button className="btn btn--primary" type="button" onClick={createCourse}>

@@ -1,15 +1,19 @@
 # Stripe setup (The Office + HOTMESS)
 
-## Changing prices (Becky / Studio)
+## Sellable products (Studio)
 
-1. Sign in as admin → **Portal → Studio**
-2. Open **Prices (subscriptions & programs)**
-3. Enter the Studio pricing password (from Padraig)
-4. Type the new dollar amount → **Save price**
+In **Portal → Studio → Sellable products** Becky can:
+- Create a new one-time program (name, price, blurb, features)
+- Edit existing programs (including HOTMESS)
+- Archive a program (hides it from `/programs`)
 
-The site labels and Stripe checkout update together. No Netlify redeploy needed.
+Uses the same Studio pricing password. Products live in Stripe and show on `/programs` immediately.
 
-## Initial product setup (one-time)
+## Office membership prices (Studio)
+
+Same Studio screen → **Office membership prices** for monthly / yearly / lifetime.
+
+## Initial product setup (one-time / legacy)
 
 1. Stripe → **Products** → **Add product** (or edit existing **The Office**)
 2. **The Office — prices** (same product, three prices)

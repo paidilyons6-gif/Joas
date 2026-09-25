@@ -1,31 +1,20 @@
 import type { Handler } from "@netlify/functions";
 import {
+  findSellableBySlug,
   getStripe,
   resolvePriceId,
-  type CheckoutKind,
+  type OfficeKind,
 } from "./_stripePrices";
 
 const siteUrl =
   process.env.URL || process.env.DEPLOY_PRIME_URL || "http://localhost:8888";
 
-function resolveKind(body: {
-  kind?: string;
-  productId?: string;
-  programId?: string;
-  plan?: string;
-}): CheckoutKind | null {
-  const raw = (
-    body.productId ||
-    body.programId ||
-    body.plan ||
-    body.kind ||
-    ""
-  ).toLowerCase();
-  if (raw === "office" || raw === "onetime" || raw === "one-time" || raw === "lifetime")
+function resolveOfficeKind(raw: string): OfficeKind | null {
+  const v = raw.toLowerCase();
+  if (v === "office" || v === "onetime" || v === "one-time" || v === "lifetime")
     return "office";
-  if (raw === "monthly" || raw === "month") return "monthly";
-  if (raw === "annual" || raw === "yearly" || raw === "year") return "annual";
-  if (raw === "hotmess") return "hotmess";
+  if (v === "monthly" || v === "month") return "monthly";
+  if (v === "annual" || v === "yearly" || v === "year") return "annual";
   return null;
 }
 
@@ -51,19 +40,56 @@ export const handler: Handler = async (event) => {
       email?: string;
     };
 
-    const kind = resolveKind(body);
-    if (!kind) {
+    const raw = (
+      body.productId ||
+      body.programId ||
+      body.plan ||
+      body.kind ||
+      ""
+    ).toLowerCase();
+
+    if (!raw) {
       return {
         statusCode: 400,
-        body: 'Use productId "office" (lifetime), "monthly", "annual", or "hotmess".',
+        body: 'Send productId for Office ("monthly", "annual", "office") or a program slug.',
       };
     }
 
-    const priceId = await resolvePriceId(stripe, kind);
+    const officeKind = resolveOfficeKind(raw);
+    let priceId: string | null = null;
+    let isSubscription = false;
+    let unlocksOffice = false;
+    let planMeta = "";
+    let productId = raw;
+    let metaKind: "subscription" | "office" | "program" = "program";
+
+    if (officeKind) {
+      priceId = await resolvePriceId(stripe, officeKind);
+      isSubscription = officeKind === "monthly" || officeKind === "annual";
+      unlocksOffice = true;
+      planMeta =
+        officeKind === "annual" || officeKind === "office"
+          ? "annual"
+          : "monthly";
+      productId = officeKind;
+      metaKind = isSubscription ? "subscription" : "office";
+    } else {
+      const program = await findSellableBySlug(stripe, raw);
+      if (!program) {
+        return {
+          statusCode: 404,
+          body: `No active program found for "${raw}". Create it in Studio → Products.`,
+        };
+      }
+      priceId = program.priceId;
+      productId = program.slug;
+      metaKind = "program";
+    }
+
     if (!priceId) {
       return {
         statusCode: 500,
-        body: `Missing Stripe price for ${kind}.`,
+        body: `Missing Stripe price for ${productId}.`,
       };
     }
 
@@ -76,15 +102,6 @@ export const handler: Handler = async (event) => {
       if (existing.data[0]) customerId = existing.data[0].id;
     }
 
-    const isSubscription = kind === "monthly" || kind === "annual";
-    const unlocksOffice = kind === "office" || isSubscription;
-    const planMeta =
-      kind === "annual" || kind === "office"
-        ? "annual"
-        : kind === "monthly"
-          ? "monthly"
-          : "";
-
     const session = await stripe.checkout.sessions.create({
       mode: isSubscription ? "subscription" : "payment",
       ...(customerId
@@ -93,18 +110,14 @@ export const handler: Handler = async (event) => {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: unlocksOffice
         ? `${siteUrl}/portal?checkout=success`
-        : `${siteUrl}/programs?checkout=success&program=${kind}`,
+        : `${siteUrl}/programs?checkout=success&program=${productId}`,
       cancel_url: unlocksOffice
         ? `${siteUrl}/pricing?checkout=cancel`
         : `${siteUrl}/programs?checkout=cancel`,
       allow_promotion_codes: true,
       metadata: {
-        kind: unlocksOffice
-          ? isSubscription
-            ? "subscription"
-            : "office"
-          : "program",
-        productId: kind,
+        kind: metaKind,
+        productId,
         plan: planMeta,
       },
       ...(isSubscription

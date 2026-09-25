@@ -1,23 +1,45 @@
 import { Link } from "react-router-dom";
-import { PROGRAMS } from "../data/programs";
 import { useAuth } from "../lib/auth";
 import { startProgramCheckout } from "../lib/payments";
 import { Reveal } from "../components/Reveal";
 import { useEffect, useState } from "react";
 import {
-  fetchLivePricing,
-  hotmessDisplay,
-  type LivePricing,
-} from "../lib/livePricing";
+  fetchStudioProducts,
+  type StudioProduct,
+} from "../lib/studioProducts";
+
+const FALLBACK: StudioProduct[] = [
+  {
+    id: "hotmess",
+    slug: "hotmess",
+    name: "HOTMESS",
+    blurb:
+      "HOTMESS stays available on the website — a Bodies by Becca program you can sell directly, separate from BodiesByBecca membership in the app.",
+    badge: "Program",
+    features: [
+      "Sold on the website",
+      "Separate from BodiesByBecca app membership",
+      "One-time Stripe checkout",
+    ],
+    amountCents: 9700,
+    priceLabel: "$97",
+    priceId: "",
+    productId: "",
+    lookupKey: "bbb_hotmess_onetime",
+    active: true,
+  },
+];
 
 export function ProgramsPage() {
   const { user } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const [live, setLive] = useState<LivePricing | null>(null);
+  const [products, setProducts] = useState<StudioProduct[]>(FALLBACK);
 
   useEffect(() => {
-    void fetchLivePricing().then(setLive);
+    void fetchStudioProducts().then((list) => {
+      if (list.length) setProducts(list.filter((p) => p.active));
+    });
   }, []);
 
   async function buy(programId: string) {
@@ -30,7 +52,7 @@ export function ProgramsPage() {
       );
       if (result.demo) {
         setMessage(
-          "Demo mode: program checkout opens when Stripe + program price IDs are set.",
+          "Demo mode: program checkout opens when Stripe is connected.",
         );
       }
     } catch (error) {
@@ -39,8 +61,6 @@ export function ProgramsPage() {
       setBusy(null);
     }
   }
-
-  const hotmess = hotmessDisplay(live);
 
   return (
     <main className="page">
@@ -52,8 +72,8 @@ export function ProgramsPage() {
               Programs you sell <em>on the site</em>
             </h1>
             <p className="section__copy">
-              BodiesByBecca membership lives in the app (App Store / Play Store).
-              Programs like HOTMESS keep selling here on the website.
+              One-time programs managed in Studio. Office membership
+              (subscriptions &amp; lifetime) lives on the Membership page.
             </p>
           </Reveal>
         </div>
@@ -61,18 +81,14 @@ export function ProgramsPage() {
 
       <section className="section pricing">
         <div className="section__inner pricing__grid">
-          {PROGRAMS.map((program) => (
+          {products.map((program) => (
             <Reveal className="price-card price-card--featured" key={program.id}>
               {program.badge && (
                 <p className="price-card__badge">{program.badge}</p>
               )}
               <h2>{program.name}</h2>
               <p className="price-card__price">
-                <span>
-                  {program.id === "hotmess"
-                    ? hotmess.priceLabel
-                    : program.priceLabel}
-                </span>
+                <span>{program.priceLabel}</span>
               </p>
               <p className="price-card__blurb">{program.blurb}</p>
               <ul>
