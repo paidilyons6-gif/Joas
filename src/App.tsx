@@ -3,12 +3,14 @@ import { AuthProvider, useAuth } from "./lib/auth";
 import { SiteLayout } from "./components/SiteLayout";
 import { PortalLayout } from "./components/PortalLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { WaitlistGate } from "./components/WaitlistGate";
 import { HomePage } from "./pages/HomePage";
 import { PricingPage } from "./pages/PricingPage";
 import { SignInPage } from "./pages/SignInPage";
 import { SignUpPage } from "./pages/SignUpPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { PrivacyPage, TermsPage } from "./pages/LegalPages";
+import { EnterPage } from "./pages/EnterPage";
 import { PortalHome } from "./pages/portal/PortalHome";
 import { CoursesPage } from "./pages/portal/CoursesPage";
 import { TrackPage } from "./pages/portal/TrackPage";
@@ -37,7 +39,9 @@ export default function App() {
     <ErrorBoundary>
       <AuthProvider>
         <BrowserRouter>
+          <WaitlistGate>
           <Routes>
+            <Route path="/enter" element={<EnterPage />} />
             <Route element={<SiteLayout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/pricing" element={<PricingPage />} />
@@ -140,6 +144,7 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </WaitlistGate>
         </BrowserRouter>
       </AuthProvider>
     </ErrorBoundary>

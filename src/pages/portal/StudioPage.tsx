@@ -32,6 +32,11 @@ import {
   upsertStudioProduct,
   type StudioProduct,
 } from "../../lib/studioProducts";
+import {
+  fetchWaitlist,
+  isWaitlistMode,
+  type WaitlistRow,
+} from "../../lib/waitlist";
 
 const PRICE_SECRET_KEY = "bbb_studio_price_secret";
 
@@ -75,6 +80,9 @@ export function StudioPage() {
   const [productBusy, setProductBusy] = useState(false);
   const [productMsg, setProductMsg] = useState("");
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
+  const [waitlistMsg, setWaitlistMsg] = useState("");
+  const [waitlistBusy, setWaitlistBusy] = useState(false);
 
   const isAdmin = !!user && isAdminEmail(user.email);
 
@@ -293,6 +301,81 @@ export function StudioPage() {
           View as client →
         </button>
       </div>
+
+      {isWaitlistMode() && (
+        <section className="studio-nav-settings">
+          <h2 className="portal-subhead">Launch waitlist</h2>
+          <p className="portal-lede">
+            The public site is gated — visitors leave their email. Load the list
+            here, copy it, and send your launch announce tomorrow. Turn the gate
+            off with <code>VITE_WAITLIST_MODE=false</code> on Netlify when you go
+            live.
+          </p>
+          <div className="account-actions">
+            <button
+              className="btn btn--primary"
+              type="button"
+              disabled={waitlistBusy || !priceSecret.trim()}
+              onClick={() => {
+                setWaitlistMsg("");
+                setWaitlistBusy(true);
+                void fetchWaitlist({
+                  email: adminEmail,
+                  secret: priceSecret.trim(),
+                })
+                  .then((rows) => {
+                    setWaitlist(rows);
+                    setWaitlistMsg(
+                      rows.length
+                        ? `${rows.length} email${rows.length === 1 ? "" : "s"} on the list.`
+                        : "No emails yet.",
+                    );
+                  })
+                  .catch((err) => {
+                    setWaitlistMsg(
+                      err instanceof Error
+                        ? err.message
+                        : "Could not load waitlist",
+                    );
+                  })
+                  .finally(() => setWaitlistBusy(false));
+              }}
+            >
+              {waitlistBusy ? "Loading…" : "Load waitlist →"}
+            </button>
+            {waitlist.length > 0 && (
+              <button
+                className="btn btn--ink"
+                type="button"
+                onClick={() => {
+                  const text = waitlist.map((r) => r.email).join("\n");
+                  void navigator.clipboard.writeText(text).then(() => {
+                    setWaitlistMsg(`Copied ${waitlist.length} emails.`);
+                  });
+                }}
+              >
+                Copy emails
+              </button>
+            )}
+          </div>
+          {waitlistMsg && <p className="form-status">{waitlistMsg}</p>}
+          {waitlist.length > 0 && (
+            <ul className="waitlist-export">
+              {waitlist.map((row) => (
+                <li key={`${row.email}-${row.created_at}`}>
+                  <strong>{row.email}</strong>
+                  <span>
+                    {new Date(row.created_at).toLocaleString(undefined, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className="studio-nav-settings">
         <h2 className="portal-subhead">Programs (sell &amp; unlock)</h2>

@@ -32,10 +32,20 @@ No Stripe Price IDs. No Netlify redeploy for new products.
 | --- | --- |
 | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Live auth + profiles |
 | `VITE_ADMIN_EMAILS` | Studio access (default `r.lyons1@icloud.com`) |
-| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Webhook writes `profiles.programs` |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Webhook writes `profiles.programs` + waitlist |
 | `STRIPE_SECRET_KEY` | Checkout + product CRUD |
 | `STRIPE_WEBHOOK_SECRET` | Verify `/.netlify/functions/stripe-webhook` |
-| `STUDIO_PRICE_SECRET` | Password gate for Studio product mutations |
+| `STUDIO_PRICE_SECRET` | Password gate for Studio product mutations + staff `/enter` |
+| `VITE_WAITLIST_MODE` | `true` (default) blocks site behind email gate; set `false` to open |
+
+## Waitlist (pre-launch)
+
+1. Apply Supabase migration `007_waitlist.sql`
+2. Keep `VITE_WAITLIST_MODE=true` (or omit — defaults on)
+3. Visitors only see the email gate; emails land in `waitlist_emails`
+4. Becca: Studio → **Load waitlist** → **Copy emails** for the launch announce
+5. Staff preview: `/enter` with Studio password
+6. On launch day: set `VITE_WAITLIST_MODE=false` and redeploy
 
 ## Webhook
 
