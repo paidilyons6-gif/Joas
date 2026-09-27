@@ -28,7 +28,13 @@ type AuthContextValue = {
   signUp: (input: { email: string; password: string; name: string }) => Promise<void>;
   signIn: (input: { email: string; password: string }) => Promise<void>;
   signOut: () => Promise<void>;
+  /**
+   * Demo-only local unlock. Live entitlements come from the Stripe webhook —
+   * call refresh() / waitForProgram() after checkout instead.
+   */
   grantProgram: (slug: string) => Promise<void>;
+  /** Poll profile until program appears (live) or grant locally (demo). */
+  waitForProgram: (slug: string, opts?: { attempts?: number; ms?: number }) => Promise<boolean>;
   toggleLesson: (lessonId: string) => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -154,25 +160,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (slug: string) => {
       const id = slug.trim().toLowerCase();
       if (!id) return;
-      if (!live) {
-        setUser(toAuthUser(demoStore.grantProgram(id), "demo"));
+      // Live entitlements are webhook-only — never write programs from the client.
+      if (live) {
+        await refresh();
         return;
       }
-      if (!user) throw new Error("Not signed in");
-      if (user.programs.includes(id)) return;
-      const next = [...user.programs, id];
-      const supabase = getSupabase();
-      const { error } = await supabase!
-        .from("profiles")
-        .update({ programs: next })
-        .eq("id", user.id);
-      // If column missing, still update local session for UX
-      if (error) {
-        console.warn(error.message);
-      }
-      setUser({ ...user, programs: next });
+      setUser(toAuthUser(demoStore.grantProgram(id), "demo"));
     },
-    [live, user],
+    [live, refresh],
+  );
+
+  const waitForProgram = useCallback(
+    async (slug: string, opts?: { attempts?: number; ms?: number }) => {
+      const id = slug.trim().toLowerCase();
+      if (!id) return false;
+      if (!live) {
+        setUser(toAuthUser(demoStore.grantProgram(id), "demo"));
+        return true;
+      }
+      const attempts = opts?.attempts ?? 12;
+      const ms = opts?.ms ?? 1500;
+      const supabase = getSupabase();
+      if (!supabase) {
+        await refresh();
+        return false;
+      }
+      for (let i = 0; i < attempts; i++) {
+        const { data } = await supabase.auth.getSession();
+        const uid = data.session?.user?.id;
+        if (uid) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("programs")
+            .eq("id", uid)
+            .maybeSingle();
+          const programs = Array.isArray(profile?.programs)
+            ? (profile.programs as string[])
+            : [];
+          if (programs.includes(id)) {
+            await refresh();
+            return true;
+          }
+        }
+        await new Promise((r) => window.setTimeout(r, ms));
+      }
+      await refresh();
+      return false;
+    },
+    [live, refresh],
   );
 
   const toggleLesson = useCallback(
@@ -206,10 +241,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signOut,
       grantProgram,
+      waitForProgram,
       toggleLesson,
       refresh,
     }),
-    [user, loading, live, signUp, signIn, signOut, grantProgram, toggleLesson, refresh],
+    [
+      user,
+      loading,
+      live,
+      signUp,
+      signIn,
+      signOut,
+      grantProgram,
+      waitForProgram,
+      toggleLesson,
+      refresh,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

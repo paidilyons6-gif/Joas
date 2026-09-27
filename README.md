@@ -20,4 +20,4 @@ npm run dev
 
 ## Stripe / Studio
 
-See **[STRIPE_SETUP.md](./STRIPE_SETUP.md)** — Becky creates and prices programs in Studio; Stripe syncs automatically.
+See **[STRIPE_SETUP.md](./STRIPE_SETUP.md)** — Becca creates and prices programs in Studio; Stripe syncs automatically.

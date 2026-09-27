@@ -2,7 +2,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { startProgramCheckout } from "../lib/payments";
 import { Reveal } from "../components/Reveal";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   fetchStudioProducts,
   type StudioProduct,
@@ -10,13 +10,14 @@ import {
 import { hasProgram } from "../lib/access";
 
 export function ProgramsPage() {
-  const { user, grantProgram } = useAuth();
+  const { user, waitForProgram, refresh } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [products, setProducts] = useState<StudioProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const handledSuccess = useRef<string | null>(null);
 
   useEffect(() => {
     void fetchStudioProducts()
@@ -32,25 +33,30 @@ export function ProgramsPage() {
       return;
     }
     if (status === "success" && program) {
+      const key = `${program}:${user?.id || "anon"}`;
+      if (handledSuccess.current === key) return;
+      handledSuccess.current = key;
       void (async () => {
-        try {
-          if (user) {
-            await grantProgram(program);
-            setMessage(`You’re in — ${program} is unlocked in your portal ♡`);
-            navigate("/portal", { replace: true });
-          } else {
-            setMessage(
-              "Payment received — sign in with the same email to open your program.",
-            );
-          }
-        } catch {
+        if (!user) {
           setMessage(
-            "Payment received. Refresh or sign in to see your program.",
+            "Payment received — sign in with the same email to open your program.",
+          );
+          return;
+        }
+        setMessage("Confirming your purchase…");
+        const ok = await waitForProgram(program);
+        if (ok) {
+          setMessage(`You’re in — ${program} is unlocked in your portal ♡`);
+          navigate("/portal?checkout=success", { replace: true });
+        } else {
+          await refresh();
+          setMessage(
+            "Payment received. If your program isn’t open yet, wait a moment and refresh — unlocks sync from Stripe.",
           );
         }
       })();
     }
-  }, [params, user, grantProgram, navigate]);
+  }, [params, user, waitForProgram, refresh, navigate]);
 
   async function buy(programId: string) {
     setMessage("");
@@ -64,11 +70,7 @@ export function ProgramsPage() {
     }
     setBusy(programId);
     try {
-      const result = await startProgramCheckout(programId, user.email);
-      if (result.demo) {
-        await grantProgram(programId);
-        navigate("/portal");
-      }
+      await startProgramCheckout(programId, user.email);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Checkout failed");
     } finally {
@@ -99,7 +101,7 @@ export function ProgramsPage() {
           {loading && <p className="pricing__note">Loading programs…</p>}
           {!loading && products.length === 0 && (
             <p className="pricing__note">
-              No programs listed yet. Becky adds them in Studio.
+              No programs yet — Becca adds them in Studio.
             </p>
           )}
           {products.map((program) => {

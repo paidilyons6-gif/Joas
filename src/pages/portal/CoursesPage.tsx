@@ -1,15 +1,20 @@
 import { Link, Navigate } from "react-router-dom";
-import { getAllTracks, trackProgressFromTrack } from "../../lib/courseCatalog";
+import {
+  trackProgressFromTrack,
+  usePublishedTracks,
+} from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
 import { hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 
 export function CoursesPage() {
   const { user } = useAuth();
+  const { preview } = useClientPreview();
+  const { tracks, loading } = usePublishedTracks();
   if (!user) return <Navigate to="/sign-in" replace />;
   const member = hasAnyProgram(user.programs);
-  const admin = isAdminEmail(user.email);
-  const tracks = getAllTracks({ includeDrafts: false });
+  const admin = isAdminEmail(user.email) && !preview;
 
   return (
     <div className="portal-page">
@@ -20,8 +25,8 @@ export function CoursesPage() {
             Train like you mean <em>business</em>
           </h1>
           <p className="portal-lede">
-            Learning paths — startup, money, launch, plus any
-            courses Becca publishes in Studio.
+            Learning paths — startup, money, launch, plus any courses Becca
+            publishes in Studio.
           </p>
         </div>
         {admin && (
@@ -31,10 +36,12 @@ export function CoursesPage() {
         )}
       </div>
 
+      {loading && <p className="portal-lede">Loading courses…</p>}
+
       <div className="module-grid module-grid--desktop">
         {tracks.map((track) => {
           const progress = trackProgressFromTrack(track, user.completedLessons);
-          const locked = track.membersOnly && !member;
+          const locked = track.membersOnly && !member && !admin;
           const minutes = track.lessons.reduce((sum, l) => sum + l.duration, 0);
           return (
             <article

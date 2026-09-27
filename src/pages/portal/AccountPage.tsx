@@ -2,10 +2,12 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 
 export function AccountPage() {
   const { user, signOut, mode } = useAuth();
-  const admin = isAdminEmail(user?.email);
+  const { preview } = useClientPreview();
+  const admin = isAdminEmail(user?.email) && !preview;
 
   if (!user) return <Navigate to="/sign-in" replace />;
 
@@ -18,7 +20,7 @@ export function AccountPage() {
         Your <em>account</em>
       </h1>
       <p className="portal-lede">
-        Free account plus any programs you&apos;ve purchased. Becky manages
+        Free account plus any programs you&apos;ve purchased. Becca manages
         products and prices in Studio.
       </p>
 

@@ -15,30 +15,18 @@ async function postCheckout(payload: Record<string, unknown>) {
   window.location.assign(data.url);
 }
 
-async function tryCheckout(payload: Record<string, unknown>) {
-  try {
-    await postCheckout(payload);
-    return { demo: false as const };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message.includes("Failed to fetch") || message.includes("404")) {
-      return { demo: true as const };
-    }
-    throw error;
-  }
-}
-
-/** Buy a program (one-time or subscription — set in Studio). */
+/** Buy a program (one-time or subscription — set in Studio). No free unlock fallback. */
 export async function startProgramCheckout(
   programId: string,
   email?: string,
 ) {
-  return tryCheckout({
+  await postCheckout({
     kind: "program",
     productId: programId,
     programId,
     email,
   });
+  return { demo: false as const };
 }
 
 /** @deprecated */

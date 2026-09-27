@@ -9,18 +9,24 @@ import {
   type ToolId,
 } from "../../data/tools";
 import { useAuth } from "../../lib/auth";
-import { hasAnyProgram } from "../../lib/access";
+import { canAccessContent } from "../../lib/access";
+import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 import { demoStore } from "../../lib/demo";
 import { syncToolDraftsRemote } from "../../lib/draftsRepo";
 
 export function ToolPage() {
   const { toolId } = useParams();
   const { user } = useAuth();
+  const { preview } = useClientPreview();
   if (!user) return <Navigate to="/sign-in" replace />;
 
   const tool = getTool(toolId || "");
   if (!tool) return <Navigate to="/portal/tools" replace />;
-  if (tool.membersOnly && !hasAnyProgram(user.programs)) {
+  const unlocked = canAccessContent(user.programs, {
+    isAdmin: isAdminEmail(user.email) && !preview,
+  });
+  if (tool.membersOnly && !unlocked) {
     return <Navigate to="/programs" replace />;
   }
 

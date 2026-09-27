@@ -4,6 +4,7 @@ import { LogoLink } from "./Logo";
 import { useAuth } from "../lib/auth";
 import { hasAnyProgram } from "../lib/access";
 import { isAdminEmail } from "../lib/admin";
+import { useClientPreview } from "../lib/clientPreview";
 import {
   DEFAULT_NAV,
   NAV_META,
@@ -25,8 +26,10 @@ const PATHS: Record<NavTopicId, string> = {
 
 export function PortalLayout() {
   const { user, signOut } = useAuth();
+  const { preview, toggle } = useClientPreview();
   const unlocked = hasAnyProgram(user?.programs);
-  const admin = isAdminEmail(user?.email);
+  const isAdmin = isAdminEmail(user?.email);
+  const admin = isAdmin && !preview;
   const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -55,8 +58,9 @@ export function PortalLayout() {
     setMenuOpen(false);
   }
 
-  const ownedLabel =
-    user?.programs?.length === 1
+  const ownedLabel = preview
+    ? "Viewing as client"
+    : user?.programs?.length === 1
       ? `Program: ${user.programs[0]}`
       : user?.programs?.length
         ? `${user.programs.length} programs unlocked`
@@ -94,7 +98,7 @@ export function PortalLayout() {
         })}
       </nav>
       <div className="portal__side-foot">
-        {!unlocked && (
+        {!unlocked && !admin && (
           <Link
             className="btn btn--primary portal__upgrade"
             to="/programs"
@@ -133,6 +137,15 @@ export function PortalLayout() {
             </p>
           </div>
           <div className="portal__topbar-actions">
+            {isAdmin && (
+              <button
+                className="btn btn--ghost-ink"
+                type="button"
+                onClick={() => toggle()}
+              >
+                {preview ? "Exit client view" : "View as client"}
+              </button>
+            )}
             {admin && visible("studio") && (
               <Link className="btn btn--ghost-ink" to="/portal/studio">
                 Studio →

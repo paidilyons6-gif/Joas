@@ -151,8 +151,8 @@ export function HomePage() {
             <Link className="btn btn--primary" to="/programs">
               Shop programs →
             </Link>
-            <Link className="btn btn--ink" to="/programs">
-              BodiesByBecca membership
+            <Link className="btn btn--ink" to={user ? "/portal" : "/sign-up"}>
+              {user ? "Open The Office →" : "Create free account →"}
             </Link>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 import {
   createVillagePost,
   deleteVillagePost,
@@ -12,14 +13,15 @@ import { hasAnyProgram } from "../../lib/access";
 
 export function OfficePage() {
   const { user } = useAuth();
+  const { preview } = useClientPreview();
   if (!user) return <Navigate to="/sign-in" replace />;
 
   const [posts, setPosts] = useState<VillagePost[]>([]);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const admin = isAdminEmail(user.email);
-  const member = hasAnyProgram(user.programs);
+  const admin = isAdminEmail(user.email) && !preview;
+  const member = hasAnyProgram(user.programs) || admin;
 
   async function refresh() {
     setPosts(await listVillagePosts());

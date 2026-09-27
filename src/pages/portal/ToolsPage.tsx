@@ -1,12 +1,17 @@
 import { Link, Navigate } from "react-router-dom";
 import { TOOLS } from "../../data/tools";
 import { useAuth } from "../../lib/auth";
-import { hasAnyProgram } from "../../lib/access";
+import { canAccessContent } from "../../lib/access";
+import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 
 export function ToolsPage() {
   const { user } = useAuth();
+  const { preview } = useClientPreview();
   if (!user) return <Navigate to="/sign-in" replace />;
-  const member = hasAnyProgram(user.programs);
+  const member = canAccessContent(user.programs, {
+    isAdmin: isAdminEmail(user.email) && !preview,
+  });
 
   return (
     <div className="portal-page">

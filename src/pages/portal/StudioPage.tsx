@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 import {
   DEFAULT_NAV,
   emptyLesson,
@@ -48,6 +49,7 @@ type ProductDraft = {
 export function StudioPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { preview, setPreview } = useClientPreview();
   const [programs, setPrograms] = useState(listProgramsForStudio());
   const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
   const [navSaved, setNavSaved] = useState("");
@@ -94,6 +96,7 @@ export function StudioPage() {
 
   if (!user) return <Navigate to="/sign-in" replace />;
   if (!isAdmin) return <Navigate to="/portal" replace />;
+  if (preview) return <Navigate to="/portal" replace />;
 
   const adminEmail = user.email;
 
@@ -267,23 +270,45 @@ export function StudioPage() {
 
   return (
     <div className="portal-page">
-      <p className="eyebrow">Studio</p>
-      <h1>
-        Edit The Office &amp; <em>products</em>
-      </h1>
-      <p className="portal-lede">
-        Create and price programs (Stripe syncs automatically), edit homepage
-        writing and member courses — signed in as admin ({user.email}).
-      </p>
+      <div className="portal-page__head-row">
+        <div>
+          <p className="eyebrow">Studio</p>
+          <h1>
+            Edit The Office &amp; <em>products</em>
+          </h1>
+          <p className="portal-lede">
+            Create and price programs (Stripe syncs automatically), edit
+            homepage writing and member courses — signed in as admin (
+            {user.email}).
+          </p>
+        </div>
+        <button
+          className="btn btn--ghost-ink"
+          type="button"
+          onClick={() => {
+            setPreview(true);
+            navigate("/portal");
+          }}
+        >
+          View as client →
+        </button>
+      </div>
 
       <section className="studio-nav-settings">
         <h2 className="portal-subhead">Programs (sell &amp; unlock)</h2>
         <p className="portal-lede">
-          These are what customers buy. The Office is the free home base —
-          buying a program unlocks portal content. Set one-time or subscription
-          pricing; Stripe updates when you save. Enter the Studio password once
-          per session.
+          Launch path: create your first program below → it appears on
+          /programs → customers buy → The Office unlocks. The Office is the free
+          home base; buying a program unlocks portal content. Set one-time or
+          subscription pricing; Stripe updates when you save. Enter the Studio
+          password once per session.
         </p>
+        {shopProducts.length === 0 && (
+          <p className="form-status">
+            No programs yet — fill in the form below and tap Create program.
+            Until then, /programs stays empty for customers.
+          </p>
+        )}
         <div className="tool-form">
           <label className="calc-field">
             <span>Studio pricing password</span>
@@ -605,6 +630,7 @@ export function StudioEditorPage() {
   const { trackId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { preview } = useClientPreview();
   const existing = trackId ? studioStore.getTrack(trackId) : null;
   const [track, setTrack] = useState<StudioTrack | null>(existing);
   const [activeLesson, setActiveLesson] = useState(0);
@@ -631,6 +657,7 @@ export function StudioEditorPage() {
 
   if (!user) return <Navigate to="/sign-in" replace />;
   if (!isAdmin) return <Navigate to="/portal" replace />;
+  if (preview) return <Navigate to="/portal" replace />;
   if (!track) return <div className="loading-screen">Loading program…</div>;
 
   const current = track;

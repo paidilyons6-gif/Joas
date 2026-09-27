@@ -2,12 +2,17 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { RESOURCES } from "../../data/resources";
 import { useAuth } from "../../lib/auth";
-import { hasAnyProgram } from "../../lib/access";
+import { canAccessContent } from "../../lib/access";
+import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 
 export function ResourcesPage() {
   const { user } = useAuth();
+  const { preview } = useClientPreview();
   if (!user) return <Navigate to="/sign-in" replace />;
-  const member = hasAnyProgram(user.programs);
+  const member = canAccessContent(user.programs, {
+    isAdmin: isAdminEmail(user.email) && !preview,
+  });
   const [copied, setCopied] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -34,11 +39,11 @@ export function ResourcesPage() {
       {!member && (
         <div className="upgrade-banner">
           <div>
-            <h2>Most vault items unlock with membership</h2>
+            <h2>Most vault items unlock with a program</h2>
             <p>Free preview includes CEO weekly habits.</p>
           </div>
           <Link className="btn btn--primary" to="/programs">
-            Upgrade →
+            Shop programs →
           </Link>
         </div>
       )}

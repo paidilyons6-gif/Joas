@@ -1,20 +1,23 @@
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import {
   allLessonsMerged,
-  getAllTracks,
   nextLessonMerged,
+  usePublishedTracks,
 } from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
 import { hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 
 export function PortalHome() {
   const { user, refresh } = useAuth();
+  const { preview } = useClientPreview();
   const [params] = useSearchParams();
+  const { tracks, loading } = usePublishedTracks();
   if (!user) return <Navigate to="/sign-in" replace />;
 
   const unlocked = hasAnyProgram(user.programs);
-  const admin = isAdminEmail(user.email);
+  const admin = isAdminEmail(user.email) && !preview;
   const lessons = allLessonsMerged();
   const done = user.completedLessons.filter((id) =>
     lessons.some((l) => l.id === id),
@@ -22,7 +25,6 @@ export function PortalHome() {
   const total = lessons.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
   const next = nextLessonMerged(user.completedLessons);
-  const tracks = getAllTracks();
   const checkoutSuccess = params.get("checkout") === "success";
 
   if (!unlocked && !admin) {
@@ -57,7 +59,7 @@ export function PortalHome() {
           <div>
             <h2>Shop programs</h2>
             <p>
-              Programs Becky publishes in Studio — pay once or subscribe, then
+              Programs Becca publishes in Studio — pay once or subscribe, then
               train here.
             </p>
           </div>
@@ -81,7 +83,10 @@ export function PortalHome() {
         <div className="upgrade-banner" role="status">
           <div>
             <h2>You&apos;re in ♡</h2>
-            <p>Your program is unlocked — dive into courses, tools, and The Office.</p>
+            <p>
+              Your program is unlocked — dive into courses, tools, and The
+              Office.
+            </p>
           </div>
           <button
             className="btn btn--primary"
@@ -100,7 +105,8 @@ export function PortalHome() {
             Welcome to <em>The Office</em>
           </h1>
           <p className="portal-lede">
-            Courses, calculators, toolkit, vault, and community — ready to build.
+            Courses, calculators, toolkit, vault, and community — ready to
+            build.
             {admin ? " Studio lets you create & price programs." : ""}
           </p>
         </div>
@@ -110,6 +116,8 @@ export function PortalHome() {
           </Link>
         )}
       </div>
+
+      {loading && <p className="portal-lede">Loading your library…</p>}
 
       <div className="stat-row stat-row--3">
         <div className="stat">

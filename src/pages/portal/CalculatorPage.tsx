@@ -13,7 +13,9 @@ import {
 } from "../../data/calculators";
 import { CalcField, CalcShell, ResultStat } from "../../components/calc/CalcShell";
 import { useAuth } from "../../lib/auth";
-import { hasAnyProgram } from "../../lib/access";
+import { canAccessContent } from "../../lib/access";
+import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 import { demoStore } from "../../lib/demo";
 import { syncCalcStateRemote } from "../../lib/draftsRepo";
 
@@ -25,12 +27,16 @@ function num(v: string | number, fallback = 0) {
 export function CalculatorPage() {
   const { calcId } = useParams();
   const { user } = useAuth();
+  const { preview } = useClientPreview();
   if (!user) return <Navigate to="/sign-in" replace />;
 
   const meta = getCalculator(calcId || "");
   if (!meta) return <Navigate to="/portal/calculators" replace />;
 
-  if (meta.membersOnly && !hasAnyProgram(user.programs)) {
+  const unlocked = canAccessContent(user.programs, {
+    isAdmin: isAdminEmail(user.email) && !preview,
+  });
+  if (meta.membersOnly && !unlocked) {
     return <Navigate to="/programs" replace />;
   }
 

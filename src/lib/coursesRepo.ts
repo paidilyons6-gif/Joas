@@ -163,8 +163,18 @@ export async function seedBuiltinTracks() {
   }
 }
 
+function bustCatalogCache() {
+  // Keep portal readers in sync after Studio writes
+  void import("./courseCatalog").then((mod) => {
+    if ("invalidateCatalog" in mod && typeof mod.invalidateCatalog === "function") {
+      mod.invalidateCatalog();
+    }
+  });
+}
+
 export async function saveStudioTrackRemote(track: StudioTrack) {
   studioStore.upsertTrack(track);
+  bustCatalogCache();
   if (!hasLiveBackend()) return;
   const supabase = getSupabase();
   if (!supabase) return;
@@ -202,6 +212,7 @@ export async function saveStudioTrackRemote(track: StudioTrack) {
 
 export async function deleteStudioTrackRemote(id: string) {
   studioStore.deleteTrack(id);
+  bustCatalogCache();
   if (!hasLiveBackend()) return;
   const supabase = getSupabase();
   if (!supabase) return;

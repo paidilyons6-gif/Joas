@@ -1,20 +1,35 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { getMergedTrack } from "../../lib/courseCatalog";
+import { useTrack } from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
 import { canAccessLesson } from "../../lib/access";
+import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 import { loadDrafts, saveLessonNote } from "../../lib/draftsRepo";
 
 export function LessonPage() {
   const { trackId, lessonId } = useParams();
   const { user, toggleLesson } = useAuth();
-  if (!user) return <Navigate to="/sign-in" replace />;
-
-  const track = getMergedTrack(trackId || "");
+  const { preview } = useClientPreview();
+  const { track, loading } = useTrack(trackId);
   const lesson = track?.lessons.find((l) => l.id === lessonId);
+  const lessonKey = lesson?.id || "";
+  const [notes, setNotes] = useState("");
+  const [noteStatus, setNoteStatus] = useState("");
+
+  useEffect(() => {
+    if (!user?.id || !lessonKey) return;
+    void loadDrafts(user.id).then((d) => {
+      setNotes(d.lessonNotes[lessonKey] || "");
+    });
+  }, [user?.id, lessonKey]);
+
+  if (!user) return <Navigate to="/sign-in" replace />;
+  if (loading) return <div className="loading-screen">Loading…</div>;
   if (!track || !lesson) return <Navigate to="/portal/courses" replace />;
 
-  if (!canAccessLesson(lesson.membersOnly, user.programs)) {
+  const admin = isAdminEmail(user.email) && !preview;
+  if (!canAccessLesson(lesson.membersOnly, user.programs, { isAdmin: admin })) {
     return <Navigate to="/programs" replace />;
   }
 
@@ -22,20 +37,10 @@ export function LessonPage() {
   const idx = track.lessons.findIndex((l) => l.id === lesson.id);
   const prev = track.lessons[idx - 1];
   const next = track.lessons[idx + 1];
-  const lessonKey = lesson.id;
-
-  const [notes, setNotes] = useState("");
-  const [noteStatus, setNoteStatus] = useState("");
-
-  useEffect(() => {
-    void loadDrafts(user.id).then((d) => {
-      setNotes(d.lessonNotes[lessonKey] || "");
-    });
-  }, [user.id, lessonKey]);
 
   async function persistNotes() {
-    if (!user) return;
-    await saveLessonNote(user.id, lessonKey, notes);
+    if (!user || !lesson) return;
+    await saveLessonNote(user.id, lesson.id, notes);
     setNoteStatus("Notes saved ♡");
     window.setTimeout(() => setNoteStatus(""), 2000);
   }

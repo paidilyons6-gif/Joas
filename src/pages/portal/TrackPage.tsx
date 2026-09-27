@@ -1,18 +1,25 @@
 import { Link, Navigate, useParams } from "react-router-dom";
-import { getMergedTrack, trackProgressFromTrack } from "../../lib/courseCatalog";
+import {
+  trackProgressFromTrack,
+  useTrack,
+} from "../../lib/courseCatalog";
 import { useAuth } from "../../lib/auth";
 import { canAccessLesson, hasAnyProgram } from "../../lib/access";
+import { isAdminEmail } from "../../lib/admin";
+import { useClientPreview } from "../../lib/clientPreview";
 
 export function TrackPage() {
   const { trackId } = useParams();
   const { user } = useAuth();
+  const { preview } = useClientPreview();
+  const { track, loading } = useTrack(trackId);
   if (!user) return <Navigate to="/sign-in" replace />;
-
-  const track = getMergedTrack(trackId || "");
+  if (loading) return <div className="loading-screen">Loading…</div>;
   if (!track) return <Navigate to="/portal/courses" replace />;
 
+  const admin = isAdminEmail(user.email) && !preview;
   const member = hasAnyProgram(user.programs);
-  if (track.membersOnly && !member) {
+  if (track.membersOnly && !member && !admin) {
     return <Navigate to="/programs" replace />;
   }
 
@@ -35,7 +42,9 @@ export function TrackPage() {
 
       <div className="training-list training-list--desktop">
         {track.lessons.map((lesson, index) => {
-          const locked = !canAccessLesson(lesson.membersOnly, user.programs);
+          const locked = !canAccessLesson(lesson.membersOnly, user.programs, {
+            isAdmin: admin,
+          });
           const done = user.completedLessons.includes(lesson.id);
           return (
             <article
