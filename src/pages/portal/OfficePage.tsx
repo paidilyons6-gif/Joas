@@ -11,6 +11,7 @@ import {
 } from "../../lib/villageRepo";
 import { hasAnyProgram } from "../../lib/access";
 
+/** Community feed — labeled Business Meeting (Village-style). */
 export function OfficePage() {
   const { user } = useAuth();
   const { preview } = useClientPreview();
@@ -61,21 +62,24 @@ export function OfficePage() {
     <div className="portal-page">
       <p className="eyebrow">Community</p>
       <h1>
-        The <em>Office</em>
+        Business <em>Meeting</em>
       </h1>
       <p className="portal-lede">
-        Share wins, ask questions, and get unstuck with other mom founders.
-        Keep it real, keep it kind, keep it moving.
+        Your program community — share wins, ask questions, and get unstuck with
+        other founders. Keep it real, keep it kind, keep it moving.
       </p>
 
       {!member && (
         <div className="upgrade-banner">
           <div>
-            <h2>A program unlocks posting in The Office</h2>
-            <p>You can still browse — upgrade when you&apos;re ready to join in.</p>
+            <h2>Buy a program to post in Business Meeting</h2>
+            <p>
+              Sign up free, get your program, then join the conversation here —
+              like The Village, for business.
+            </p>
           </div>
           <Link className="btn btn--primary" to="/programs">
-            Upgrade →
+            Shop programs →
           </Link>
         </div>
       )}
@@ -83,7 +87,7 @@ export function OfficePage() {
       {member && (
         <form className="office-composer" onSubmit={(e) => void onSubmit(e)}>
           <label className="calc-field">
-            <span>Share with everyone</span>
+            <span>Share with the meeting</span>
             <textarea
               rows={3}
               value={body}
@@ -104,7 +108,7 @@ export function OfficePage() {
         {posts.length === 0 ? (
           <div className="studio-empty">
             <h3>No posts yet</h3>
-            <p>Be the first to say hey and start the conversation.</p>
+            <p>Be the first to say hey and start the Business Meeting.</p>
           </div>
         ) : (
           posts.map((post) => (

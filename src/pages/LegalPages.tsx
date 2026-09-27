@@ -54,7 +54,7 @@ export function TermsPage() {
             credentials or redistribute course materials.
           </p>
           <p>
-            Community posts in The Office must stay respectful. We may remove
+            Community posts in Business Meeting must stay respectful. We may remove
             content that is abusive, spammy, or illegal. These terms may update
             over time; continued use means you accept the current version.
           </p>

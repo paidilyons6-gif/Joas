@@ -26,6 +26,7 @@ type DbLesson = {
   title: string;
   duration: number;
   members_only: boolean;
+  video_url?: string | null;
   objectives: string[];
   sections: { heading: string; body: string }[];
   action: string;
@@ -94,6 +95,7 @@ async function hydrateTracks(
       title: l.title,
       duration: l.duration,
       membersOnly: l.members_only,
+      videoUrl: l.video_url || "",
       objectives: l.objectives || [],
       sections: (l.sections as CourseLesson["sections"]) || [],
       action: l.action || "",
@@ -152,6 +154,7 @@ export async function seedBuiltinTracks() {
         title: l.title,
         duration: l.duration,
         members_only: l.membersOnly,
+        video_url: l.videoUrl || "",
         objectives: l.objectives,
         sections: l.sections,
         action: l.action,
@@ -200,6 +203,7 @@ export async function saveStudioTrackRemote(track: StudioTrack) {
       title: l.title,
       duration: l.duration,
       members_only: l.membersOnly,
+      video_url: l.videoUrl || "",
       objectives: l.objectives,
       sections: l.sections,
       action: l.action,

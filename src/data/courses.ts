@@ -3,6 +3,8 @@ export type CourseLesson = {
   title: string;
   duration: number;
   membersOnly: boolean;
+  /** YouTube, Vimeo, or direct video URL — shown at the top of the lesson */
+  videoUrl?: string;
   objectives: string[];
   sections: { heading: string; body: string }[];
   action: string;

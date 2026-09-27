@@ -46,8 +46,8 @@ export function SignUpPage() {
         </h1>
         <p className="auth-card__lede">
           {program
-            ? `Create your free account, then buy ${program} to unlock it in The Office.`
-            : "Create a free account. Buy a program to unlock courses and tools inside The Office."}
+            ? `Create your free account, then buy ${program} — like The Village, you get program access right away.`
+            : "Create a free account, buy a program, and get access — courses, videos, and Business Meeting."}
         </p>
         <form className="auth-form" onSubmit={(e) => void onSubmit(e)}>
           <label>

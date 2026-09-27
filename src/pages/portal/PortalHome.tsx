@@ -51,8 +51,8 @@ export function PortalHome() {
           Welcome to <em>The Office</em>
         </h1>
         <p className="portal-lede">
-          Your free account is ready. Pick a program to unlock courses, tools,
-          and community inside The Office.
+          Your free account is ready — same idea as The Village. Buy a program
+          to unlock courses, tools, and Business Meeting.
         </p>
 
         <div className="upgrade-banner">
@@ -105,9 +105,11 @@ export function PortalHome() {
             Welcome to <em>The Office</em>
           </h1>
           <p className="portal-lede">
-            Courses, calculators, toolkit, vault, and community — ready to
-            build.
-            {admin ? " Studio lets you create & price programs." : ""}
+            Courses, calculators, toolkit, vault, and Business Meeting — ready
+            to build.
+            {admin
+              ? " Studio lets you edit programs, add lesson videos, and set prices."
+              : ""}
           </p>
         </div>
         {admin && (
@@ -171,7 +173,7 @@ export function PortalHome() {
         </Link>
         <Link className="pin-card" to="/portal/office">
           <p className="pin-card__label">Community</p>
-          <h3>The Office</h3>
+          <h3>Business Meeting</h3>
         </Link>
         <Link className="pin-card" to="/programs">
           <p className="pin-card__label">Shop</p>

@@ -285,9 +285,8 @@ export function StudioPage() {
             Edit The Office &amp; <em>products</em>
           </h1>
           <p className="portal-lede">
-            Create and price programs (Stripe syncs automatically), edit
-            homepage writing and member courses — signed in as admin (
-            {user.email}).
+            Create and price programs, edit course parts and lesson videos,
+            and run Business Meeting — signed in as admin ({user.email}).
           </p>
         </div>
         <button
@@ -918,6 +917,19 @@ export function StudioEditorPage() {
                 }
               />
             </label>
+            <label className="calc-field">
+              <span>Lesson video URL</span>
+              <input
+                type="url"
+                value={lesson.videoUrl || ""}
+                onChange={(e) => updateLesson({ videoUrl: e.target.value })}
+                placeholder="YouTube, Vimeo, Loom, or direct .mp4 link"
+              />
+            </label>
+            <p className="portal-lede" style={{ marginTop: "-0.5rem" }}>
+              Paste a link — members see the video at the top of this lesson
+              part.
+            </p>
             <label className="check-item">
               <input
                 type="checkbox"

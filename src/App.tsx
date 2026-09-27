@@ -138,6 +138,8 @@ export default function App() {
                 }
               />
               <Route path="village" element={<Navigate to="/portal/office" replace />} />
+              <Route path="meeting" element={<Navigate to="/portal/office" replace />} />
+              <Route path="business-meeting" element={<Navigate to="/portal/office" replace />} />
               <Route path="training" element={<Navigate to="/portal/courses" replace />} />
               <Route path="training/:moduleId" element={<Navigate to="/portal/courses" replace />} />
             </Route>

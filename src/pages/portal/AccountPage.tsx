@@ -43,7 +43,7 @@ export function AccountPage() {
           <span>Portal</span>
           <strong>
             {unlocked || admin
-              ? "Courses · tools · vault · The Office"
+              ? "Courses · tools · vault · Business Meeting"
               : "Locked until you buy a program"}
           </strong>
         </div>

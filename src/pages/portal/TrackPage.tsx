@@ -59,6 +59,7 @@ export function TrackPage() {
                 <h2>{lesson.title}</h2>
                 <p>
                   {lesson.duration} min · {lesson.objectives.length} objectives
+                  {lesson.videoUrl ? " · Video" : ""}
                   {locked ? " · Members only" : ""}
                 </p>
               </div>

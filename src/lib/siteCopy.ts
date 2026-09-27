@@ -46,16 +46,16 @@ export const DEFAULT_SITE_COPY: SiteCopy = {
   pillarsTitle: "Ambitious. Unfiltered.",
   pillarsTitleEm: "Yours.",
   pillarsCopy:
-    "Sign up free, buy the program you want, and train inside The Office — education, community, and tools in one place.",
+    "Sign up free, buy the program, and get in — courses with video, tools, and Business Meeting (your program community).",
   bandTitle: "Bigger plans start in",
   bandTitleEm: "The Office.",
   bandCopy:
-    "Create your account, pick a program on the site, and unlock your seat. Becky adds and prices programs in Studio.",
+    "Create your account, pick a program on the site, and unlock your seat. Becca edits the program and adds videos in Studio.",
   offerEyebrow: "Inside The Office",
   offerTitle: "Progress over",
   offerTitleEm: "perfection.",
   offerCopy:
-    "Elite courses, financial calculators, and startup worksheets — unlocked when you buy a program.",
+    "Program courses (with video lessons), financial calculators, worksheets, and Business Meeting — unlocked when you buy.",
 };
 
 const COPY_KEY = "bbb_site_copy_v1";

@@ -88,9 +88,9 @@ export function ProgramsPage() {
               Buy the program. <em>Train in The Office.</em>
             </h1>
             <p className="section__copy">
-              The Office is your home base. Access comes from the programs you
-              buy — create a free account, pick a program, pay once or
-              subscribe.
+              Like The Village: sign up free, buy Becca&apos;s program, and get
+              access — courses with video lessons, tools, and Business Meeting
+              inside The Office.
             </p>
           </Reveal>
         </div>

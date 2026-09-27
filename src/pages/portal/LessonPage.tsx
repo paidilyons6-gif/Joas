@@ -6,6 +6,7 @@ import { canAccessLesson } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
 import { loadDrafts, saveLessonNote } from "../../lib/draftsRepo";
+import { resolveLessonVideo } from "../../lib/videoEmbed";
 
 export function LessonPage() {
   const { trackId, lessonId } = useParams();
@@ -37,6 +38,7 @@ export function LessonPage() {
   const idx = track.lessons.findIndex((l) => l.id === lesson.id);
   const prev = track.lessons[idx - 1];
   const next = track.lessons[idx + 1];
+  const video = resolveLessonVideo(lesson.videoUrl);
 
   async function persistNotes() {
     if (!user || !lesson) return;
@@ -54,6 +56,21 @@ export function LessonPage() {
         Lesson {idx + 1} · {lesson.duration} min
       </p>
       <h1>{lesson.title}</h1>
+
+      {video && (
+        <div className="lesson-video">
+          {video.kind === "file" ? (
+            <video controls playsInline src={video.src} preload="metadata" />
+          ) : (
+            <iframe
+              src={video.src}
+              title={`${lesson.title} video`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          )}
+        </div>
+      )}
 
       <div className="lesson-desktop-grid">
         <div>

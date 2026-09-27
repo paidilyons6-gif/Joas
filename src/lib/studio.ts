@@ -48,7 +48,7 @@ export const NAV_META: {
   { id: "home", label: "Home", group: "Learn" },
   { id: "courses", label: "Courses", group: "Learn" },
   { id: "vault", label: "Vault", group: "Learn" },
-  { id: "office", label: "The Office", group: "Learn" },
+  { id: "office", label: "Business Meeting", group: "Learn" },
   { id: "calculators", label: "Calculators", group: "Build" },
   { id: "toolkit", label: "Toolkit", group: "Build" },
   { id: "studio", label: "Studio", group: "Create", adminOnly: true },
@@ -125,7 +125,11 @@ export const studioStore = {
       published: true,
       studio: true,
       overridesId: builtin.id,
-      lessons: builtin.lessons.map((l) => ({ ...l, studio: true as const })),
+      lessons: builtin.lessons.map((l) => ({
+        ...l,
+        videoUrl: l.videoUrl || "",
+        studio: true as const,
+      })),
     };
     this.upsertTrack(track);
     return track;
@@ -231,6 +235,7 @@ export function emptyLesson(id: string): StudioLesson {
     title: "New lesson",
     duration: 10,
     membersOnly: true,
+    videoUrl: "",
     objectives: ["What members will walk away with"],
     sections: [
       {
