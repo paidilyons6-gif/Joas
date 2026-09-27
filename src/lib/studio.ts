@@ -154,25 +154,22 @@ function toCourseTrack(t: StudioTrack): CourseTrack {
   };
 }
 
-/** Studio overrides replace built-ins with the same id; then remaining built-ins. */
+/**
+ * Member-facing catalog: only courses Becca creates/publishes in Studio.
+ * Built-in sample tracks are Studio templates only — never shown to customers.
+ */
 export function getAllTracks(opts?: { includeDrafts?: boolean }): CourseTrack[] {
-  const studio = studioStore
+  return studioStore
     .list()
-    .filter((t) => (opts?.includeDrafts ? true : t.published));
-
-  const overridden = new Set(
-    studio.flatMap((t) => [t.id, t.overridesId].filter(Boolean) as string[]),
-  );
-
-  const fromStudio = studio.map(toCourseTrack);
-  const builtins = COURSE_TRACKS.filter((t) => !overridden.has(t.id));
-  return [...fromStudio, ...builtins];
+    .filter((t) => (opts?.includeDrafts ? true : t.published))
+    .map(toCourseTrack);
 }
 
 export function getMergedTrack(trackId: string, includeDrafts = false) {
   return getAllTracks({ includeDrafts }).find((t) => t.id === trackId);
 }
 
+/** Becca's Studio courses (+ optional built-in templates she can copy to edit). */
 export function listProgramsForStudio(): {
   id: string;
   title: string;
@@ -187,46 +184,30 @@ export function listProgramsForStudio(): {
     studio.map((t) => [t.overridesId || t.id, t]),
   );
 
-  const builtinRows = COURSE_TRACKS.map((t) => {
-    const override = studioByOverride.get(t.id);
-    if (override) {
-      return {
-        id: t.id,
-        title: override.title,
-        blurb: override.blurb,
-        lessonCount: override.lessons.length,
-        source: "studio" as const,
-        published: override.published,
-        editableId: override.id,
-      };
-    }
-    return {
-      id: t.id,
-      title: t.title,
-      blurb: t.blurb,
-      lessonCount: t.lessons.length,
-      source: "builtin" as const,
-      published: true,
-      editableId: t.id,
-    };
-  });
+  // Templates: only show builtins she hasn't copied into Studio yet
+  const templateRows = COURSE_TRACKS.filter(
+    (t) => !studioByOverride.has(t.id),
+  ).map((t) => ({
+    id: t.id,
+    title: t.title,
+    blurb: t.blurb,
+    lessonCount: t.lessons.length,
+    source: "builtin" as const,
+    published: false,
+    editableId: t.id,
+  }));
 
-  const customOnly = studio
-    .filter(
-      (t) =>
-        !COURSE_TRACKS.some((b) => b.id === t.id || b.id === t.overridesId),
-    )
-    .map((t) => ({
-      id: t.id,
-      title: t.title,
-      blurb: t.blurb,
-      lessonCount: t.lessons.length,
-      source: "studio" as const,
-      published: t.published,
-      editableId: t.id,
-    }));
+  const studioRows = studio.map((t) => ({
+    id: t.id,
+    title: t.title,
+    blurb: t.blurb,
+    lessonCount: t.lessons.length,
+    source: "studio" as const,
+    published: t.published,
+    editableId: t.id,
+  }));
 
-  return [...builtinRows, ...customOnly];
+  return [...studioRows, ...templateRows];
 }
 
 export function emptyLesson(id: string): StudioLesson {

@@ -64,12 +64,13 @@ export async function fetchTracks(opts?: {
   }
 
   const { data: tracks, error } = await trackQuery;
-  if (error || !tracks?.length) {
-    // Seed then retry once from builtins if empty
-    if (!error) await seedBuiltinTracks();
-    const fallback = await trackQuery;
-    if (!fallback.data?.length) return mergeLocal(opts?.includeDrafts);
-    return hydrateTracks(fallback.data as DbTrack[], opts?.includeDrafts);
+  if (error) {
+    return mergeLocal(opts?.includeDrafts);
+  }
+  // Empty catalog is valid — members only see courses Becca publishes in Studio.
+  // Do not auto-seed built-in sample tracks.
+  if (!tracks?.length) {
+    return mergeLocal(opts?.includeDrafts);
   }
 
   return hydrateTracks(tracks as DbTrack[], opts?.includeDrafts);
@@ -116,17 +117,12 @@ async function hydrateTracks(
     }));
 }
 
+/** Local / offline: Studio tracks only (no built-in sample courses for members). */
 function mergeLocal(includeDrafts?: boolean): CourseTrack[] {
-  const studio = studioStore
+  return studioStore
     .list()
-    .filter((t) => (includeDrafts ? true : t.published));
-  const overridden = new Set(
-    studio.flatMap((t) => [t.id, t.overridesId].filter(Boolean) as string[]),
-  );
-  return [
-    ...studio.map(studioToCourse),
-    ...COURSE_TRACKS.filter((t) => !overridden.has(t.id)),
-  ];
+    .filter((t) => (includeDrafts ? true : t.published))
+    .map(studioToCourse);
 }
 
 export async function seedBuiltinTracks() {

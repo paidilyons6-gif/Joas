@@ -25,8 +25,8 @@ export function CoursesPage() {
             Train like you mean <em>business</em>
           </h1>
           <p className="portal-lede">
-            Learning paths — startup, money, launch, plus any courses Becca
-            publishes in Studio.
+            Follow the courses Becca builds in Studio — with video on each part
+            when she adds it.
           </p>
         </div>
         {admin && (
@@ -37,6 +37,21 @@ export function CoursesPage() {
       </div>
 
       {loading && <p className="portal-lede">Loading courses…</p>}
+      {!loading && tracks.length === 0 && (
+        <div className="studio-empty">
+          <h3>No courses yet</h3>
+          <p>
+            {admin
+              ? "Create and publish a course in Studio — members will follow that."
+              : "Becca is adding your program courses. Check back soon."}
+          </p>
+          {admin && (
+            <Link className="btn btn--primary" to="/portal/studio">
+              Open Studio →
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="module-grid module-grid--desktop">
         {tracks.map((track) => {

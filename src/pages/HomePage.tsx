@@ -126,10 +126,10 @@ export function HomePage() {
           </Reveal>
           <div className="offer__rows">
             <Reveal className="offer__row" as="div">
-              <h3>3 course tracks</h3>
+              <h3>Becca&apos;s program courses</h3>
               <p>
-                Startup Foundations, Money &amp; Margins, and Launch &amp; Sales
-                — with lesson players, objectives, and checkoffs.
+                Follow the courses she builds — video lessons, objectives, and
+                checkoffs as she publishes each part.
               </p>
             </Reveal>
             <Reveal className="offer__row" as="div">

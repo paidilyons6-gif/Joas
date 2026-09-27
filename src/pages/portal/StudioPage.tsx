@@ -630,11 +630,12 @@ export function StudioPage() {
 
       <div className="studio-hero">
         <div>
-          <h2>Member courses (inside the portal)</h2>
+          <h2>Your program courses</h2>
           <p>
-            These are learning tracks for members — separate from sellable
-            products on /programs. Edit Startup Foundations, Money &amp;
-            Margins, Launch &amp; Sales, or add new courses.
+            Members only follow courses you create and publish here — add
+            parts, paste video links, then publish. Optional templates below
+            are starters you can copy; they stay hidden until you edit &amp;
+            publish them.
           </p>
         </div>
         <button className="btn btn--primary" type="button" onClick={createCourse}>
@@ -646,12 +647,17 @@ export function StudioPage() {
         {programs.map((program) => (
           <article key={program.id} className="module-card module-card--tall">
             <p className="module-card__phase">
-              {program.source === "builtin" ? "Built-in" : program.published ? "Published" : "Draft"}
+              {program.source === "builtin"
+                ? "Template (hidden from members)"
+                : program.published
+                  ? "Published"
+                  : "Draft"}
             </p>
             <h3>{program.title}</h3>
             <p>{program.blurb}</p>
             <p className="module-card__meta">
               {program.lessonCount} lessons · tap Edit to change content
+              {program.source === "builtin" ? " · copy into Studio first" : ""}
             </p>
             <div className="account-actions">
               <button
