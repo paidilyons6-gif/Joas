@@ -4,6 +4,7 @@ import { SiteLayout } from "./components/SiteLayout";
 import { PortalLayout } from "./components/PortalLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { WaitlistGate } from "./components/WaitlistGate";
+import { SiteLookProvider } from "./components/SiteLookProvider";
 import { HomePage } from "./pages/HomePage";
 import { PricingPage } from "./pages/PricingPage";
 import { SignInPage } from "./pages/SignInPage";
@@ -38,6 +39,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
+        <SiteLookProvider>
         <BrowserRouter>
           <WaitlistGate>
           <Routes>
@@ -148,6 +150,7 @@ export default function App() {
           </Routes>
           </WaitlistGate>
         </BrowserRouter>
+        </SiteLookProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

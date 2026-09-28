@@ -9,6 +9,11 @@ import {
   siteCopyStore,
   type SiteCopy,
 } from "./siteCopy";
+import {
+  normalizeLook,
+  siteLookStore,
+  type SiteLook,
+} from "./siteLook";
 
 type DbTrack = {
   id: string;
@@ -278,6 +283,33 @@ export async function saveSiteCopyRemote(copy: SiteCopy) {
   await supabase.from("site_settings").upsert({
     id: "main",
     copy,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+export async function fetchSiteLook(): Promise<SiteLook> {
+  if (!hasLiveBackend()) return siteLookStore.get();
+  const supabase = getSupabase();
+  if (!supabase) return siteLookStore.get();
+  const { data } = await supabase
+    .from("site_settings")
+    .select("look")
+    .eq("id", "main")
+    .maybeSingle();
+  if (!data?.look) return siteLookStore.get();
+  const merged = normalizeLook(data.look as Partial<SiteLook>);
+  siteLookStore.save(merged);
+  return merged;
+}
+
+export async function saveSiteLookRemote(look: SiteLook) {
+  siteLookStore.save(look);
+  if (!hasLiveBackend()) return;
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.from("site_settings").upsert({
+    id: "main",
+    look: normalizeLook(look),
     updated_at: new Date().toISOString(),
   });
 }

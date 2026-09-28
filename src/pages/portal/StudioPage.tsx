@@ -19,13 +19,19 @@ import {
   deleteStudioTrackRemote,
   saveNavSettingsRemote,
   saveSiteCopyRemote,
+  saveSiteLookRemote,
   saveStudioTrackRemote,
   fetchSiteCopy,
+  fetchSiteLook,
 } from "../../lib/coursesRepo";
 import {
   DEFAULT_SITE_COPY,
   type SiteCopy,
 } from "../../lib/siteCopy";
+import {
+  DEFAULT_SITE_LOOK,
+  type SiteLook,
+} from "../../lib/siteLook";
 import {
   archiveStudioProduct,
   fetchStudioProducts,
@@ -60,6 +66,8 @@ export function StudioPage() {
   const [navSaved, setNavSaved] = useState("");
   const [copy, setCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY);
   const [copySaved, setCopySaved] = useState("");
+  const [look, setLook] = useState<SiteLook>(DEFAULT_SITE_LOOK);
+  const [lookSaved, setLookSaved] = useState("");
   const [priceSecret, setPriceSecret] = useState(() => {
     try {
       return sessionStorage.getItem(PRICE_SECRET_KEY) || "";
@@ -99,6 +107,7 @@ export function StudioPage() {
     if (!isAdmin) return;
     refresh();
     void fetchSiteCopy().then(setCopy);
+    void fetchSiteLook().then(setLook);
     refreshShopProducts();
   }, [isAdmin]);
 
@@ -273,6 +282,17 @@ export function StudioPage() {
     void saveSiteCopyRemote(copy).then(() => {
       setCopySaved("Homepage writing saved ♡ — refresh the home page to see it.");
       window.setTimeout(() => setCopySaved(""), 3000);
+    });
+  }
+
+  function updateLook<K extends keyof SiteLook>(key: K, value: SiteLook[K]) {
+    setLook((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function saveLook() {
+    void saveSiteLookRemote(look).then(() => {
+      setLookSaved("Photos & colours saved ♡ — open the home page to see them.");
+      window.setTimeout(() => setLookSaved(""), 3000);
     });
   }
 
@@ -557,7 +577,97 @@ export function StudioPage() {
       </section>
 
       <section className="studio-nav-settings">
-        <h2 className="portal-subhead">Homepage writing</h2>
+        <h2 className="portal-subhead">Photos &amp; colours</h2>
+        <p className="portal-lede">
+          Your site editor for look &amp; feel — paste image URLs (Imgur, Bunny,
+          Cloudinary, or any public link) and tweak brand colours. Save, then
+          open the home page.
+        </p>
+        <div className="tool-form">
+          <label className="calc-field">
+            <span>Hero photo URL</span>
+            <input
+              type="url"
+              value={look.heroImageUrl}
+              onChange={(e) => updateLook("heroImageUrl", e.target.value)}
+              placeholder="https://… or /hero.jpg"
+            />
+          </label>
+          {look.heroImageUrl && (
+            <div
+              className="studio-look-preview"
+              style={{ backgroundImage: `url(${look.heroImageUrl})` }}
+              aria-label="Hero preview"
+            />
+          )}
+          <label className="calc-field">
+            <span>Band / mid-page photo URL</span>
+            <input
+              type="url"
+              value={look.bandImageUrl}
+              onChange={(e) => updateLook("bandImageUrl", e.target.value)}
+              placeholder="https://… or /band.jpg"
+            />
+          </label>
+          {look.bandImageUrl && (
+            <div
+              className="studio-look-preview"
+              style={{ backgroundImage: `url(${look.bandImageUrl})` }}
+              aria-label="Band preview"
+            />
+          )}
+          <div className="studio-color-grid">
+            {(
+              [
+                ["colorSignature", "Signature pink"],
+                ["colorSoft", "Soft pink"],
+                ["colorEnergy", "Energy yellow"],
+                ["colorClarity", "Clarity blue"],
+                ["colorClean", "Page background"],
+                ["colorInk", "Text ink"],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className="studio-color-field">
+                <span>{label}</span>
+                <span className="studio-color-field__row">
+                  <input
+                    type="color"
+                    value={look[key]}
+                    onChange={(e) => updateLook(key, e.target.value)}
+                  />
+                  <input
+                    type="text"
+                    value={look[key]}
+                    onChange={(e) => updateLook(key, e.target.value)}
+                  />
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="account-actions">
+            <button className="btn btn--primary" type="button" onClick={saveLook}>
+              Save photos &amp; colours →
+            </button>
+            <button
+              className="btn btn--ghost-ink"
+              type="button"
+              onClick={() => {
+                setLook(DEFAULT_SITE_LOOK);
+                void saveSiteLookRemote(DEFAULT_SITE_LOOK).then(() => {
+                  setLookSaved("Reset to defaults.");
+                  window.setTimeout(() => setLookSaved(""), 2500);
+                });
+              }}
+            >
+              Reset defaults
+            </button>
+            {lookSaved && <p className="form-status">{lookSaved}</p>}
+          </div>
+        </div>
+      </section>
+
+      <section className="studio-nav-settings">
+        <h2 className="portal-subhead">Homepage writing (text)</h2>
         <p className="portal-lede">
           Edit the words visitors see on the landing page (hero, manifesto, and
           more). Save, then open the home page.

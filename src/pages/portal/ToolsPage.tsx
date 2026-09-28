@@ -1,17 +1,19 @@
 import { Link, Navigate } from "react-router-dom";
 import { TOOLS } from "../../data/tools";
 import { useAuth } from "../../lib/auth";
-import { canAccessContent } from "../../lib/access";
+import { canAccessContent, hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
 
 export function ToolsPage() {
   const { user } = useAuth();
-  const { preview } = useClientPreview();
+  const { preview, setPreview } = useClientPreview();
   if (!user) return <Navigate to="/sign-in" replace />;
-  const member = canAccessContent(user.programs, {
-    isAdmin: isAdminEmail(user.email) && !preview,
+  const isAdmin = isAdminEmail(user.email);
+  const unlocked = canAccessContent(user.programs, {
+    isAdmin: isAdmin && !preview,
   });
+  const ownsProgram = hasAnyProgram(user.programs);
 
   return (
     <div className="portal-page">
@@ -21,12 +23,47 @@ export function ToolsPage() {
       </h1>
       <p className="portal-lede">
         Offer builder, ideal client, launch planner, and weekly CEO scorecard —
-        saved on this device as you go.
+        unlocked when you buy a program (a free signup alone is not enough).
       </p>
+
+      {isAdmin && preview && (
+        <div className="upgrade-banner" role="status">
+          <div>
+            <h2>View as client is on</h2>
+            <p>
+              You&apos;re seeing the locked buyer experience. Exit client view
+              to use the toolkit as admin.
+            </p>
+          </div>
+          <button
+            className="btn btn--primary"
+            type="button"
+            onClick={() => setPreview(false)}
+          >
+            Exit client view →
+          </button>
+        </div>
+      )}
+
+      {!unlocked && !preview && (
+        <div className="upgrade-banner">
+          <div>
+            <h2>Toolkit needs a program</h2>
+            <p>
+              {ownsProgram
+                ? "Refresh your access if you just purchased."
+                : "Signed up is free — buy a program to open these worksheets."}
+            </p>
+          </div>
+          <Link className="btn btn--primary" to="/programs">
+            Shop programs →
+          </Link>
+        </div>
+      )}
 
       <div className="module-grid">
         {TOOLS.map((tool) => {
-          const locked = tool.membersOnly && !member;
+          const locked = tool.membersOnly && !unlocked;
           return (
             <Link
               key={tool.id}
@@ -37,7 +74,7 @@ export function ToolsPage() {
               <h3>{tool.title}</h3>
               <p>{tool.blurb}</p>
               <p className="module-card__meta">
-                {locked ? "Members only" : "Open tool →"}
+                {locked ? "Buy a program to unlock" : "Open tool →"}
               </p>
             </Link>
           );

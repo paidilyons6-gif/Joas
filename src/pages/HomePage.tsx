@@ -4,25 +4,33 @@ import { Logo } from "../components/Logo";
 import { Reveal } from "../components/Reveal";
 import { useAuth } from "../lib/auth";
 import { DEFAULT_SITE_COPY, type SiteCopy } from "../lib/siteCopy";
-import { fetchSiteCopy } from "../lib/coursesRepo";
-
-const HERO_IMAGE = "/hero.jpg";
-const BAND_IMAGE = "/band.jpg";
+import { DEFAULT_SITE_LOOK, type SiteLook } from "../lib/siteLook";
+import { fetchSiteCopy, fetchSiteLook } from "../lib/coursesRepo";
+import { siteLookStore } from "../lib/siteLook";
 
 export function HomePage() {
   const { user } = useAuth();
   const [copy, setCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY);
+  const [look, setLook] = useState<SiteLook>(DEFAULT_SITE_LOOK);
 
   useEffect(() => {
     void fetchSiteCopy().then(setCopy);
-    const refresh = () => {
+    void fetchSiteLook().then(setLook);
+    const refreshCopy = () => {
       void fetchSiteCopy().then(setCopy);
     };
-    window.addEventListener("bbb-copy-updated", refresh);
-    window.addEventListener("storage", refresh);
+    const refreshLook = () => {
+      void fetchSiteLook().then(setLook);
+    };
+    window.addEventListener("bbb-copy-updated", refreshCopy);
+    window.addEventListener(siteLookStore.eventName, refreshLook);
+    window.addEventListener("storage", refreshCopy);
+    window.addEventListener("storage", refreshLook);
     return () => {
-      window.removeEventListener("bbb-copy-updated", refresh);
-      window.removeEventListener("storage", refresh);
+      window.removeEventListener("bbb-copy-updated", refreshCopy);
+      window.removeEventListener(siteLookStore.eventName, refreshLook);
+      window.removeEventListener("storage", refreshCopy);
+      window.removeEventListener("storage", refreshLook);
     };
   }, []);
 
@@ -32,7 +40,7 @@ export function HomePage() {
         className="hero"
         id="top"
         aria-label="The Office — BusinessByBecca"
-        style={{ ["--hero-image" as string]: `url(${HERO_IMAGE})` }}
+        style={{ ["--hero-image" as string]: `url(${look.heroImageUrl})` }}
       >
         <div className="hero__media" aria-hidden="true" />
         <div className="hero__veil" aria-hidden="true" />
@@ -103,7 +111,7 @@ export function HomePage() {
       <section
         className="band"
         aria-labelledby="band-title"
-        style={{ ["--band-image" as string]: `url(${BAND_IMAGE})` }}
+        style={{ ["--band-image" as string]: `url(${look.bandImageUrl})` }}
       >
         <div className="band__media" aria-hidden="true" />
         <div className="band__veil" aria-hidden="true" />

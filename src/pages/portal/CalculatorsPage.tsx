@@ -1,17 +1,19 @@
 import { Link, Navigate } from "react-router-dom";
 import { CALCULATORS } from "../../data/calculators";
 import { useAuth } from "../../lib/auth";
-import { canAccessContent } from "../../lib/access";
+import { canAccessContent, hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
 
 export function CalculatorsPage() {
   const { user } = useAuth();
-  const { preview } = useClientPreview();
+  const { preview, setPreview } = useClientPreview();
   if (!user) return <Navigate to="/sign-in" replace />;
-  const member = canAccessContent(user.programs, {
-    isAdmin: isAdminEmail(user.email) && !preview,
+  const isAdmin = isAdminEmail(user.email);
+  const unlocked = canAccessContent(user.programs, {
+    isAdmin: isAdmin && !preview,
   });
+  const ownsProgram = hasAnyProgram(user.programs);
 
   return (
     <div className="portal-page">
@@ -20,13 +22,45 @@ export function CalculatorsPage() {
         Calculators that create <em>clarity</em>
       </h1>
       <p className="portal-lede">
-        Price, break-even, goals, runway, profit, and offer mix — founder math
-        without the spreadsheet spiral.
+        Price, break-even, goals, runway, profit, and offer mix — unlocked when
+        you buy a program.
       </p>
+
+      {isAdmin && preview && (
+        <div className="upgrade-banner" role="status">
+          <div>
+            <h2>View as client is on</h2>
+            <p>Exit client view to use calculators as admin.</p>
+          </div>
+          <button
+            className="btn btn--primary"
+            type="button"
+            onClick={() => setPreview(false)}
+          >
+            Exit client view →
+          </button>
+        </div>
+      )}
+
+      {!unlocked && !preview && (
+        <div className="upgrade-banner">
+          <div>
+            <h2>Calculators need a program</h2>
+            <p>
+              {ownsProgram
+                ? "Refresh your access if you just purchased."
+                : "A free account isn’t enough — buy a program to unlock."}
+            </p>
+          </div>
+          <Link className="btn btn--primary" to="/programs">
+            Shop programs →
+          </Link>
+        </div>
+      )}
 
       <div className="module-grid">
         {CALCULATORS.map((calc) => {
-          const locked = calc.membersOnly && !member;
+          const locked = calc.membersOnly && !unlocked;
           return (
             <Link
               key={calc.id}
@@ -37,7 +71,7 @@ export function CalculatorsPage() {
               <h3>{calc.title}</h3>
               <p>{calc.blurb}</p>
               <p className="module-card__meta">
-                {locked ? "Members only" : "Open calculator →"}
+                {locked ? "Buy a program to unlock" : "Open calculator →"}
               </p>
             </Link>
           );

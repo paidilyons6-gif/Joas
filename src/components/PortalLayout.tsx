@@ -47,8 +47,10 @@ export function PortalLayout() {
   }, []);
 
   function visible(id: NavTopicId) {
+    // Studio only when not in client preview
     if (id === "studio" && !admin) return false;
-    if (!unlocked && !admin && id !== "home" && id !== "account") return false;
+    // Admins (even in client preview) can open locked areas to preview them
+    if (!unlocked && !isAdmin && id !== "home" && id !== "account") return false;
     return nav[id] !== false;
   }
 
