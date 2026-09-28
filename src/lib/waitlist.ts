@@ -100,6 +100,26 @@ export type WaitlistRow = {
   created_at: string;
 };
 
+export async function sendWaitlistAnnounce(input: {
+  email: string;
+  secret: string;
+  subject?: string;
+  body?: string;
+}): Promise<{ sent: number; total: number; failures?: string[] }> {
+  const res = await fetch("/.netlify/functions/send-waitlist-announce", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || "Could not send announce");
+  return JSON.parse(text) as {
+    sent: number;
+    total: number;
+    failures?: string[];
+  };
+}
+
 export async function fetchWaitlist(input: {
   email: string;
   secret: string;

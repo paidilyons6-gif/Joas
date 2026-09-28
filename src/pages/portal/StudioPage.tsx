@@ -41,6 +41,7 @@ import {
 import {
   fetchWaitlist,
   isWaitlistMode,
+  sendWaitlistAnnounce,
   type WaitlistRow,
 } from "../../lib/waitlist";
 
@@ -91,6 +92,7 @@ export function StudioPage() {
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [waitlistMsg, setWaitlistMsg] = useState("");
   const [waitlistBusy, setWaitlistBusy] = useState(false);
+  const [announceBusy, setAnnounceBusy] = useState(false);
 
   const isAdmin = !!user && isAdminEmail(user.email);
 
@@ -325,10 +327,11 @@ export function StudioPage() {
         <section className="studio-nav-settings">
           <h2 className="portal-subhead">Launch waitlist</h2>
           <p className="portal-lede">
-            The public site is gated — visitors leave their email. Load the list
-            here, copy it, and send your launch announce tomorrow. Turn the gate
-            off with <code>VITE_WAITLIST_MODE=false</code> on Netlify when you go
-            live.
+            Visitors leave their email and get a confirmation from{" "}
+            <strong>paidilyons6@gmail.com</strong> (same mailbox style as The
+            Village). Load the list here, then send the launch announce when
+            you&apos;re ready. Turn the gate off with{" "}
+            <code>VITE_WAITLIST_MODE=false</code> on Netlify when you go live.
           </p>
           <div className="account-actions">
             <button
@@ -374,6 +377,43 @@ export function StudioPage() {
                 }}
               >
                 Copy emails
+              </button>
+            )}
+            {waitlist.length > 0 && (
+              <button
+                className="btn btn--primary"
+                type="button"
+                disabled={announceBusy || !priceSecret.trim()}
+                onClick={() => {
+                  if (
+                    !confirm(
+                      `Send the launch email from paidilyons6@gmail.com to ${waitlist.length} people?`,
+                    )
+                  ) {
+                    return;
+                  }
+                  setWaitlistMsg("");
+                  setAnnounceBusy(true);
+                  void sendWaitlistAnnounce({
+                    email: adminEmail,
+                    secret: priceSecret.trim(),
+                  })
+                    .then((result) => {
+                      setWaitlistMsg(
+                        `Sent ${result.sent}/${result.total} launch emails from paidilyons6@gmail.com.`,
+                      );
+                    })
+                    .catch((err) => {
+                      setWaitlistMsg(
+                        err instanceof Error
+                          ? err.message
+                          : "Could not send announce",
+                      );
+                    })
+                    .finally(() => setAnnounceBusy(false));
+                }}
+              >
+                {announceBusy ? "Sending…" : "Send launch emails →"}
               </button>
             )}
           </div>
