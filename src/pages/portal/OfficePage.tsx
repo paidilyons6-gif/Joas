@@ -7,6 +7,7 @@ import {
   createVillagePost,
   deleteVillagePost,
   listVillagePosts,
+  setVillagePostPinned,
   type VillagePost,
 } from "../../lib/villageRepo";
 import { hasAnyProgram } from "../../lib/access";
@@ -58,6 +59,16 @@ export function OfficePage() {
     await refresh();
   }
 
+  async function onPin(post: VillagePost) {
+    setError("");
+    try {
+      await setVillagePostPinned(post.id, !post.pinned);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not pin post");
+    }
+  }
+
   return (
     <div className="portal-page">
       <p className="eyebrow">Community</p>
@@ -67,6 +78,7 @@ export function OfficePage() {
       <p className="portal-lede">
         Your program community — share wins, ask questions, and get unstuck with
         other founders. Keep it real, keep it kind, keep it moving.
+        {admin ? " Coach tip: pin posts to keep them at the top." : ""}
       </p>
 
       {!member && (
@@ -112,23 +124,38 @@ export function OfficePage() {
           </div>
         ) : (
           posts.map((post) => (
-            <article key={post.id} className="office-post">
+            <article
+              key={post.id}
+              className={`office-post ${post.pinned ? "office-post--pinned" : ""}`}
+            >
               <div className="office-post__meta">
                 <strong>{post.authorName}</strong>
+                {post.pinned && <span className="office-post__pin-badge">Pinned</span>}
                 <time dateTime={post.createdAt}>
                   {new Date(post.createdAt).toLocaleString()}
                 </time>
               </div>
               <p>{post.body}</p>
-              {(admin || post.authorId === user.id) && (
-                <button
-                  className="btn btn--ghost-ink"
-                  type="button"
-                  onClick={() => void onDelete(post.id)}
-                >
-                  Delete
-                </button>
-              )}
+              <div className="office-post__actions">
+                {admin && (
+                  <button
+                    className="btn btn--ghost-ink"
+                    type="button"
+                    onClick={() => void onPin(post)}
+                  >
+                    {post.pinned ? "Unpin" : "Pin to top"}
+                  </button>
+                )}
+                {(admin || post.authorId === user.id) && (
+                  <button
+                    className="btn btn--ghost-ink"
+                    type="button"
+                    onClick={() => void onDelete(post.id)}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
             </article>
           ))
         )}

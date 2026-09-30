@@ -1,19 +1,56 @@
+import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { TOOLS } from "../../data/tools";
 import { useAuth } from "../../lib/auth";
 import { canAccessContent, hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
+import {
+  BUILD_LIVE_EVENT,
+  isToolLive,
+  readBuildLiveLocal,
+  type BuildLiveSettings,
+} from "../../lib/buildLive";
+import { fetchBuildLive, saveBuildLiveRemote } from "../../lib/coursesRepo";
 
 export function ToolsPage() {
   const { user } = useAuth();
   const { preview, setPreview } = useClientPreview();
-  if (!user) return <Navigate to="/sign-in" replace />;
-  const isAdmin = isAdminEmail(user.email);
-  const unlocked = canAccessContent(user.programs, {
+  const [live, setLive] = useState<BuildLiveSettings>(() => readBuildLiveLocal());
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    void fetchBuildLive().then(setLive);
+    const sync = () => setLive(readBuildLiveLocal());
+    window.addEventListener(BUILD_LIVE_EVENT, sync);
+    return () => window.removeEventListener(BUILD_LIVE_EVENT, sync);
+  }, []);
+
+  const isAdmin = isAdminEmail(user?.email);
+  const coach = isAdmin && !preview;
+  const unlocked = canAccessContent(user?.programs, {
     isAdmin: isAdmin && !preview,
   });
-  const ownsProgram = hasAnyProgram(user.programs);
+  const ownsProgram = hasAnyProgram(user?.programs);
+
+  if (!user) return <Navigate to="/sign-in" replace />;
+
+  const visibleTools = TOOLS.filter((tool) => coach || isToolLive(tool.id, live));
+
+  async function toggleLive(id: string) {
+    const next: BuildLiveSettings = {
+      ...live,
+      toolkit: {
+        ...live.toolkit,
+        [id]: !isToolLive(id, live),
+      },
+    };
+    setLive(next);
+    await saveBuildLiveRemote(next);
+    setStatus(
+      isToolLive(id, next) ? `${id} is LIVE for clients` : `${id} hidden from clients`,
+    );
+  }
 
   return (
     <div className="portal-page">
@@ -22,9 +59,12 @@ export function ToolsPage() {
         Worksheets that move the <em>needle</em>
       </h1>
       <p className="portal-lede">
-        Offer builder, ideal client, launch planner, and weekly CEO scorecard —
-        unlocked when you buy a program (a free signup alone is not enough).
+        {coach
+          ? "Edit and choose which toolkit items are LIVE for clients."
+          : "Offer builder, ideal client, launch planner, and weekly CEO scorecard — unlocked when you buy a program."}
       </p>
+
+      {status && coach && <p className="form-status">{status}</p>}
 
       {isAdmin && preview && (
         <div className="upgrade-banner" role="status">
@@ -62,21 +102,40 @@ export function ToolsPage() {
       )}
 
       <div className="module-grid">
-        {TOOLS.map((tool) => {
+        {visibleTools.map((tool) => {
           const locked = tool.membersOnly && !unlocked;
+          const liveOn = isToolLive(tool.id, live);
           return (
-            <Link
+            <div
               key={tool.id}
-              className={`module-card ${locked ? "module-card--locked" : ""}`}
-              to={locked ? "/programs" : `/portal/tools/${tool.id}`}
+              className={`module-card ${locked ? "module-card--locked" : ""} ${coach && !liveOn ? "module-card--draft" : ""}`}
             >
-              <p className="module-card__phase">{tool.badge}</p>
+              <p className="module-card__phase">
+                {coach ? (liveOn ? "LIVE" : "Hidden") : tool.badge}
+              </p>
               <h3>{tool.title}</h3>
               <p>{tool.blurb}</p>
               <p className="module-card__meta">
                 {locked ? "Buy a program to unlock" : "Open tool →"}
               </p>
-            </Link>
+              <div className="module-card__actions">
+                <Link
+                  className="btn btn--ink"
+                  to={locked ? "/programs" : `/portal/tools/${tool.id}`}
+                >
+                  {locked ? "Unlock →" : "Open →"}
+                </Link>
+                {coach && (
+                  <button
+                    className={`btn ${liveOn ? "btn--ghost-ink" : "btn--primary"}`}
+                    type="button"
+                    onClick={() => void toggleLive(tool.id)}
+                  >
+                    {liveOn ? "Set hidden" : "Make LIVE →"}
+                  </button>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>

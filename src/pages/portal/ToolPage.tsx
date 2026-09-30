@@ -14,6 +14,7 @@ import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
 import { demoStore } from "../../lib/demo";
 import { syncToolDraftsRemote } from "../../lib/draftsRepo";
+import { isToolLive } from "../../lib/buildLive";
 
 export function ToolPage() {
   const { toolId } = useParams();
@@ -23,8 +24,12 @@ export function ToolPage() {
 
   const tool = getTool(toolId || "");
   if (!tool) return <Navigate to="/portal/tools" replace />;
+  const coach = isAdminEmail(user.email) && !preview;
+  if (!coach && !isToolLive(tool.id)) {
+    return <Navigate to="/portal/tools" replace />;
+  }
   const unlocked = canAccessContent(user.programs, {
-    isAdmin: isAdminEmail(user.email) && !preview,
+    isAdmin: coach,
   });
   if (tool.membersOnly && !unlocked) {
     return <Navigate to="/programs" replace />;

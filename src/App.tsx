@@ -25,6 +25,7 @@ import { AccountPage } from "./pages/portal/AccountPage";
 import { StudioPage, StudioEditorPage } from "./pages/portal/StudioPage";
 import { ProgramsPage } from "./pages/ProgramsPage";
 import { OfficePage } from "./pages/portal/OfficePage";
+import { EmailingListPage } from "./pages/portal/EmailingListPage";
 import { RequireMember } from "./components/RequireMember";
 import type { ReactNode } from "react";
 
@@ -67,6 +68,7 @@ export default function App() {
               <Route path="account" element={<AccountPage />} />
               <Route path="studio" element={<StudioPage />} />
               <Route path="studio/:trackId" element={<StudioEditorPage />} />
+              <Route path="emailing" element={<EmailingListPage />} />
               <Route
                 path="courses"
                 element={

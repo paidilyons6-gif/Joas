@@ -3,14 +3,14 @@ import { useCallback, useEffect, useState } from "react";
 const BYPASS_KEY = "bbb_waitlist_bypass";
 const EVENT = "bbb-waitlist-bypass";
 
-/** Gate is on unless explicitly disabled with VITE_WAITLIST_MODE=false */
+/** Gate is off unless explicitly enabled with VITE_WAITLIST_MODE=true */
 export function isWaitlistMode() {
   const flag = (import.meta.env.VITE_WAITLIST_MODE as string | undefined)
     ?.trim()
     .toLowerCase();
-  if (flag === "false" || flag === "0" || flag === "off") return false;
-  // Default ON so the site stays blocked until launch announce.
-  return true;
+  // Becca: no public email collection — opt in only when launching a waitlist.
+  if (flag === "true" || flag === "1" || flag === "on") return true;
+  return false;
 }
 
 export function hasWaitlistBypass() {

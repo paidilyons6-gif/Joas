@@ -14,6 +14,13 @@ import {
   siteLookStore,
   type SiteLook,
 } from "./siteLook";
+import {
+  defaultBuildLive,
+  mergeBuildLive,
+  readBuildLiveLocal,
+  writeBuildLiveLocal,
+  type BuildLiveSettings,
+} from "./buildLive";
 
 type DbTrack = {
   id: string;
@@ -313,3 +320,33 @@ export async function saveSiteLookRemote(look: SiteLook) {
     updated_at: new Date().toISOString(),
   });
 }
+
+export async function fetchBuildLive(): Promise<BuildLiveSettings> {
+  if (!hasLiveBackend()) return readBuildLiveLocal();
+  const supabase = getSupabase();
+  if (!supabase) return readBuildLiveLocal();
+  const { data, error } = await supabase
+    .from("site_settings")
+    .select("build")
+    .eq("id", "main")
+    .maybeSingle();
+  if (error || !data?.build) return readBuildLiveLocal();
+  const merged = mergeBuildLive(data.build as Partial<BuildLiveSettings>);
+  writeBuildLiveLocal(merged);
+  return merged;
+}
+
+export async function saveBuildLiveRemote(settings: BuildLiveSettings) {
+  const merged = mergeBuildLive(settings);
+  writeBuildLiveLocal(merged);
+  if (!hasLiveBackend()) return;
+  const supabase = getSupabase();
+  if (!supabase) return;
+  await supabase.from("site_settings").upsert({
+    id: "main",
+    build: merged,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+export { defaultBuildLive };

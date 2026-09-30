@@ -48,6 +48,12 @@ export function PortalLayout() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!coachMode && location.pathname.startsWith("/portal/emailing")) {
+      navigate("/portal");
+    }
+  }, [coachMode, location.pathname, navigate]);
+
   function visible(id: NavTopicId) {
     // Studio only in Coach view
     if (id === "studio" && !coachMode) return false;
@@ -66,7 +72,11 @@ export function PortalLayout() {
     const wantClient = mode === "client";
     setPreview(wantClient);
     closeMenu();
-    if (wantClient && location.pathname.startsWith("/portal/studio")) {
+    if (
+      wantClient &&
+      (location.pathname.startsWith("/portal/studio") ||
+        location.pathname.startsWith("/portal/emailing"))
+    ) {
       navigate("/portal");
     }
   }
@@ -118,6 +128,23 @@ export function PortalLayout() {
               : "Edit programs, pages, and what shows for clients."}
           </p>
         </div>
+      )}
+
+      {coachMode && (
+        <details className="portal__coach-menu">
+          <summary>Coach menu</summary>
+          <nav className="portal__coach-links" aria-label="Coach pages" onClick={closeMenu}>
+            <NavLink to="/portal" end>
+              Home
+            </NavLink>
+            <NavLink to="/portal/courses">Courses</NavLink>
+            <NavLink to="/portal/emailing">Emailing list</NavLink>
+            <NavLink to="/portal/office">The Office</NavLink>
+            <NavLink to="/portal/calculators">Calculators</NavLink>
+            <NavLink to="/portal/tools">Toolkit</NavLink>
+            <NavLink to="/portal/studio">Studio</NavLink>
+          </nav>
+        </details>
       )}
 
       <nav className="portal__nav" aria-label="Portal" onClick={closeMenu}>

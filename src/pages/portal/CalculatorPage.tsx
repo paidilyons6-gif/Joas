@@ -18,6 +18,7 @@ import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
 import { demoStore } from "../../lib/demo";
 import { syncCalcStateRemote } from "../../lib/draftsRepo";
+import { isCalcLive } from "../../lib/buildLive";
 
 function num(v: string | number, fallback = 0) {
   const n = typeof v === "number" ? v : Number(v);
@@ -33,8 +34,13 @@ export function CalculatorPage() {
   const meta = getCalculator(calcId || "");
   if (!meta) return <Navigate to="/portal/calculators" replace />;
 
+  const coach = isAdminEmail(user.email) && !preview;
+  if (!coach && !isCalcLive(meta.id)) {
+    return <Navigate to="/portal/calculators" replace />;
+  }
+
   const unlocked = canAccessContent(user.programs, {
-    isAdmin: isAdminEmail(user.email) && !preview,
+    isAdmin: coach,
   });
   if (meta.membersOnly && !unlocked) {
     return <Navigate to="/programs" replace />;
