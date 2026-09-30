@@ -29,15 +29,15 @@ export function CalculatorsPage() {
       {isAdmin && preview && (
         <div className="upgrade-banner" role="status">
           <div>
-            <h2>View as client is on</h2>
-            <p>Exit client view to use calculators as admin.</p>
+            <h2>Client view is on</h2>
+            <p>Switch to Coach view to use calculators as admin.</p>
           </div>
           <button
             className="btn btn--primary"
             type="button"
             onClick={() => setPreview(false)}
           >
-            Exit client view →
+            Coach view →
           </button>
         </div>
       )}

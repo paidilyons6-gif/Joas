@@ -29,10 +29,10 @@ export function ToolsPage() {
       {isAdmin && preview && (
         <div className="upgrade-banner" role="status">
           <div>
-            <h2>View as client is on</h2>
+            <h2>Client view is on</h2>
             <p>
-              You&apos;re seeing the locked buyer experience. Exit client view
-              to use the toolkit as admin.
+              This is the locked buyer experience. Switch to Coach view to edit
+              and unlock as admin.
             </p>
           </div>
           <button
@@ -40,7 +40,7 @@ export function ToolsPage() {
             type="button"
             onClick={() => setPreview(false)}
           >
-            Exit client view →
+            Coach view →
           </button>
         </div>
       )}

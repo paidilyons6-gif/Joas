@@ -319,7 +319,7 @@ export function StudioPage() {
             navigate("/portal");
           }}
         >
-          View as client →
+          Switch to Client view →
         </button>
       </div>
 

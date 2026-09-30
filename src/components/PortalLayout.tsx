@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Link } from "react-router-dom";
+import { NavLink, Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { LogoLink } from "./Logo";
 import { useAuth } from "../lib/auth";
@@ -26,10 +26,12 @@ const PATHS: Record<NavTopicId, string> = {
 
 export function PortalLayout() {
   const { user, signOut } = useAuth();
-  const { preview, toggle } = useClientPreview();
+  const { preview, setPreview } = useClientPreview();
+  const navigate = useNavigate();
+  const location = useLocation();
   const unlocked = hasAnyProgram(user?.programs);
   const isAdmin = isAdminEmail(user?.email);
-  const admin = isAdmin && !preview;
+  const coachMode = isAdmin && !preview;
   const [nav, setNav] = useState<NavSettings>(DEFAULT_NAV);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -47,9 +49,9 @@ export function PortalLayout() {
   }, []);
 
   function visible(id: NavTopicId) {
-    // Studio only when not in client preview
-    if (id === "studio" && !admin) return false;
-    // Admins (even in client preview) can open locked areas to preview them
+    // Studio only in Coach view
+    if (id === "studio" && !coachMode) return false;
+    // Admins can browse locked areas in Client view to preview them
     if (!unlocked && !isAdmin && id !== "home" && id !== "account") return false;
     return nav[id] !== false;
   }
@@ -60,13 +62,24 @@ export function PortalLayout() {
     setMenuOpen(false);
   }
 
+  function setMode(mode: "coach" | "client") {
+    const wantClient = mode === "client";
+    setPreview(wantClient);
+    closeMenu();
+    if (wantClient && location.pathname.startsWith("/portal/studio")) {
+      navigate("/portal");
+    }
+  }
+
   const ownedLabel = preview
-    ? "Viewing as client"
-    : user?.programs?.length === 1
-      ? `Program: ${user.programs[0]}`
-      : user?.programs?.length
-        ? `${user.programs.length} programs unlocked`
-        : "Free account · buy a program to unlock";
+    ? "Client view — what buyers see"
+    : coachMode
+      ? "Coach view — edit everything"
+      : user?.programs?.length === 1
+        ? `Program: ${user.programs[0]}`
+        : user?.programs?.length
+          ? `${user.programs.length} programs unlocked`
+          : "Free account · buy a program to unlock";
 
   const navBody = (
     <>
@@ -77,6 +90,36 @@ export function PortalLayout() {
         <p className="portal__hello">Hey {user?.name?.split(" ")[0] || "you"} ♡</p>
         <p className="portal__plan">{ownedLabel}</p>
       </div>
+
+      {isAdmin && (
+        <div className="portal__mode" role="group" aria-label="Coach or client view">
+          <p className="portal__mode-label">View mode</p>
+          <div className="portal__mode-toggle">
+            <button
+              type="button"
+              className={`portal__mode-btn ${!preview ? "is-active" : ""}`}
+              aria-pressed={!preview}
+              onClick={() => setMode("coach")}
+            >
+              Coach view
+            </button>
+            <button
+              type="button"
+              className={`portal__mode-btn ${preview ? "is-active" : ""}`}
+              aria-pressed={preview}
+              onClick={() => setMode("client")}
+            >
+              Client view
+            </button>
+          </div>
+          <p className="portal__mode-hint">
+            {preview
+              ? "Seeing the portal like a client. Switch to Coach to edit."
+              : "Edit programs, pages, and what shows for clients."}
+          </p>
+        </div>
+      )}
+
       <nav className="portal__nav" aria-label="Portal" onClick={closeMenu}>
         {groups.map((group) => {
           const items = NAV_META.filter(
@@ -100,13 +143,22 @@ export function PortalLayout() {
         })}
       </nav>
       <div className="portal__side-foot">
-        {!unlocked && !admin && (
+        {!unlocked && !coachMode && (
           <Link
             className="btn btn--primary portal__upgrade"
             to="/programs"
             onClick={closeMenu}
           >
             Shop programs →
+          </Link>
+        )}
+        {coachMode && (
+          <Link
+            className="btn btn--primary portal__upgrade"
+            to="/portal/studio"
+            onClick={closeMenu}
+          >
+            Open Studio →
           </Link>
         )}
         <button className="btn btn--ghost-ink" type="button" onClick={() => void signOut()}>
@@ -117,7 +169,9 @@ export function PortalLayout() {
   );
 
   return (
-    <div className={`portal ${menuOpen ? "portal--menu-open" : ""}`}>
+    <div
+      className={`portal ${menuOpen ? "portal--menu-open" : ""} ${preview ? "portal--client" : coachMode ? "portal--coach" : ""}`}
+    >
       <aside className="portal__side">{navBody}</aside>
       <div className="portal__main">
         <header className="portal__topbar">
@@ -131,35 +185,45 @@ export function PortalLayout() {
             Menu
           </button>
           <div>
-            <p className="portal__topbar-kicker">The Office</p>
+            <p className="portal__topbar-kicker">
+              {preview ? "Client view" : coachMode ? "Coach view" : "The Office"}
+            </p>
             <p className="portal__topbar-title">
-              {unlocked || admin
-                ? "Your laptop learning portal"
-                : "Buy a program to unlock"}
+              {preview
+                ? "Previewing what your clients see"
+                : unlocked || coachMode
+                  ? "Your laptop learning portal"
+                  : "Buy a program to unlock"}
             </p>
           </div>
           <div className="portal__topbar-actions">
-            {isAdmin && (
-              <button
-                className="btn btn--ghost-ink"
-                type="button"
-                onClick={() => toggle()}
-              >
-                {preview ? "Exit client view" : "View as client"}
-              </button>
-            )}
-            {admin && visible("studio") && (
+            {coachMode && visible("studio") && (
               <Link className="btn btn--ghost-ink" to="/portal/studio">
                 Studio →
               </Link>
             )}
-            {!unlocked && !admin && (
+            {!unlocked && !coachMode && !isAdmin && (
               <Link className="btn btn--primary" to="/programs">
                 Programs →
               </Link>
             )}
           </div>
         </header>
+        {isAdmin && preview && (
+          <div className="portal__client-banner" role="status">
+            <p>
+              <strong>Client view</strong> — this is what buyers see. Editing is
+              off.
+            </p>
+            <button
+              className="btn btn--primary"
+              type="button"
+              onClick={() => setMode("coach")}
+            >
+              Back to Coach view →
+            </button>
+          </div>
+        )}
         <div className="portal__content">
           <Outlet />
         </div>
