@@ -19,10 +19,22 @@ export function SignInPage() {
     setError("");
     setBusy(true);
     try {
-      await signIn({ email, password });
+      await signIn({ email: email.trim().toLowerCase(), password });
       navigate("/portal");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not sign in");
+      const raw = err instanceof Error ? err.message : "Could not sign in";
+      const lower = raw.toLowerCase();
+      if (lower.includes("invalid login") || lower.includes("invalid credentials")) {
+        setError(
+          "That email or password isn’t right. Use Forgot password if you need a reset link.",
+        );
+      } else if (lower.includes("email not confirmed")) {
+        setError(
+          "This email isn’t confirmed yet. Check your inbox (and spam) for the confirm link.",
+        );
+      } else {
+        setError(raw);
+      }
     } finally {
       setBusy(false);
     }

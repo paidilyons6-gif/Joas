@@ -9,7 +9,10 @@ const OPEN_PATHS = new Set([
   "/privacy",
   "/terms",
   "/enter",
-  "/sign-in", // Becca can sign in → admin bypasses the gate
+  "/sign-in",
+  "/sign-up",
+  "/forgot-password",
+  "/reset-password",
 ]);
 
 /** Blocks the public site behind the email waitlist until launch. */

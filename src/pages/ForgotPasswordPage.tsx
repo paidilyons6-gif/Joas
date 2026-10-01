@@ -24,11 +24,15 @@ export function ForgotPasswordPage() {
       const supabase = getSupabase();
       if (!supabase) throw new Error("Auth is not configured");
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email,
-        { redirectTo: `${window.location.origin}/sign-in` },
+        email.trim().toLowerCase(),
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        },
       );
       if (resetError) throw resetError;
-      setMessage("Check your email for a reset link ♡");
+      setMessage(
+        "If that email has an Office account, a reset link is on the way ♡ Check spam too.",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send reset");
     } finally {
@@ -44,8 +48,8 @@ export function ForgotPasswordPage() {
           Reset <em>password</em>
         </h1>
         <p className="auth-card__lede">
-          Enter your email and we&apos;ll send a reset link when live auth is
-          connected.
+          Enter the email for your Office account and we&apos;ll send a link to
+          choose a new password.
         </p>
         <form className="auth-form" onSubmit={(e) => void onSubmit(e)}>
           <label>

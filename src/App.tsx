@@ -10,6 +10,7 @@ import { PricingPage } from "./pages/PricingPage";
 import { SignInPage } from "./pages/SignInPage";
 import { SignUpPage } from "./pages/SignUpPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { PrivacyPage, TermsPage } from "./pages/LegalPages";
 import { EnterPage } from "./pages/EnterPage";
 import { PortalHome } from "./pages/portal/PortalHome";
@@ -52,6 +53,7 @@ export default function App() {
               <Route path="/sign-in" element={<SignInPage />} />
               <Route path="/sign-up" element={<SignUpPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/terms" element={<TermsPage />} />
             </Route>
