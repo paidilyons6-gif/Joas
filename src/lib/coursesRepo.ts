@@ -2,6 +2,7 @@ import { getSupabase } from "./supabase";
 import { hasLiveBackend } from "./demo";
 import type { CourseLesson, CourseTrack } from "../data/courses";
 import { COURSE_TRACKS } from "../data/courses";
+import { SEEN_HEARD_EARN_TRACK } from "../data/seenHeardEarnCourse";
 import type { NavSettings, StudioTrack } from "./studio";
 import { DEFAULT_NAV, studioStore } from "./studio";
 import {
@@ -79,13 +80,13 @@ export async function fetchTracks(opts?: {
   if (error) {
     return mergeLocal(opts?.includeDrafts);
   }
-  // Empty catalog is valid — members only see courses Becca publishes in Studio.
-  // Do not auto-seed built-in sample tracks.
+  // Empty / missing CMS → fall back to local Studio + Seen. Heard. Earn. scaffold
   if (!tracks?.length) {
     return mergeLocal(opts?.includeDrafts);
   }
 
-  return hydrateTracks(tracks as DbTrack[], opts?.includeDrafts);
+  const hydrated = await hydrateTracks(tracks as DbTrack[], opts?.includeDrafts);
+  return withSeenHeardEarn(hydrated, opts?.includeDrafts);
 }
 
 async function hydrateTracks(
@@ -129,12 +130,25 @@ async function hydrateTracks(
     }));
 }
 
-/** Local / offline: Studio tracks only (no built-in sample courses for members). */
+/** Local / offline: Studio tracks + Seen. Heard. Earn. scaffold if not overridden. */
 function mergeLocal(includeDrafts?: boolean): CourseTrack[] {
-  return studioStore
-    .list()
+  const studio = studioStore.list();
+  const hasShe = studio.some(
+    (t) => t.id === SEEN_HEARD_EARN_TRACK.id || t.overridesId === SEEN_HEARD_EARN_TRACK.id,
+  );
+  const tracks = hasShe ? studio : [SEEN_HEARD_EARN_TRACK, ...studio];
+  return tracks
     .filter((t) => (includeDrafts ? true : t.published))
     .map(studioToCourse);
+}
+
+function withSeenHeardEarn(
+  tracks: CourseTrack[],
+  includeDrafts?: boolean,
+): CourseTrack[] {
+  if (tracks.some((t) => t.id === SEEN_HEARD_EARN_TRACK.id)) return tracks;
+  if (!includeDrafts && !SEEN_HEARD_EARN_TRACK.published) return tracks;
+  return [studioToCourse(SEEN_HEARD_EARN_TRACK), ...tracks];
 }
 
 export async function seedBuiltinTracks() {

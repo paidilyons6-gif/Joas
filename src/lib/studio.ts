@@ -1,5 +1,6 @@
 import type { CourseLesson, CourseTrack } from "../data/courses";
 import { COURSE_TRACKS } from "../data/courses";
+import { SEEN_HEARD_EARN_TRACK } from "../data/seenHeardEarnCourse";
 
 export type StudioLesson = CourseLesson & {
   studio?: true;
@@ -159,8 +160,14 @@ function toCourseTrack(t: StudioTrack): CourseTrack {
  * Built-in sample tracks are Studio templates only — never shown to customers.
  */
 export function getAllTracks(opts?: { includeDrafts?: boolean }): CourseTrack[] {
-  return studioStore
-    .list()
+  const studio = studioStore.list();
+  const hasShe = studio.some(
+    (t) =>
+      t.id === SEEN_HEARD_EARN_TRACK.id ||
+      t.overridesId === SEEN_HEARD_EARN_TRACK.id,
+  );
+  const tracks = hasShe ? studio : [SEEN_HEARD_EARN_TRACK, ...studio];
+  return tracks
     .filter((t) => (opts?.includeDrafts ? true : t.published))
     .map(toCourseTrack);
 }
@@ -184,9 +191,15 @@ export function listProgramsForStudio(): {
     studio.map((t) => [t.overridesId || t.id, t]),
   );
 
+  // Ensure Seen. Heard. Earn. appears in Studio even before local edit/save
+  if (!studioByOverride.has(SEEN_HEARD_EARN_TRACK.id)) {
+    studioStore.upsertTrack(SEEN_HEARD_EARN_TRACK);
+  }
+  const studioNow = studioStore.list();
+
   // Templates: only show builtins she hasn't copied into Studio yet
   const templateRows = COURSE_TRACKS.filter(
-    (t) => !studioByOverride.has(t.id),
+    (t) => !studioByOverride.has(t.id) && t.id !== SEEN_HEARD_EARN_TRACK.id,
   ).map((t) => ({
     id: t.id,
     title: t.title,
@@ -197,7 +210,7 @@ export function listProgramsForStudio(): {
     editableId: t.id,
   }));
 
-  const studioRows = studio.map((t) => ({
+  const studioRows = studioNow.map((t) => ({
     id: t.id,
     title: t.title,
     blurb: t.blurb,

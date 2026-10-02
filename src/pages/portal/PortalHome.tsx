@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/auth";
 import { hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
+import { coursesAreOpen, coursesOpenLabel } from "../../lib/coursesOpen";
 
 export function PortalHome() {
   const { user, refresh } = useAuth();
@@ -26,6 +27,7 @@ export function PortalHome() {
   const pct = total ? Math.round((done / total) * 100) : 0;
   const next = nextLessonMerged(user.completedLessons);
   const checkoutSuccess = params.get("checkout") === "success";
+  const coursesLocked = unlocked && !admin && !coursesAreOpen();
 
   if (!unlocked && !admin) {
     return (
@@ -84,17 +86,39 @@ export function PortalHome() {
           <div>
             <h2>You&apos;re in ♡</h2>
             <p>
-              Your program is unlocked — dive into courses, tools, and The
-              Office.
+              {coursesLocked
+                ? "The Office platform is unlocked. Course training opens October 14th — use Toolkit, Calculators, and Business Meeting now."
+                : "Your program is unlocked — dive into courses, tools, and The Office."}
             </p>
           </div>
-          <button
-            className="btn btn--primary"
-            type="button"
-            onClick={() => void refresh()}
-          >
-            Refresh access
-          </button>
+          {coursesLocked ? (
+            <Link className="btn btn--primary" to="/portal/courses">
+              Courses info →
+            </Link>
+          ) : (
+            <button
+              className="btn btn--primary"
+              type="button"
+              onClick={() => void refresh()}
+            >
+              Refresh access
+            </button>
+          )}
+        </div>
+      )}
+
+      {coursesLocked && !checkoutSuccess && (
+        <div className="upgrade-banner" role="status">
+          <div>
+            <h2>{coursesOpenLabel()}</h2>
+            <p>
+              Platform access is yours now. Seen. Heard. Earn. course training
+              unlocks October 14th.
+            </p>
+          </div>
+          <Link className="btn btn--primary" to="/portal/courses">
+            View Courses →
+          </Link>
         </div>
       )}
 
@@ -105,8 +129,9 @@ export function PortalHome() {
             Welcome to <em>The Office</em>
           </h1>
           <p className="portal-lede">
-            Courses, calculators, toolkit, vault, and Business Meeting — ready
-            to build.
+            {coursesLocked
+              ? "Your platform is open — Toolkit, Calculators, Vault, and Business Meeting. Courses open October 14th."
+              : "Courses, calculators, toolkit, vault, and Business Meeting — ready to build."}
             {admin
               ? " Studio lets you edit programs, add lesson videos, and set prices."
               : ""}
@@ -143,7 +168,7 @@ export function PortalHome() {
         </div>
       </div>
 
-      {next && (
+      {next && !coursesLocked && (
         <div className="upgrade-banner">
           <div>
             <h2>Continue: {next.lesson.title}</h2>
@@ -161,7 +186,7 @@ export function PortalHome() {
       <div className="pin-grid">
         <Link className="pin-card" to="/portal/courses">
           <p className="pin-card__label">Learn</p>
-          <h3>Courses</h3>
+          <h3>{coursesLocked ? coursesOpenLabel() : "Courses"}</h3>
         </Link>
         <Link className="pin-card" to="/portal/tools">
           <p className="pin-card__label">Build</p>
