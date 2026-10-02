@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Logo } from "../components/Logo";
 import { joinWaitlist } from "../lib/waitlist";
 
-const HERO_IMAGE = "/hero.jpg";
+const HERO_IMAGE = "/hero-becca.jpg";
 
 export function WaitlistPage() {
   const [email, setEmail] = useState("");

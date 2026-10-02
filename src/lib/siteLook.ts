@@ -10,7 +10,7 @@ export type SiteLook = {
 };
 
 export const DEFAULT_SITE_LOOK: SiteLook = {
-  heroImageUrl: "/hero.jpg",
+  heroImageUrl: "/hero-becca.jpg",
   bandImageUrl: "/band.jpg",
   colorSignature: "#ff2d8b",
   colorSoft: "#ffc1e3",
