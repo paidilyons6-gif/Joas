@@ -16,6 +16,7 @@ import {
 } from "../../lib/studio";
 import { fetchTracks, saveStudioTrackRemote } from "../../lib/coursesRepo";
 import type { CourseTrack } from "../../data/courses";
+import { coursesAreOpen, coursesOpenLabel } from "../../lib/coursesOpen";
 
 type CoachRow = {
   track: CourseTrack;
@@ -105,6 +106,35 @@ export function CoursesPage() {
   const empty = admin ? coachRows.length === 0 : published.tracks.length === 0;
 
   if (!user) return <Navigate to="/sign-in" replace />;
+
+  const waitingForOpen = member && !admin && !coursesAreOpen();
+
+  if (waitingForOpen) {
+    return (
+      <div className="portal-page">
+        <p className="eyebrow">Courses</p>
+        <h1>
+          Seen. Heard. <em>Earn.</em>
+        </h1>
+        <div className="courses-coming">
+          <p className="courses-coming__date">{coursesOpenLabel()}</p>
+          <p className="portal-lede">
+            You’re in — The Office platform is unlocked. Course training opens
+            October 14th. Until then, use Toolkit, Calculators, and Business
+            Meeting.
+          </p>
+          <div className="account-actions">
+            <Link className="btn btn--primary" to="/portal/tools">
+              Open Toolkit →
+            </Link>
+            <Link className="btn btn--ink" to="/portal">
+              Back to portal
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="portal-page">

@@ -856,18 +856,72 @@ button {
   letter-spacing: -0.02em;
 }
 
+.price-card__media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 0.85rem;
+  background: var(--ink) center / cover no-repeat;
+  margin-bottom: 0.85rem;
+}
+
 .price-card__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.65rem;
   font-size: 1rem;
   color: var(--ink-muted);
 }
 
-.price-card__price span {
+.price-card__price > span:not(.price-card__compare):not(.price-card__early) {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 2.6rem;
   color: var(--ink);
   letter-spacing: -0.03em;
-  margin-right: 0.2rem;
+}
+
+.price-card__compare {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--ink-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+.price-card__early {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--signature);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.courses-coming {
+  margin-top: 1.25rem;
+  padding: 1.5rem 1.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(160deg, rgba(26, 26, 26, 0.96), rgba(26, 26, 26, 0.88));
+  color: var(--white);
+}
+
+.courses-coming__date {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--signature);
+}
+
+.courses-coming .portal-lede {
+  color: rgba(248, 248, 246, 0.82);
 }
 
 .price-card ul {

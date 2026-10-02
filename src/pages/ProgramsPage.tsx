@@ -8,6 +8,7 @@ import {
   type StudioProduct,
 } from "../lib/studioProducts";
 import { hasProgram } from "../lib/access";
+import { coursesOpenLabel } from "../lib/coursesOpen";
 
 export function ProgramsPage() {
   const { user, waitForProgram, refresh } = useAuth();
@@ -106,17 +107,36 @@ export function ProgramsPage() {
           )}
           {products.map((program) => {
             const owned = hasProgram(user?.programs, program.id);
+            const hasCompare =
+              !!program.compareAtCents &&
+              program.compareAtCents > program.amountCents;
             return (
               <Reveal
                 className="price-card price-card--featured"
                 key={program.id}
               >
+                {program.imageUrl && (
+                  <div
+                    className="price-card__media"
+                    style={{ backgroundImage: `url(${program.imageUrl})` }}
+                    role="img"
+                    aria-label={program.name}
+                  />
+                )}
                 {program.badge && (
                   <p className="price-card__badge">{program.badge}</p>
                 )}
                 <h2>{program.name}</h2>
                 <p className="price-card__price">
+                  {hasCompare && (
+                    <span className="price-card__compare">
+                      {program.compareAtLabel}
+                    </span>
+                  )}
                   <span>{program.priceLabel}</span>
+                  {hasCompare && (
+                    <span className="price-card__early">Early bird</span>
+                  )}
                 </p>
                 <p className="price-card__blurb">{program.blurb}</p>
                 <ul>
@@ -148,7 +168,8 @@ export function ProgramsPage() {
         </div>
         {message && <p className="form-status">{message}</p>}
         <p className="pricing__note">
-          Already bought something?{" "}
+          Course training {coursesOpenLabel().toLowerCase()}. Platform access
+          unlocks as soon as you buy.{" "}
           <Link to={user ? "/portal" : "/sign-in"}>
             {user ? "Open your portal" : "Sign in"}
           </Link>

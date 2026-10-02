@@ -24,6 +24,12 @@ export type SellableProduct = {
   features: string[];
   amountCents: number;
   priceLabel: string;
+  /** ISO currency, e.g. eur / usd */
+  currency: string;
+  /** Early-bird compare-at (original) price in cents, if any */
+  compareAtCents?: number;
+  compareAtLabel?: string;
+  imageUrl?: string;
   priceId: string;
   productId: string;
   lookupKey: string;
@@ -39,8 +45,25 @@ export function getStripe() {
 }
 
 export function formatDollars(cents: number) {
-  const dollars = cents / 100;
-  return Number.isInteger(dollars) ? `$${dollars}` : `$${dollars.toFixed(2)}`;
+  return formatMoney(cents, "usd");
+}
+
+export function formatMoney(cents: number, currency = "usd") {
+  const code = (currency || "usd").toLowerCase();
+  const amount = cents / 100;
+  try {
+    return new Intl.NumberFormat("en-IE", {
+      style: "currency",
+      currency: code.toUpperCase(),
+      minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    const symbol = code === "eur" ? "€" : "$";
+    return Number.isInteger(amount)
+      ? `${symbol}${amount}`
+      : `${symbol}${amount.toFixed(2)}`;
+  }
 }
 
 export function slugify(input: string) {
@@ -151,6 +174,12 @@ function toSellable(
           : "one_time";
   const suffix =
     interval === "month" ? "/mo" : interval === "year" ? "/yr" : "";
+  const currency = (price.currency || product.metadata.bbb_currency || "usd").toLowerCase();
+  const compareRaw = Number(product.metadata.bbb_compare_at_cents || 0);
+  const compareAtCents =
+    Number.isFinite(compareRaw) && compareRaw > (price.unit_amount || 0)
+      ? compareRaw
+      : undefined;
   return {
     id: slug,
     slug,
@@ -159,7 +188,13 @@ function toSellable(
     badge: product.metadata.bbb_badge || "Program",
     features: parseFeatures(product.metadata.bbb_features),
     amountCents: price.unit_amount || 0,
-    priceLabel: `${formatDollars(price.unit_amount || 0)}${suffix}`,
+    priceLabel: `${formatMoney(price.unit_amount || 0, currency)}${suffix}`,
+    currency,
+    compareAtCents,
+    compareAtLabel: compareAtCents
+      ? formatMoney(compareAtCents, currency)
+      : undefined,
+    imageUrl: product.metadata.bbb_image || product.images?.[0] || undefined,
     priceId: price.id,
     productId: product.id,
     lookupKey: product.metadata.bbb_lookup || programLookupKey(slug),

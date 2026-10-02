@@ -55,6 +55,9 @@ type ProductDraft = {
   badge: string;
   featuresText: string;
   amountDollars: string;
+  compareAtDollars: string;
+  currency: string;
+  imageUrl: string;
   interval: "one_time" | "month" | "year";
 };
 
@@ -83,7 +86,10 @@ export function StudioPage() {
     blurb: "",
     badge: "Program",
     featuresText: "",
-    amountDollars: "97",
+    amountDollars: "30",
+    compareAtDollars: "",
+    currency: "eur",
+    imageUrl: "",
     interval: "one_time",
   });
   const [productBusy, setProductBusy] = useState(false);
@@ -126,7 +132,10 @@ export function StudioPage() {
       blurb: "",
       badge: "Program",
       featuresText: "",
-      amountDollars: "97",
+      amountDollars: "30",
+      compareAtDollars: "",
+      currency: "eur",
+      imageUrl: "",
       interval: "one_time",
     };
   }
@@ -141,6 +150,11 @@ export function StudioPage() {
       badge: product.badge || "Program",
       featuresText: product.features.join("\n"),
       amountDollars: String((product.amountCents || 0) / 100),
+      compareAtDollars: product.compareAtCents
+        ? String(product.compareAtCents / 100)
+        : "",
+      currency: product.currency || "eur",
+      imageUrl: product.imageUrl || "",
       interval: product.interval || "one_time",
     });
     setProductMsg(`Editing ${product.name}`);
@@ -149,12 +163,13 @@ export function StudioPage() {
   async function saveShopProduct() {
     setProductMsg("");
     const amount = Number(productDraft.amountDollars);
+    const compareAt = Number(productDraft.compareAtDollars);
     if (!productDraft.name.trim()) {
       setProductMsg("Give the product a name.");
       return;
     }
     if (!Number.isFinite(amount) || amount < 1) {
-      setProductMsg("Enter a dollar amount of at least 1.");
+      setProductMsg("Enter a price of at least 1.");
       return;
     }
     if (!priceSecret.trim()) {
@@ -181,6 +196,12 @@ export function StudioPage() {
           .map((l) => l.trim())
           .filter(Boolean),
         amountDollars: amount,
+        currency: productDraft.currency || "eur",
+        compareAtDollars:
+          Number.isFinite(compareAt) && compareAt > amount
+            ? compareAt
+            : undefined,
+        imageUrl: productDraft.imageUrl.trim() || undefined,
         interval: productDraft.interval,
         active: true,
       });
@@ -536,7 +557,23 @@ export function StudioPage() {
             </select>
           </label>
           <label className="calc-field">
-            <span>Price (USD)</span>
+            <span>Currency</span>
+            <select
+              value={productDraft.currency}
+              onChange={(e) =>
+                setProductDraft((prev) => ({
+                  ...prev,
+                  currency: e.target.value,
+                }))
+              }
+            >
+              <option value="eur">EUR (€)</option>
+              <option value="usd">USD ($)</option>
+              <option value="gbp">GBP (£)</option>
+            </select>
+          </label>
+          <label className="calc-field">
+            <span>Price (early bird)</span>
             <input
               type="number"
               min={1}
@@ -548,6 +585,35 @@ export function StudioPage() {
                   amountDollars: e.target.value,
                 }))
               }
+            />
+          </label>
+          <label className="calc-field">
+            <span>Original price (optional strikethrough)</span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={productDraft.compareAtDollars}
+              onChange={(e) =>
+                setProductDraft((prev) => ({
+                  ...prev,
+                  compareAtDollars: e.target.value,
+                }))
+              }
+              placeholder="e.g. 90"
+            />
+          </label>
+          <label className="calc-field">
+            <span>Cover image URL (optional)</span>
+            <input
+              value={productDraft.imageUrl}
+              onChange={(e) =>
+                setProductDraft((prev) => ({
+                  ...prev,
+                  imageUrl: e.target.value,
+                }))
+              }
+              placeholder="/programs/seen-heard-earn.jpg"
             />
           </label>
           <label className="calc-field">

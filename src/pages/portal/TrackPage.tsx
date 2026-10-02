@@ -7,6 +7,7 @@ import { useAuth } from "../../lib/auth";
 import { canAccessLesson, hasAnyProgram } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
+import { coursesAreOpen } from "../../lib/coursesOpen";
 
 export function TrackPage() {
   const { trackId } = useParams();
@@ -19,6 +20,9 @@ export function TrackPage() {
 
   const admin = isAdminEmail(user.email) && !preview;
   const member = hasAnyProgram(user.programs);
+  if (!admin && !coursesAreOpen()) {
+    return <Navigate to="/portal/courses" replace />;
+  }
   if (track.membersOnly && !member && !admin) {
     return <Navigate to="/programs" replace />;
   }

@@ -7,6 +7,10 @@ export type StudioProduct = {
   features: string[];
   amountCents: number;
   priceLabel: string;
+  currency?: string;
+  compareAtCents?: number;
+  compareAtLabel?: string;
+  imageUrl?: string;
   priceId: string;
   productId: string;
   lookupKey: string;
@@ -38,6 +42,9 @@ export async function upsertStudioProduct(input: {
   badge: string;
   features: string[];
   amountDollars: number;
+  currency?: string;
+  compareAtDollars?: number;
+  imageUrl?: string;
   interval?: "one_time" | "month" | "year";
   active?: boolean;
 }) {

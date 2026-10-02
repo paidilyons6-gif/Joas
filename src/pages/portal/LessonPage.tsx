@@ -7,6 +7,7 @@ import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
 import { loadDrafts, saveLessonNote } from "../../lib/draftsRepo";
 import { resolveLessonVideo } from "../../lib/videoEmbed";
+import { coursesAreOpen } from "../../lib/coursesOpen";
 
 export function LessonPage() {
   const { trackId, lessonId } = useParams();
@@ -30,6 +31,9 @@ export function LessonPage() {
   if (!track || !lesson) return <Navigate to="/portal/courses" replace />;
 
   const admin = isAdminEmail(user.email) && !preview;
+  if (!admin && !coursesAreOpen()) {
+    return <Navigate to="/portal/courses" replace />;
+  }
   if (!canAccessLesson(lesson.membersOnly, user.programs, { isAdmin: admin })) {
     return <Navigate to="/programs" replace />;
   }

@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import {
-  formatDollars,
+  formatMoney,
   getStripe,
   programLookupKey,
   serializeFeatures,
@@ -69,6 +69,12 @@ export const handler: Handler = async (event) => {
       badge?: string;
       features?: string[] | string;
       amountDollars?: number | string;
+      /** Alias for amountDollars (currency-agnostic) */
+      amount?: number | string;
+      currency?: string;
+      compareAtDollars?: number | string;
+      compareAtAmount?: number | string;
+      imageUrl?: string;
       interval?: string;
       active?: boolean;
     };
@@ -88,12 +94,22 @@ export const handler: Handler = async (event) => {
       return { statusCode: 400, body: "Could not build a product id from the name." };
     }
 
-    const dollars = Number(body.amountDollars);
-    if (!Number.isFinite(dollars) || dollars < 1) {
-      return { statusCode: 400, body: "Enter a dollar amount of at least 1." };
+    const amount = Number(body.amountDollars ?? body.amount);
+    if (!Number.isFinite(amount) || amount < 1) {
+      return { statusCode: 400, body: "Enter a price of at least 1." };
     }
-    const amountCents = Math.round(dollars * 100);
+    const amountCents = Math.round(amount * 100);
     const interval = parseInterval(body.interval);
+    const currency = String(body.currency || "eur")
+      .trim()
+      .toLowerCase()
+      .slice(0, 3) || "eur";
+    const compareAt = Number(body.compareAtDollars ?? body.compareAtAmount);
+    const compareAtCents =
+      Number.isFinite(compareAt) && compareAt > amount
+        ? Math.round(compareAt * 100)
+        : 0;
+    const imageUrl = (body.imageUrl || "").trim();
 
     const features = Array.isArray(body.features)
       ? body.features
@@ -105,7 +121,7 @@ export const handler: Handler = async (event) => {
     const blurb = (body.blurb || "").trim();
     const badge = (body.badge || "Program").trim() || "Program";
     const lookupKey = programLookupKey(slug);
-    const metadata = {
+    const metadata: Record<string, string> = {
       bbb: "true",
       bbb_role: "program",
       bbb_slug: slug,
@@ -114,10 +130,15 @@ export const handler: Handler = async (event) => {
       bbb_blurb: blurb.slice(0, 490),
       bbb_features: serializeFeatures(features),
       bbb_interval: interval,
+      bbb_currency: currency,
+      bbb_compare_at_cents: compareAtCents ? String(compareAtCents) : "",
+      bbb_image: imageUrl.slice(0, 490),
     };
 
     let productId = body.productId;
     let created = false;
+
+    const productImages = imageUrl ? [imageUrl] : undefined;
 
     if (productId) {
       await stripe.products.update(productId, {
@@ -125,6 +146,7 @@ export const handler: Handler = async (event) => {
         description: blurb || undefined,
         active: body.active !== false,
         metadata,
+        ...(productImages ? { images: productImages } : {}),
       });
     } else {
       const existingPrices = await stripe.prices.list({
@@ -139,12 +161,14 @@ export const handler: Handler = async (event) => {
           description: blurb || undefined,
           active: true,
           metadata,
+          ...(productImages ? { images: productImages } : {}),
         });
       } else {
         const product = await stripe.products.create({
           name,
           description: blurb || undefined,
           metadata,
+          ...(productImages ? { images: productImages } : {}),
         });
         productId = product.id;
         created = true;
@@ -164,11 +188,13 @@ export const handler: Handler = async (event) => {
 
     const current = currentPrices.data.find(matchesInterval);
     const amountMatches = current?.unit_amount === amountCents;
+    const currencyMatches = (current?.currency || "").toLowerCase() === currency;
     let priceId = current?.id;
 
     const needsNew =
       !current ||
       !amountMatches ||
+      !currencyMatches ||
       (interval === "one_time" ? !!current.recurring : !current.recurring);
 
     if (needsNew) {
@@ -180,7 +206,7 @@ export const handler: Handler = async (event) => {
       const createdPrice = await stripe.prices.create({
         product: productId!,
         unit_amount: amountCents,
-        currency: "usd",
+        currency,
         lookup_key: lookupKey,
         transfer_lookup_key: true,
         nickname:
@@ -197,6 +223,7 @@ export const handler: Handler = async (event) => {
           lookup: lookupKey,
           role: "program",
           interval,
+          currency,
         },
       });
       priceId = createdPrice.id;
@@ -224,7 +251,13 @@ export const handler: Handler = async (event) => {
           badge,
           features,
           amountCents,
-          priceLabel: `${formatDollars(amountCents)}${suffix}`,
+          priceLabel: `${formatMoney(amountCents, currency)}${suffix}`,
+          currency,
+          compareAtCents: compareAtCents || undefined,
+          compareAtLabel: compareAtCents
+            ? formatMoney(compareAtCents, currency)
+            : undefined,
+          imageUrl: imageUrl || undefined,
           priceId,
           productId,
           lookupKey,
