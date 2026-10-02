@@ -1,42 +1,22 @@
-# Local development stack. `supabase start` reads this.
-project_id = "rail"
+# A string used to distinguish different Supabase projects on the same host
+project_id = "utnsdavbxbnacseqerjr"
 
 [api]
 enabled = true
-port = 54321
-schemas = ["public", "storage", "graphql_public"]
-extra_search_path = ["public", "extensions"]
-max_rows = 1000
 
 [db]
 port = 54322
-shadow_port = 54320
-major_version = 16
-
-[studio]
-enabled = true
-port = 54323
+major_version = 17
 
 [auth]
 enabled = true
-site_url = "rail://"
-additional_redirect_urls = ["rail://", "http://localhost:8081"]
-jwt_expiry = 3600
-enable_refresh_token_rotation = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = [
+  "http://127.0.0.1:5173",
+  "http://localhost:8888",
+]
 enable_signup = true
 
 [auth.email]
 enable_signup = true
-# Off locally so the fixture user can sign in without an inbox. This must stay
-# ON in the hosted project.
 enable_confirmations = false
-
-[storage]
-enabled = true
-file_size_limit = "15MiB"
-
-[functions.embed-garment]
-verify_jwt = true
-
-[functions.delete-account]
-verify_jwt = true
