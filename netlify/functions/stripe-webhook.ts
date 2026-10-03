@@ -1,6 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const stripeSecret =
   process.env.STRIPE_SECRET_KEY || process.env.stripe_secret_key;
@@ -13,30 +13,113 @@ function adminClient() {
   return createClient(supabaseUrl, supabaseServiceKey);
 }
 
+type GrantResult = {
+  ok: boolean;
+  email: string;
+  slug: string;
+  reason?: string;
+  createdProfile?: boolean;
+};
+
+async function findAuthUserId(
+  supabase: SupabaseClient,
+  email: string,
+): Promise<string | null> {
+  const normalized = email.toLowerCase();
+  // Paginate a bit — Office is small; enough for unlock reliability
+  for (let page = 1; page <= 10; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    });
+    if (error || !data?.users?.length) return null;
+    const hit = data.users.find(
+      (u) => (u.email || "").toLowerCase() === normalized,
+    );
+    if (hit) return hit.id;
+    if (data.users.length < 200) return null;
+  }
+  return null;
+}
+
 async function grantProgramByEmail(
   email: string,
   slug: string,
   stripeCustomerId?: string | null,
-) {
+): Promise<GrantResult> {
+  const normalized = email.trim().toLowerCase();
   const supabase = adminClient();
-  if (!supabase || !slug) return;
+  if (!supabase || !slug) {
+    return {
+      ok: false,
+      email: normalized,
+      slug,
+      reason: "missing_supabase_or_slug",
+    };
+  }
 
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from("profiles")
     .select("id, programs")
-    .eq("email", email.toLowerCase())
+    .eq("email", normalized)
     .maybeSingle();
 
-  if (!profile) return;
+  let createdProfile = false;
+  if (!profile) {
+    const userId = await findAuthUserId(supabase, normalized);
+    if (!userId) {
+      return {
+        ok: false,
+        email: normalized,
+        slug,
+        reason: "no_auth_user_yet",
+      };
+    }
+    const { data: upserted, error: upsertError } = await supabase
+      .from("profiles")
+      .upsert({
+        id: userId,
+        email: normalized,
+        programs: [slug],
+        stripe_customer_id: stripeCustomerId || null,
+        updated_at: new Date().toISOString(),
+      })
+      .select("id, programs")
+      .maybeSingle();
+    if (upsertError || !upserted) {
+      return {
+        ok: false,
+        email: normalized,
+        slug,
+        reason: upsertError?.message || "profile_upsert_failed",
+      };
+    }
+    return { ok: true, email: normalized, slug, createdProfile: true };
+  }
 
   const current = Array.isArray(profile.programs)
     ? (profile.programs as string[])
     : [];
   const next = current.includes(slug) ? current : [...current, slug];
-  const patch: Record<string, unknown> = { programs: next };
+  const patch: Record<string, unknown> = {
+    programs: next,
+    updated_at: new Date().toISOString(),
+  };
   if (stripeCustomerId) patch.stripe_customer_id = stripeCustomerId;
 
-  await supabase.from("profiles").update(patch).eq("id", profile.id);
+  const { error } = await supabase
+    .from("profiles")
+    .update(patch)
+    .eq("id", profile.id);
+  if (error) {
+    return {
+      ok: false,
+      email: normalized,
+      slug,
+      reason: error.message,
+    };
+  }
+  return { ok: true, email: normalized, slug, createdProfile };
 }
 
 async function revokeProgramByEmail(email: string, slug: string) {
@@ -52,7 +135,10 @@ async function revokeProgramByEmail(email: string, slug: string) {
     ? (profile.programs as string[])
     : [];
   const next = current.filter((p) => p !== slug);
-  await supabase.from("profiles").update({ programs: next }).eq("id", profile.id);
+  await supabase
+    .from("profiles")
+    .update({ programs: next, updated_at: new Date().toISOString() })
+    .eq("id", profile.id);
 }
 
 export const handler: Handler = async (event) => {
@@ -84,6 +170,8 @@ export const handler: Handler = async (event) => {
     };
   }
 
+  const grants: GrantResult[] = [];
+
   if (stripeEvent.type === "checkout.session.completed") {
     const session = stripeEvent.data.object as Stripe.Checkout.Session;
     const email =
@@ -101,7 +189,14 @@ export const handler: Handler = async (event) => {
       undefined;
 
     if (email && slug && session.metadata?.kind === "program") {
-      await grantProgramByEmail(email, slug, customerId);
+      grants.push(await grantProgramByEmail(email, slug, customerId));
+    } else {
+      grants.push({
+        ok: false,
+        email: email || "",
+        slug: slug || "",
+        reason: "missing_email_slug_or_kind",
+      });
     }
   }
 
@@ -109,7 +204,11 @@ export const handler: Handler = async (event) => {
     const sub = stripeEvent.data.object as Stripe.Subscription;
     const slug = sub.metadata?.program;
     if (!slug) {
-      return { statusCode: 200, body: JSON.stringify({ received: true }) };
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ received: true, grants }),
+      };
     }
     const customerId =
       typeof sub.customer === "string" ? sub.customer : sub.customer.id;
@@ -119,8 +218,13 @@ export const handler: Handler = async (event) => {
         sub.status === "active" ||
         sub.status === "trialing" ||
         sub.status === "past_due";
-      if (active) await grantProgramByEmail(customer.email, slug, customerId);
-      else await revokeProgramByEmail(customer.email, slug);
+      if (active) {
+        grants.push(
+          await grantProgramByEmail(customer.email, slug, customerId),
+        );
+      } else {
+        await revokeProgramByEmail(customer.email, slug);
+      }
     }
   }
 
@@ -137,5 +241,9 @@ export const handler: Handler = async (event) => {
     }
   }
 
-  return { statusCode: 200, body: JSON.stringify({ received: true }) };
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ received: true, type: stripeEvent.type, grants }),
+  };
 };
