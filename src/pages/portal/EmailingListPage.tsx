@@ -30,30 +30,6 @@ export function EmailingListPage() {
     }
   });
 
-  if (!user) return <Navigate to="/sign-in" replace />;
-  const isAdmin = isAdminEmail(user.email);
-  if (!isAdmin) return <Navigate to="/portal" replace />;
-  if (preview) {
-    return (
-      <div className="portal-page">
-        <p className="eyebrow">Emailing list</p>
-        <h1>
-          Coach tool — switch to <em>Coach view</em>
-        </h1>
-        <p className="portal-lede">
-          Clients never see the emailing list. Flip back to Coach view to send.
-        </p>
-        <button
-          className="btn btn--primary"
-          type="button"
-          onClick={() => setPreview(false)}
-        >
-          Coach view →
-        </button>
-      </div>
-    );
-  }
-
   async function loadList() {
     setMsg("");
     setBusy(true);
@@ -82,10 +58,35 @@ export function EmailingListPage() {
     }
   }
 
+  const canLoad = !!user && isAdminEmail(user.email) && !preview;
   useEffect(() => {
-    void loadList();
+    if (canLoad) void loadList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [canLoad]);
+
+  if (!user) return <Navigate to="/sign-in" replace />;
+  const isAdmin = isAdminEmail(user.email);
+  if (!isAdmin) return <Navigate to="/portal" replace />;
+  if (preview) {
+    return (
+      <div className="portal-page">
+        <p className="eyebrow">Emailing list</p>
+        <h1>
+          Coach tool — switch to <em>Coach view</em>
+        </h1>
+        <p className="portal-lede">
+          Clients never see the emailing list. Flip back to Coach view to send.
+        </p>
+        <button
+          className="btn btn--primary"
+          type="button"
+          onClick={() => setPreview(false)}
+        >
+          Coach view →
+        </button>
+      </div>
+    );
+  }
 
   async function onAdd(event: FormEvent) {
     event.preventDefault();

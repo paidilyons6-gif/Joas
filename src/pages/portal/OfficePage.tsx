@@ -16,14 +16,10 @@ import { hasAnyProgram } from "../../lib/access";
 export function OfficePage() {
   const { user } = useAuth();
   const { preview } = useClientPreview();
-  if (!user) return <Navigate to="/sign-in" replace />;
-
   const [posts, setPosts] = useState<VillagePost[]>([]);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const admin = isAdminEmail(user.email) && !preview;
-  const member = hasAnyProgram(user.programs) || admin;
 
   async function refresh() {
     setPosts(await listVillagePosts());
@@ -32,6 +28,11 @@ export function OfficePage() {
   useEffect(() => {
     void refresh();
   }, []);
+
+  if (!user) return <Navigate to="/sign-in" replace />;
+
+  const admin = isAdminEmail(user.email) && !preview;
+  const member = hasAnyProgram(user.programs) || admin;
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();

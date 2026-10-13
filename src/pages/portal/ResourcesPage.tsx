@@ -9,12 +9,12 @@ import { useClientPreview } from "../../lib/clientPreview";
 export function ResourcesPage() {
   const { user } = useAuth();
   const { preview } = useClientPreview();
+  const [copied, setCopied] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   if (!user) return <Navigate to="/sign-in" replace />;
   const member = canAccessContent(user.programs, {
     isAdmin: isAdminEmail(user.email) && !preview,
   });
-  const [copied, setCopied] = useState<string | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null);
 
   async function copyContent(id: string, content: string) {
     try {
