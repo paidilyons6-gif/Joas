@@ -90,7 +90,19 @@ export function LessonPage() {
           {lesson.sections.map((section) => (
             <section className="lesson-panel" key={section.heading}>
               <h2>{section.heading}</h2>
-              <p>{section.body}</p>
+              {section.body && (
+                <p className="lesson-section__body">{section.body}</p>
+              )}
+              {section.images && section.images.length > 0 && (
+                <div className="lesson-images">
+                  {section.images.map((img) => (
+                    <figure key={img.src}>
+                      <img src={img.src} alt={img.caption || section.heading} loading="lazy" />
+                      {img.caption && <figcaption>{img.caption}</figcaption>}
+                    </figure>
+                  ))}
+                </div>
+              )}
             </section>
           ))}
 

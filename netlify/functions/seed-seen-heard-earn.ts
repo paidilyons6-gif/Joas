@@ -1,5 +1,6 @@
 import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
+import { SEEN_HEARD_EARN_TRACK } from "../../src/data/seenHeardEarnCourse";
 
 const ADMIN_EMAILS = (process.env.VITE_ADMIN_EMAILS || "r.lyons1@icloud.com")
   .split(",")
@@ -17,63 +18,19 @@ const TRACK = {
   sort_order: 0,
 };
 
-const LESSONS = [
-  {
-    id: "she-day-1",
-    track_id: "seen-heard-earn",
-    title: "Day 1 — Seen.",
-    duration: 45,
-    members_only: true,
-    video_url: "",
-    objectives: ["Get clear on how you want to be seen as a brand"],
-    sections: [
-      {
-        heading: "Welcome to Day 1",
-        body: "Today we get you Seen. — the brand presence that makes people stop scrolling and pay attention.",
-      },
-    ],
-    action:
-      "Write one sentence that says who you help and what they walk away with.",
-    worksheet_prompt: "Brand visibility notes…",
-    sort_order: 0,
-  },
-  {
-    id: "she-day-2",
-    track_id: "seen-heard-earn",
-    title: "Day 2 — Heard.",
-    duration: 45,
-    members_only: true,
-    video_url: "",
-    objectives: ["Shape a message people actually remember"],
-    sections: [
-      {
-        heading: "Welcome to Day 2",
-        body: "Today we get you Heard. — voice, offer language, and the words that convert.",
-      },
-    ],
-    action: "Draft your core offer paragraph out loud, then tighten it.",
-    worksheet_prompt: "Message and offer notes…",
-    sort_order: 1,
-  },
-  {
-    id: "she-day-3",
-    track_id: "seen-heard-earn",
-    title: "Day 3 — Earn.",
-    duration: 45,
-    members_only: true,
-    video_url: "",
-    objectives: ["Connect your brand to paid opportunities"],
-    sections: [
-      {
-        heading: "Welcome to Day 3",
-        body: "Today we get you Earn. — pricing confidence and the path from attention to income.",
-      },
-    ],
-    action: "Write your next paid ask and who you will send it to this week.",
-    worksheet_prompt: "Earn plan notes…",
-    sort_order: 2,
-  },
-];
+const LESSONS = SEEN_HEARD_EARN_TRACK.lessons.map((lesson, index) => ({
+  id: lesson.id,
+  track_id: TRACK.id,
+  title: lesson.title,
+  duration: lesson.duration,
+  members_only: lesson.membersOnly,
+  video_url: lesson.videoUrl || "",
+  objectives: lesson.objectives,
+  sections: lesson.sections,
+  action: lesson.action,
+  worksheet_prompt: lesson.worksheetPrompt,
+  sort_order: index,
+}));
 
 /** Admin-only: upsert Seen. Heard. Earn. course into Supabase CMS tables. */
 export const handler: Handler = async (event) => {

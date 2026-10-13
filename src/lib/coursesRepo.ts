@@ -41,7 +41,7 @@ type DbLesson = {
   members_only: boolean;
   video_url?: string | null;
   objectives: string[];
-  sections: { heading: string; body: string }[];
+  sections: CourseLesson["sections"];
   action: string;
   worksheet_prompt: string;
   sort_order: number;

@@ -44,8 +44,48 @@ import {
   sendWaitlistAnnounce,
   type WaitlistRow,
 } from "../../lib/waitlist";
+import type { LessonImage, LessonSection } from "../../data/courses";
 
 const PRICE_SECRET_KEY = "bbb_studio_price_secret";
+
+function SectionImagesField({
+  images,
+  onChange,
+}: {
+  images: LessonImage[];
+  onChange: (images: LessonImage[]) => void;
+}) {
+  const serialized = images
+    .map((img) => (img.caption ? `${img.src} | ${img.caption}` : img.src))
+    .join("\n");
+  const [text, setText] = useState(serialized);
+  useEffect(() => setText(serialized), [serialized]);
+
+  function commit() {
+    onChange(
+      text
+        .split("\n")
+        .map((line) => {
+          const [src, ...rest] = line.split("|");
+          const caption = rest.join("|").trim();
+          return { src: src.trim(), ...(caption ? { caption } : {}) };
+        })
+        .filter((img) => img.src),
+    );
+  }
+
+  return (
+    <label className="calc-field">
+      <span>Images (one per line: link | caption)</span>
+      <textarea
+        rows={2}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+      />
+    </label>
+  );
+}
 
 type ProductDraft = {
   productId?: string;
@@ -989,7 +1029,7 @@ export function StudioEditorPage() {
     });
   }
 
-  function updateSection(index: number, patch: { heading?: string; body?: string }) {
+  function updateSection(index: number, patch: Partial<LessonSection>) {
     if (!lesson) return;
     const sections = lesson.sections.map((s, i) =>
       i === index ? { ...s, ...patch } : s,
@@ -1217,6 +1257,10 @@ export function StudioEditorPage() {
                     }
                   />
                 </label>
+                <SectionImagesField
+                  images={section.images || []}
+                  onChange={(images) => updateSection(index, { images })}
+                />
               </div>
             ))}
             <button className="btn btn--ghost-ink" type="button" onClick={addSection}>

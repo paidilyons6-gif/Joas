@@ -1588,6 +1588,36 @@ a.module-card:hover {
   color: var(--ink-muted);
 }
 
+.lesson-section__body {
+  white-space: pre-line;
+}
+
+.lesson-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.lesson-images figure {
+  margin: 0;
+}
+
+.lesson-images img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  object-position: top;
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+}
+
+.lesson-images figcaption {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-top: 0.35rem;
+}
+
 .lesson-panel--action {
   background: linear-gradient(120deg, rgba(255, 230, 0, 0.35), rgba(255, 193, 227, 0.55));
   border-color: transparent;

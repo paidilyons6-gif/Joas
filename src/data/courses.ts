@@ -1,3 +1,11 @@
+export type LessonImage = { src: string; caption?: string };
+
+export type LessonSection = {
+  heading: string;
+  body: string;
+  images?: LessonImage[];
+};
+
 export type CourseLesson = {
   id: string;
   title: string;
@@ -6,7 +14,7 @@ export type CourseLesson = {
   /** YouTube, Vimeo, or direct video URL — shown at the top of the lesson */
   videoUrl?: string;
   objectives: string[];
-  sections: { heading: string; body: string }[];
+  sections: LessonSection[];
   action: string;
   worksheetPrompt: string;
 };
