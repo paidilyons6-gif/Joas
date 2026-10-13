@@ -21,6 +21,7 @@ export type NavTopicId =
   | "calculators"
   | "toolkit"
   | "office"
+  | "calendar"
   | "studio"
   | "account";
 
@@ -36,6 +37,7 @@ export const DEFAULT_NAV: NavSettings = {
   calculators: true,
   toolkit: true,
   office: true,
+  calendar: true,
   studio: true,
   account: true,
 };
@@ -50,6 +52,7 @@ export const NAV_META: {
   { id: "courses", label: "Courses", group: "Learn" },
   { id: "vault", label: "Vault", group: "Learn" },
   { id: "office", label: "Business Meeting", group: "Learn" },
+  { id: "calendar", label: "Calendar", group: "Learn" },
   { id: "calculators", label: "Calculators", group: "Build" },
   { id: "toolkit", label: "Toolkit", group: "Build" },
   { id: "studio", label: "Studio", group: "Create", adminOnly: true },
