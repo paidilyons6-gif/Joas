@@ -10,7 +10,7 @@ const TRACK = {
   id: "seen-heard-earn",
   title: "Seen. Heard. Earn.",
   blurb:
-    "Your 3-day brand workshop — lifetime access in The Office. Opens October 14th.",
+    "Your 3-day brand workshop — lifetime access in The Office.",
   badge: "3-day workshop",
   members_only: true,
   published: true,
@@ -29,7 +29,7 @@ const LESSONS = [
     sections: [
       {
         heading: "Welcome to Day 1",
-        body: "Today we get you Seen. Edit this in Studio and add video before October 14.",
+        body: "Today we get you Seen. — the brand presence that makes people stop scrolling and pay attention.",
       },
     ],
     action:
@@ -48,7 +48,7 @@ const LESSONS = [
     sections: [
       {
         heading: "Welcome to Day 2",
-        body: "Today we get you Heard. Edit this in Studio and add video before October 14.",
+        body: "Today we get you Heard. — voice, offer language, and the words that convert.",
       },
     ],
     action: "Draft your core offer paragraph out loud, then tighten it.",
@@ -66,7 +66,7 @@ const LESSONS = [
     sections: [
       {
         heading: "Welcome to Day 3",
-        body: "Today we get you Earn. Edit this in Studio and add video before October 14.",
+        body: "Today we get you Earn. — pricing confidence and the path from attention to income.",
       },
     ],
     action: "Write your next paid ask and who you will send it to this week.",
@@ -110,10 +110,10 @@ export const handler: Handler = async (event) => {
   }
 
   const supabase = createClient(url, key);
-  const { error: trackError } = await supabase.from("course_tracks").upsert({
-    ...TRACK,
-    updated_at: new Date().toISOString(),
-  });
+  const { error: trackError } = await supabase.from("course_tracks").upsert(
+    { ...TRACK, updated_at: new Date().toISOString() },
+    { onConflict: "id", ignoreDuplicates: true },
+  );
 
   if (trackError) {
     return {
@@ -127,10 +127,10 @@ export const handler: Handler = async (event) => {
   }
 
   for (const lesson of LESSONS) {
-    const { error } = await supabase.from("course_lessons").upsert({
-      ...lesson,
-      updated_at: new Date().toISOString(),
-    });
+    const { error } = await supabase.from("course_lessons").upsert(
+      { ...lesson, updated_at: new Date().toISOString() },
+      { onConflict: "id", ignoreDuplicates: true },
+    );
     if (error) {
       return { statusCode: 500, body: error.message };
     }

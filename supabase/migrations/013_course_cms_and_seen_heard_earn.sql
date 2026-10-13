@@ -1,5 +1,5 @@
 -- Course CMS tables + seed Seen. Heard. Earn. workshop track
--- Safe to re-run in Supabase SQL Editor.
+-- Safe to re-run in Supabase SQL Editor: never overwrites lessons Becca edits in Studio.
 
 create or replace function public.is_admin_user()
 returns boolean
@@ -8,6 +8,21 @@ stable
 as $$
   select coalesce(
     (select is_admin from public.profiles where id = auth.uid()),
+    false
+  );
+$$;
+
+-- security definer so lesson policies can read the caller's programs without
+-- depending on profiles RLS
+create or replace function public.has_any_program()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select cardinality(programs) > 0 from public.profiles where id = auth.uid()),
     false
   );
 $$;
@@ -60,13 +75,19 @@ create policy "Admins manage tracks"
   using (public.is_admin_user())
   with check (public.is_admin_user());
 
+-- Paid lesson content (videos, teaching) is only readable by buyers and admins
 drop policy if exists "Anyone can read lessons of visible tracks" on public.course_lessons;
-create policy "Anyone can read lessons of visible tracks"
+drop policy if exists "Buyers read lessons of visible tracks" on public.course_lessons;
+create policy "Buyers read lessons of visible tracks"
   on public.course_lessons for select
   using (
-    exists (
-      select 1 from public.course_tracks t
-      where t.id = track_id and (t.published = true or public.is_admin_user())
+    public.is_admin_user()
+    or (
+      exists (
+        select 1 from public.course_tracks t
+        where t.id = track_id and t.published = true
+      )
+      and (members_only = false or public.has_any_program())
     )
   );
 
@@ -76,26 +97,25 @@ create policy "Admins manage lessons"
   using (public.is_admin_user())
   with check (public.is_admin_user());
 
--- Seed Seen. Heard. Earn. (published; portal still gates until Oct 14 for buyers)
+grant select on public.course_tracks to anon, authenticated;
+grant select on public.course_lessons to anon, authenticated;
+grant insert, update, delete on public.course_tracks to authenticated;
+grant insert, update, delete on public.course_lessons to authenticated;
+
+-- Seed Seen. Heard. Earn. only if missing (portal gates lessons until Oct 14)
 insert into public.course_tracks (
   id, title, blurb, badge, members_only, published, sort_order, updated_at
 ) values (
   'seen-heard-earn',
   'Seen. Heard. Earn.',
-  'Your 3-day brand workshop — lifetime access in The Office. Opens October 14th.',
+  'Your 3-day brand workshop — lifetime access in The Office.',
   '3-day workshop',
   true,
   true,
   0,
   now()
 )
-on conflict (id) do update set
-  title = excluded.title,
-  blurb = excluded.blurb,
-  badge = excluded.badge,
-  members_only = excluded.members_only,
-  published = excluded.published,
-  updated_at = now();
+on conflict (id) do nothing;
 
 insert into public.course_lessons (
   id, track_id, title, duration, members_only, video_url,
@@ -109,7 +129,7 @@ insert into public.course_lessons (
   true,
   '',
   array['Get clear on how you want to be seen as a brand'],
-  '[{"heading":"Welcome to Day 1","body":"Today we get you Seen. — the brand presence that makes people stop scrolling and pay attention. Becca will add the full teaching and video here before October 14."}]'::jsonb,
+  '[{"heading":"Welcome to Day 1","body":"Today we get you Seen. — the brand presence that makes people stop scrolling and pay attention."}]'::jsonb,
   'Write one sentence that says who you help and what they walk away with.',
   'Brand visibility notes…',
   0,
@@ -123,7 +143,7 @@ insert into public.course_lessons (
   true,
   '',
   array['Shape a message people actually remember'],
-  '[{"heading":"Welcome to Day 2","body":"Today we get you Heard. — voice, offer language, and the words that convert. Full lesson content lands before October 14."}]'::jsonb,
+  '[{"heading":"Welcome to Day 2","body":"Today we get you Heard. — voice, offer language, and the words that convert."}]'::jsonb,
   'Draft your core offer paragraph out loud, then tighten it.',
   'Message and offer notes…',
   1,
@@ -137,18 +157,17 @@ insert into public.course_lessons (
   true,
   '',
   array['Connect your brand to paid opportunities'],
-  '[{"heading":"Welcome to Day 3","body":"Today we get you Earn. — pricing confidence and the path from attention to income. Full lesson content lands before October 14."}]'::jsonb,
+  '[{"heading":"Welcome to Day 3","body":"Today we get you Earn. — pricing confidence and the path from attention to income."}]'::jsonb,
   'Write your next paid ask and who you will send it to this week.',
   'Earn plan notes…',
   2,
   now()
 )
-on conflict (id) do update set
-  title = excluded.title,
-  duration = excluded.duration,
-  objectives = excluded.objectives,
-  sections = excluded.sections,
-  action = excluded.action,
-  worksheet_prompt = excluded.worksheet_prompt,
-  sort_order = excluded.sort_order,
-  updated_at = now();
+on conflict (id) do nothing;
+
+notify pgrst, 'reload schema';
+
+select t.id as track, t.published, count(l.id) as lessons
+from public.course_tracks t
+left join public.course_lessons l on l.track_id = t.id
+group by t.id, t.published;

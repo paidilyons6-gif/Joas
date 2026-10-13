@@ -5,7 +5,7 @@ export const SEEN_HEARD_EARN_TRACK: StudioTrack = {
   id: "seen-heard-earn",
   title: "Seen. Heard. Earn.",
   blurb:
-    "Your 3-day brand workshop — lifetime access in The Office. Opens October 14th.",
+    "Your 3-day brand workshop — lifetime access in The Office.",
   badge: "3-day workshop",
   membersOnly: true,
   published: true,
@@ -21,7 +21,7 @@ export const SEEN_HEARD_EARN_TRACK: StudioTrack = {
       sections: [
         {
           heading: "Welcome to Day 1",
-          body: "Today we get you Seen. — the brand presence that makes people stop scrolling and pay attention. Becca can replace this teaching and add video in Studio before October 14.",
+          body: "Today we get you Seen. — the brand presence that makes people stop scrolling and pay attention.",
         },
       ],
       action:
@@ -39,7 +39,7 @@ export const SEEN_HEARD_EARN_TRACK: StudioTrack = {
       sections: [
         {
           heading: "Welcome to Day 2",
-          body: "Today we get you Heard. — voice, offer language, and the words that convert. Full lesson content can be edited in Studio before October 14.",
+          body: "Today we get you Heard. — voice, offer language, and the words that convert.",
         },
       ],
       action: "Draft your core offer paragraph out loud, then tighten it.",
@@ -56,7 +56,7 @@ export const SEEN_HEARD_EARN_TRACK: StudioTrack = {
       sections: [
         {
           heading: "Welcome to Day 3",
-          body: "Today we get you Earn. — pricing confidence and the path from attention to income. Full lesson content can be edited in Studio before October 14.",
+          body: "Today we get you Earn. — pricing confidence and the path from attention to income.",
         },
       ],
       action:
