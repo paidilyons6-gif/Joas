@@ -203,14 +203,14 @@ button {
   background-color: #1a1a1a;
   background-image: var(--hero-image);
   background-size: cover;
-  background-position: center 28%;
+  background-position: center 50%;
   transform: scale(1.06);
   animation: drift 20s var(--ease) forwards;
 }
 
 @media (max-width: 720px) {
   .hero__media {
-    background-position: center 22%;
+    background-position: 70% center;
   }
 }
 
