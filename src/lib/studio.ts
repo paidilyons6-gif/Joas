@@ -51,7 +51,7 @@ export const NAV_META: {
   { id: "home", label: "Home", group: "Learn" },
   { id: "courses", label: "Courses", group: "Learn" },
   { id: "vault", label: "Vault", group: "Learn" },
-  { id: "office", label: "Business Meeting", group: "Learn" },
+  { id: "office", label: "The Office", group: "Learn" },
   { id: "calendar", label: "Calendar", group: "Learn" },
   { id: "calculators", label: "Calculators", group: "Build" },
   { id: "toolkit", label: "Toolkit", group: "Build" },

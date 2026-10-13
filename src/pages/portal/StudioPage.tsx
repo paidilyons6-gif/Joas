@@ -377,7 +377,7 @@ export function StudioPage() {
           </h1>
           <p className="portal-lede">
             Create and price programs, edit course parts and lesson videos,
-            and run Business Meeting — signed in as admin ({user.email}).
+            and run The Office — signed in as admin ({user.email}).
           </p>
         </div>
         <button

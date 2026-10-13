@@ -1819,6 +1819,19 @@ a.module-card:hover {
   color: var(--ink-muted);
 }
 
+.vault-card__coach {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed rgba(26, 26, 26, 0.14);
+}
+
+.vault-upload {
+  background: var(--white);
+  border: 1.5px dashed rgba(26, 26, 26, 0.2);
+  padding: 1.2rem 1.25rem;
+  margin-bottom: 1.2rem;
+}
+
 .vault-content {
   margin-top: 1rem;
   padding: 1rem;
@@ -2476,7 +2489,7 @@ a.module-card:hover {
   background: #000;
 }
 
-/* ——— Business Meeting feed ——— */
+/* ——— The Office feed ——— */
 .office-composer {
   display: grid;
   gap: 0.85rem;

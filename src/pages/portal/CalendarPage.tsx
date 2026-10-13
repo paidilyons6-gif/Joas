@@ -150,7 +150,7 @@ export function CalendarPage() {
         What&apos;s <em>on</em>
       </h1>
       <p className="portal-lede">
-        LIVE sessions, Business Meetings, and deadlines. Times show in your own
+        LIVE sessions, Office meetups, and deadlines. Times show in your own
         time zone — add any session straight to your calendar.
       </p>
 

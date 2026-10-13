@@ -46,7 +46,7 @@ export const DEFAULT_SITE_COPY: SiteCopy = {
   pillarsTitle: "Ambitious. Unfiltered.",
   pillarsTitleEm: "Yours.",
   pillarsCopy:
-    "Sign up free, buy the program, and get in — courses with video, tools, and Business Meeting (your program community).",
+    "Sign up free, buy the program, and get in — courses with video, tools, and The Office (your program community).",
   bandTitle: "Bigger plans start in",
   bandTitleEm: "The Office.",
   bandCopy:
@@ -55,7 +55,7 @@ export const DEFAULT_SITE_COPY: SiteCopy = {
   offerTitle: "Progress over",
   offerTitleEm: "perfection.",
   offerCopy:
-    "Program courses (with video lessons), financial calculators, worksheets, and Business Meeting — unlocked when you buy.",
+    "Program courses (with video lessons), financial calculators, worksheets, and The Office — unlocked when you buy.",
 };
 
 const COPY_KEY = "bbb_site_copy_v1";

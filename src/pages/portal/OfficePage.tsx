@@ -12,7 +12,7 @@ import {
 } from "../../lib/villageRepo";
 import { hasAnyProgram } from "../../lib/access";
 
-/** Community feed — labeled Business Meeting (Village-style). */
+/** Community feed — labeled The Office (Village-style). */
 export function OfficePage() {
   const { user } = useAuth();
   const { preview } = useClientPreview();
@@ -74,7 +74,7 @@ export function OfficePage() {
     <div className="portal-page">
       <p className="eyebrow">Community</p>
       <h1>
-        Business <em>Meeting</em>
+        The <em>Office</em>
       </h1>
       <p className="portal-lede">
         Your program community — share wins, ask questions, and get unstuck with
@@ -85,7 +85,7 @@ export function OfficePage() {
       {!member && (
         <div className="upgrade-banner">
           <div>
-            <h2>Buy a program to post in Business Meeting</h2>
+            <h2>Buy a program to post in The Office</h2>
             <p>
               Sign up free, get your program, then join the conversation here —
               like The Village, for business.
@@ -121,7 +121,7 @@ export function OfficePage() {
         {posts.length === 0 ? (
           <div className="studio-empty">
             <h3>No posts yet</h3>
-            <p>Be the first to say hey and start the Business Meeting.</p>
+            <p>Be the first to say hey and get The Office talking.</p>
           </div>
         ) : (
           posts.map((post) => (
