@@ -258,10 +258,14 @@ export function StudioPage() {
 
   function createCourse() {
     const track = emptyTrack();
-    void saveStudioTrackRemote(track).then(() => {
-      refresh();
-      navigate(`/portal/studio/${track.id}`);
-    });
+    void saveStudioTrackRemote(track)
+      .catch((error: unknown) => {
+        alert(error instanceof Error ? error.message : "Could not save");
+      })
+      .then(() => {
+        refresh();
+        navigate(`/portal/studio/${track.id}`);
+      });
   }
 
   function editProgram(editableId: string, source: "builtin" | "studio") {
@@ -279,7 +283,11 @@ export function StudioPage() {
       return;
     }
     if (!confirm("Delete this custom course? This cannot be undone.")) return;
-    void deleteStudioTrackRemote(id).then(() => refresh());
+    void deleteStudioTrackRemote(id)
+      .catch((error: unknown) => {
+        alert(error instanceof Error ? error.message : "Could not delete");
+      })
+      .then(() => refresh());
   }
 
   function toggleNav(id: NavTopicId) {
@@ -1019,10 +1027,15 @@ export function StudioEditorPage() {
 
   function onSave(event: FormEvent) {
     event.preventDefault();
-    void saveStudioTrackRemote(current).then(() => {
-      setSaved("Program & lessons saved ♡");
-      window.setTimeout(() => setSaved(""), 2200);
-    });
+    void saveStudioTrackRemote(current).then(
+      () => {
+        setSaved("Program & lessons saved ♡");
+        window.setTimeout(() => setSaved(""), 2200);
+      },
+      (error: unknown) => {
+        setSaved(error instanceof Error ? error.message : "Could not save");
+      },
+    );
   }
 
   function publishToggle() {
@@ -1036,10 +1049,15 @@ export function StudioEditorPage() {
         : "Draft",
     };
     setTrack(next);
-    void saveStudioTrackRemote(next).then(() => {
-      setSaved(next.published ? "Live for members ♡" : "Hidden as draft");
-      window.setTimeout(() => setSaved(""), 2200);
-    });
+    void saveStudioTrackRemote(next).then(
+      () => {
+        setSaved(next.published ? "Live for members ♡" : "Hidden as draft");
+        window.setTimeout(() => setSaved(""), 2200);
+      },
+      (error: unknown) => {
+        setSaved(error instanceof Error ? error.message : "Could not save");
+      },
+    );
   }
 
   return (
