@@ -1612,6 +1612,15 @@ a.module-card:hover {
   border: 1.5px solid rgba(26, 26, 26, 0.08);
 }
 
+.lesson-images figure.lesson-images__wide {
+  grid-column: 1 / -1;
+}
+
+.lesson-images__wide img {
+  max-height: none;
+  object-fit: contain;
+}
+
 .lesson-images figcaption {
   font-size: 0.8rem;
   color: var(--ink-muted);

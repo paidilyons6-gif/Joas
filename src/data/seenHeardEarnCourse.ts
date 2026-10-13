@@ -1,14 +1,16 @@
 import type { StudioLesson, StudioTrack } from "../lib/studio";
 
 const IMG = "/course/seen";
+const HEARD_IMG = "/course/heard";
+const EARN_IMG = "/course/earn";
 
-function seen(lesson: Omit<StudioLesson, "membersOnly" | "studio" | "videoUrl">): StudioLesson {
+function chapter(lesson: Omit<StudioLesson, "membersOnly" | "studio" | "videoUrl">): StudioLesson {
   return { ...lesson, membersOnly: true, videoUrl: "", studio: true };
 }
 
 /** Day 1 — Seen. chapters come from Becca's "SEEN · The Office" deck. */
 export const SEEN_LESSONS: StudioLesson[] = [
-  seen({
+  chapter({
     id: "she-seen-1",
     title: "Day 1 · Seen — Welcome in",
     duration: 5,
@@ -26,7 +28,7 @@ export const SEEN_LESSONS: StudioLesson[] = [
     action: "Tick this chapter off, then move straight on to “What are you building?”",
     worksheetPrompt: "What do you want to have by the end of these three days?",
   }),
-  seen({
+  chapter({
     id: "she-seen-2",
     title: "Day 1 · Seen — What are you building?",
     duration: 10,
@@ -52,7 +54,7 @@ export const SEEN_LESSONS: StudioLesson[] = [
     action: "Write down your answers to the three questions: what you want to sell, who your community is, and what's stopping you.",
     worksheetPrompt: "I want to sell… My community is… What's stopping me is…",
   }),
-  seen({
+  chapter({
     id: "she-seen-3",
     title: "Day 1 · Seen — Meet your girl",
     duration: 10,
@@ -77,7 +79,7 @@ export const SEEN_LESSONS: StudioLesson[] = [
     action: "Give your girl a name and answer the four questions about her.",
     worksheetPrompt: "Her name… Who she is… What keeps her up… How her life gets better… What she'd search…",
   }),
-  seen({
+  chapter({
     id: "she-seen-4",
     title: "Day 1 · Seen — Anatomy of a profile",
     duration: 10,
@@ -106,7 +108,7 @@ export const SEEN_LESSONS: StudioLesson[] = [
     action: "Do the three-second test on your own profile, then fix your photo, name, bio, link and highlights.",
     worksheetPrompt: "My new bio (one sentence: who I am, what I do, how I help)…",
   }),
-  seen({
+  chapter({
     id: "she-seen-5",
     title: "Day 1 · Seen — What gets you shown more",
     duration: 10,
@@ -127,7 +129,7 @@ export const SEEN_LESSONS: StudioLesson[] = [
     action: "Look at your last five posts. Which signal was each one built for, and which format did it use?",
     worksheetPrompt: "A post she'd share… A post she'd save… A post she'd watch twice…",
   }),
-  seen({
+  chapter({
     id: "she-seen-6",
     title: "Day 1 · Seen — Win the first 3 seconds",
     duration: 10,
@@ -158,7 +160,7 @@ export const SEEN_LESSONS: StudioLesson[] = [
     action: "Fill in all four hooks for your own business.",
     worksheetPrompt: "Stop doing ___ if you want ___… Life got more fun when I did ___… The real reason your ___ isn't working… POV: you finally ___…",
   }),
-  seen({
+  chapter({
     id: "she-seen-7",
     title: "Day 1 · Seen — Get seen beyond your page",
     duration: 5,
@@ -172,7 +174,7 @@ export const SEEN_LESSONS: StudioLesson[] = [
     action: "Pick one account for a collab and leave three thoughtful comments on bigger accounts she follows.",
     worksheetPrompt: "Collab ideas… Accounts she follows… Keywords she'd search… Local businesses…",
   }),
-  seen({
+  chapter({
     id: "she-seen-8",
     title: "Day 1 · Seen — Show up every day",
     duration: 5,
@@ -186,7 +188,7 @@ export const SEEN_LESSONS: StudioLesson[] = [
     action: "Post something today, in whatever format suits your idea.",
     worksheetPrompt: "Today's light bulb… The format that suits it…",
   }),
-  seen({
+  chapter({
     id: "she-seen-9",
     title: "Day 1 · Seen — Homework before Day 2",
     duration: 10,
@@ -206,6 +208,428 @@ export const SEEN_LESSONS: StudioLesson[] = [
   }),
 ];
 
+/** Day 2 — Heard. chapters come from Becca's "HEARD · The Office" deck. */
+export const HEARD_LESSONS: StudioLesson[] = [
+  chapter({
+    id: "she-heard-1",
+    title: "Day 2 · Heard — Welcome back",
+    duration: 10,
+    objectives: [
+      "Know today's goal: make them stay and listen",
+      "Share what you made for yesterday's homework",
+    ],
+    sections: [
+      {
+        heading: "Welcome to Day 2 · Seen. Heard. Earn.",
+        body: "HEARD. How to make them stay and listen.",
+        images: [{ src: `${HEARD_IMG}/cover.jpg`, caption: "Day 2 · HEARD. How to make them stay and listen" }],
+      },
+      {
+        heading: "Show us what you made",
+        body: "Let's go round and see yesterday's homework. Tell us:\n\n1. Your new profile\nWhat did you change, and why?\n\n2. Your challenge Reel\nWhat was your hook, and how did it do?\n\n3. Your content ideas\nWhich one are you most excited to make?",
+      },
+    ],
+    action: "Share your new profile, your challenge Reel and your content ideas with the group.",
+    worksheetPrompt: "What I changed on my profile… My hook and how it did… The idea I'm most excited to make…",
+  }),
+  chapter({
+    id: "she-heard-2",
+    title: "Day 2 · Heard — Seen vs heard",
+    duration: 5,
+    objectives: ["Know the difference between being seen and being heard"],
+    sections: [
+      {
+        heading: "SEEN. She watched. She scrolled on.",
+        body: "• A view\n• A like\n• Maybe a follow",
+      },
+      {
+        heading: "HEARD. She stopped and listened.",
+        body: "• She saves it\n• She sends it to a friend\n• She DMs you\n• She buys from you",
+      },
+      {
+        heading: "Seen gets them to stop. Heard gets them to stay.",
+        body: "",
+      },
+    ],
+    action: "Look at your last few posts. Which ones got her to save, share or DM, not just like?",
+    worksheetPrompt: "Posts that got me seen… Posts that got me heard…",
+  }),
+  chapter({
+    id: "she-heard-3",
+    title: "Day 2 · Heard — Find your voice",
+    duration: 10,
+    objectives: ["Write and speak in a voice that's unmistakably yours"],
+    sections: [
+      {
+        heading: "Your voice is the one thing nobody can copy.",
+        body: "Write it the way you'd say it out loud.",
+      },
+      {
+        heading: "Four rules",
+        body: "• Talk like you talk. Your words, your accent, your sayings.\n• Say what you think. Have opinions. Safe and bland gets scrolled past.\n• Show the real you. The messy kitchen, the bad days, the wins.\n• Be the same everywhere. Same you in Reels, captions, stories and DMs.",
+      },
+    ],
+    action: "Write down three sayings or phrases you use all the time, and one opinion you hold about your topic.",
+    worksheetPrompt: "Things I always say… An opinion I'm not afraid to share…",
+  }),
+  chapter({
+    id: "she-heard-4",
+    title: "Day 2 · Heard — Your story sells",
+    duration: 10,
+    objectives: ["Shape your story into a before, a turning point and a why"],
+    sections: [
+      {
+        heading: "Your story in three parts",
+        body: "01 Your before: where were you? What was hard?\n02 Your turning point: what changed? What did you learn?\n03 Your why: why do you do this now, and who for?",
+      },
+      {
+        heading: "My story",
+        body: "Built my business as a coach. Gained weight and lost 30kg. Had my baby, and lost 30kg again postpartum. Did it twice. Then all of a sudden I was a single mom, and I overcame that too.\n\nTurn your disasters into positives. Your story can inspire people you've never met.",
+      },
+    ],
+    action: "Jot down your before, your turning point and your why in a few lines each.",
+    worksheetPrompt: "My before… My turning point… My why…",
+  }),
+  chapter({
+    id: "she-heard-5",
+    title: "Day 2 · Heard — Your content pillars",
+    duration: 5,
+    objectives: ["Make every post you, then educational, entertaining or both"],
+    sections: [
+      {
+        heading: "BE YOU.",
+        body: "Always. Your voice, your face, your story in every single post.",
+      },
+      {
+        heading: "Then make it…",
+        body: "• EDUCATIONAL: be her problem solver. Show her a problem she didn't know she had, then fix it for her.\n• ENTERTAINING: funny, relatable, real life. She laughs or feels seen.\n• BOTH: teach her something in a way that makes her smile. The sweet spot.",
+      },
+    ],
+    action: "Write one post idea for each pillar: educational, entertaining and both.",
+    worksheetPrompt: "Educational idea… Entertaining idea… Both…",
+  }),
+  chapter({
+    id: "she-heard-6",
+    title: "Day 2 · Heard — Write captions like you talk",
+    duration: 15,
+    objectives: [
+      "Write captions in your own voice, talking straight to her",
+      "Make the first line do the work",
+    ],
+    sections: [
+      {
+        heading: "Example caption",
+        body: "People know you're selling to them.\n\nSo what are you selling?\nAnd do you actually care about it?\n\nTalk as you.\nTo her.\n\nThat's how the right clients find you.",
+      },
+      {
+        heading: "Five caption rules",
+        body: "• First line stops the scroll. Like your friend just said it to you. Not an ad.\n• Talk to her, as you. Write it yourself. Not ChatGPT.\n• Short and spaced out. Short paragraphs. One-liners. Full stops.\n• Go easy on the emojis. Clean and easy to read wins.\n• Straight to the point. No humming and hawing.",
+      },
+      {
+        heading: "The first line does the work",
+        body: "This is what she sees before she taps 'more'. Your first line is:\n\n✓ One eye-catching line\n✓ Easy to read\n✓ Straight to the point\n✓ Makes her tap 'more'",
+        images: [
+          { src: `${HEARD_IMG}/caption-october-challenge.jpg`, caption: "“The October Challenge is now LIVE and only €15 for the next 3 days…”" },
+          { src: `${HEARD_IMG}/caption-pre-baby-clothes.jpg`, caption: "“I'm so happy I kept my pre baby clothes…”" },
+        ],
+      },
+      {
+        heading: "Then when she taps in",
+        body: "Clear. Easy to read. Direct. Talking straight to her.",
+        images: [
+          { src: `${HEARD_IMG}/caption-gym-nanny.jpg`, caption: "“Gym? Nope! Did I have a nanny? Nope.”" },
+          { src: `${HEARD_IMG}/caption-bother-yourself.jpg`, caption: "“Bother yourself with exercise…”" },
+        ],
+      },
+    ],
+    action: "Rewrite the first line of your next caption so it sounds like a friend talking, not an ad.",
+    worksheetPrompt: "My new first line… The rest of my caption, short and spaced out…",
+  }),
+  chapter({
+    id: "she-heard-7",
+    title: "Day 2 · Heard — Stories build trust",
+    duration: 5,
+    objectives: ["Use stories most days so she starts looking for you"],
+    sections: [
+      {
+        heading: "Four ways to use your stories",
+        body: "• Behind the scenes: your day, your work, your real life.\n• Polls and questions: ask her opinion. She'll tell you.\n• Show your face: talk to camera, even for 15 seconds.\n• Most days: show up often, so she starts looking for you.",
+      },
+      {
+        heading: "Reels get you seen. Stories get you trusted.",
+        body: "",
+      },
+    ],
+    action: "Post a story today with your face to camera and a poll or question box.",
+    worksheetPrompt: "Poll and question ideas for this week…",
+  }),
+  chapter({
+    id: "she-heard-8",
+    title: "Day 2 · Heard — Talk back",
+    duration: 5,
+    objectives: ["Turn comments and DMs into real conversations"],
+    sections: [
+      {
+        heading: "What it looks like",
+        body: "Her: “This is literally me after my second baby”\nYou: “Ah I hear you! How old is your youngest?”\nHer: “8 months. I've no energy at all”\nYou: “Okay, let's fix that. Can I ask you a few things?”",
+      },
+      {
+        heading: "Four rules",
+        body: "1. Reply to every comment. She took the time. Take it back.\n2. Ask a question back. Keep the conversation going.\n3. DM like a friend. Not a sales script. A real chat.\n4. Remember her. Use her name. Remember her story.",
+      },
+    ],
+    action: "Reply to every comment from your last three posts and ask a question back.",
+    worksheetPrompt: "Questions I can ask back…",
+  }),
+  chapter({
+    id: "she-heard-9",
+    title: "Day 2 · Heard — Give them a home",
+    duration: 5,
+    objectives: ["Turn followers into a community with a name, a place and a reason to stay"],
+    sections: [
+      {
+        heading: "Build your community",
+        body: "• Give it a name. The Village. HOTMESS. A name makes her feel part of something.\n• Give it a place. A broadcast channel, a group chat or an app, like my Girls Group Chat.\n• Give her a reason to stay. Wins, check-ins, lives and the inside jokes only you lot get.",
+      },
+      {
+        heading: "Followers watch you. A community shows up for you.",
+        body: "",
+      },
+    ],
+    action: "Pick a name and a place for your community.",
+    worksheetPrompt: "My community's name… Where it lives… Why she'll stay…",
+  }),
+  chapter({
+    id: "she-heard-10",
+    title: "Day 2 · Heard — Homework before Day 3",
+    duration: 10,
+    objectives: ["Finish your Day 2 homework and send it to Becca for review"],
+    sections: [
+      {
+        heading: "Your homework",
+        body: "☐ Write your story in half an A4 page. Your before, your turning point and your why.\n\n☐ Rewrite one old caption. New first line, short and spaced out, talking straight to her.\n\n☐ Show up on your stories every day, with at least one poll or question box.\n\n☐ The challenge: post your story as a Reel or carousel, with a caption written by you, and send it to me for review.",
+      },
+      {
+        heading: "Tomorrow: EARN.",
+        body: "Heard gets them to stay. Earn gets them to buy.",
+      },
+    ],
+    action: "Do all four, send your story post to Becca for review, then tick this chapter off.",
+    worksheetPrompt: "My story (half an A4 page)… My rewritten caption…",
+  }),
+];
+
+/** Day 3 — Earn. chapters come from Becca's "EARN · Day 3" deck. */
+export const EARN_LESSONS: StudioLesson[] = [
+  chapter({
+    id: "she-earn-1",
+    title: "Day 3 · Earn — Welcome back",
+    duration: 10,
+    objectives: [
+      "Know today's goal: turn followers into paying clients",
+      "Share what you made for yesterday's homework",
+    ],
+    sections: [
+      {
+        heading: "Welcome to Day 3 · Seen. Heard. Earn.",
+        body: "EARN. How to turn followers into paying clients.",
+        images: [{ src: `${EARN_IMG}/cover.jpg`, caption: "Day 3 · EARN. How to turn followers into paying clients" }],
+      },
+      {
+        heading: "Show us what you made",
+        body: "Let's go round and see yesterday's homework. Tell us:\n\n1. Your story post\nHow did it feel to share it? What did people say?\n\n2. Your new caption\nRead us your first line.\n\n3. Your stories\nWhat did your poll or question box tell you?",
+      },
+      {
+        heading: "Before we start: you're allowed to make money.",
+        body: "If you're genuinely helping her, charging for it isn't greedy. It's a business.",
+      },
+    ],
+    action: "Share your story post, your new first line and what your stories told you.",
+    worksheetPrompt: "How sharing my story felt… What my poll or question box told me…",
+  }),
+  chapter({
+    id: "she-earn-2",
+    title: "Day 3 · Earn — Build your offer ladder",
+    duration: 10,
+    objectives: ["Give her a way in at every level"],
+    sections: [
+      {
+        heading: "Every follower is at a different step",
+        body: "Give her a way in at every level.\n\n• FREE: your content, stories and group chat\n• LOW PRICE: a challenge, like my €15 October Challenge\n• MONTHLY: a subscription, like The Village app\n• PREMIUM: 1-1 coaching, the full you",
+      },
+    ],
+    action: "Fill in one offer for each step of your ladder.",
+    worksheetPrompt: "Free… Low price… Monthly… Premium…",
+  }),
+  chapter({
+    id: "she-earn-3",
+    title: "Day 3 · Earn — Your offer in one sentence",
+    duration: 10,
+    objectives: ["Say who it's for, the result and the pain it removes, in one sentence"],
+    sections: [
+      {
+        heading: "The formula",
+        body: "I help [her] get [result] without [the pain].",
+      },
+      {
+        heading: "Mine",
+        body: "I help moms get fit at home in 20-30 minutes a day, without a gym or a nanny.\n\n✓ Who it's for. Your girl, not everyone.\n✓ The result. People buy results, remember.\n✓ The pain it removes. What she won't have to do.",
+      },
+    ],
+    action: "Write your offer in one sentence using the formula.",
+    worksheetPrompt: "I help ___ get ___ without ___.",
+  }),
+  chapter({
+    id: "she-earn-4",
+    title: "Day 3 · Earn — Price it with confidence",
+    duration: 5,
+    objectives: ["Set a price you can stand behind"],
+    sections: [
+      {
+        heading: "Three steps",
+        body: "• Know your numbers. What does it cost you in time and money to deliver it?\n• Look at the market. What do others charge? Decide where you fit.\n• Start, then raise. A launch price gets you started. Raise it as the results come in.",
+      },
+      {
+        heading: "Cheap doesn't mean more sales. Clear value does.",
+        body: "",
+      },
+    ],
+    action: "Work out what your offer costs you to deliver and set your launch price.",
+    worksheetPrompt: "My cost in time and money… What others charge… My launch price…",
+  }),
+  chapter({
+    id: "she-earn-5",
+    title: "Day 3 · Earn — Sell like you talk",
+    duration: 5,
+    objectives: ["Sell in your own voice, with proof and a clear ask"],
+    sections: [
+      {
+        heading: "Four things every sales post does",
+        body: "• Show results. Client wins and your own journey. Proof sells.\n• Show the inside. What's in it? What does a week look like?\n• Answer her doubts. No time? No money? Will it work for me?\n• Ask clearly. Tell her exactly what to do. Link in bio. DM me.",
+      },
+      {
+        heading: "People know you're selling. Just be you while you do it.",
+        body: "",
+      },
+    ],
+    action: "List the three doubts your girl has, and how you'd answer each.",
+    worksheetPrompt: "Her doubts… My answers…",
+  }),
+  chapter({
+    id: "she-earn-6",
+    title: "Day 3 · Earn — Give her a reason to act now",
+    duration: 10,
+    objectives: ["Use real deadlines, launch prices and bonuses"],
+    sections: [
+      {
+        heading: "Three reasons to act now",
+        body: "• A deadline: “You have 24 hours left to join me for September.”\n• A launch price: “The October Challenge is now LIVE and only €15 for the next 3 days.”\n• A bonus: “…and a chance to win €150!”",
+        images: [
+          { src: `${HEARD_IMG}/caption-gym-nanny.jpg`, caption: "A deadline: “You have 24 hours left to join me for September”" },
+          { src: `${HEARD_IMG}/caption-october-challenge.jpg`, caption: "A launch price: “only €15 for the next 3 days”" },
+          { src: `${HEARD_IMG}/caption-bother-yourself.jpg`, caption: "A bonus: “a chance to win €150”" },
+        ],
+      },
+      {
+        heading: "The one rule: only say it if it's true.",
+        body: "Fake deadlines break the trust you built on Day 2.\n\nWithout a reason to act now, 'I'll do it later' becomes never.",
+      },
+    ],
+    action: "Decide your real reason to act now: a deadline, a launch price or a bonus.",
+    worksheetPrompt: "My deadline… My launch price… My bonus…",
+  }),
+  chapter({
+    id: "she-earn-7",
+    title: "Day 3 · Earn — A simple launch",
+    duration: 10,
+    objectives: ["Run a four-step launch you can repeat every month"],
+    sections: [
+      {
+        heading: "Four steps",
+        body: "1. Tease. Talk about the problem. Polls and questions on stories.\n2. Open. Doors open. Tell her what it is and the launch price.\n3. Prove. Results, wins and behind the scenes, every day.\n4. Last call. 48 hours left. 24 hours left. Doors closing.",
+      },
+      {
+        heading: "Then do it again next month. Every launch gets easier.",
+        body: "",
+      },
+    ],
+    action: "Put dates on your tease, open, prove and last call.",
+    worksheetPrompt: "Tease… Open… Prove… Last call…",
+  }),
+  chapter({
+    id: "she-earn-8",
+    title: "Day 3 · Earn — Turn DMs into clients",
+    duration: 5,
+    objectives: ["Turn a DM into a sale without a sales script"],
+    sections: [
+      {
+        heading: "What it looks like",
+        body: "Her: “Is the challenge good if I've never trained before?”\nYou: “Love that you asked! What's your goal right now?”\nHer: “Just to feel like myself again after my baby”\nYou: “That's exactly who it's for! Here's the link.”",
+      },
+      {
+        heading: "Four steps",
+        body: "1. Start the chat. Ask them to comment or DM you a word.\n2. Listen first. Ask about her and her goal before you pitch.\n3. Match her to the right offer. Use your ladder.\n4. Send the link. Then follow up once, kindly.",
+      },
+    ],
+    action: "Pick the word you'll ask people to comment or DM you.",
+    worksheetPrompt: "My DM word… The questions I'll ask before I pitch…",
+  }),
+  chapter({
+    id: "she-earn-9",
+    title: "Day 3 · Earn — Make it easy to pay",
+    duration: 5,
+    objectives: ["Make paying take a few taps"],
+    sections: [
+      {
+        heading: "Three checks",
+        body: "• One clear link. Your bio link goes straight to your offer. No hunting.\n• A few taps. Test it on your phone. If it's fiddly, she'll give up.\n• Tell her where. 'Link in bio.' 'Tap the link.' Say it every time.",
+      },
+      {
+        heading: "She's ready to buy. Don't make her work for it.",
+        body: "",
+      },
+    ],
+    action: "Test your bio link on your phone, from tap to paid.",
+    worksheetPrompt: "How many taps it took… What I'll fix…",
+  }),
+  chapter({
+    id: "she-earn-10",
+    title: "Day 3 · Earn — Results keep them coming back",
+    duration: 5,
+    objectives: ["Turn happy clients into your best marketing"],
+    sections: [
+      {
+        heading: "Three habits",
+        body: "• Deliver what you promised. Then a little more. Over-deliver.\n• Celebrate her wins. Share them, with her permission. That's your proof.\n• Offer the next step. Challenge, then app, then 1-1. Your ladder again.",
+      },
+      {
+        heading: "Happy clients are your best marketing.",
+        body: "",
+      },
+    ],
+    action: "Plan one way you'll over-deliver for your first clients.",
+    worksheetPrompt: "How I'll over-deliver… How I'll share her wins… Her next step…",
+  }),
+  chapter({
+    id: "she-earn-11",
+    title: "Day 3 · Earn — Your next 7 days",
+    duration: 10,
+    objectives: ["Make your first sale, or your next one"],
+    sections: [
+      {
+        heading: "Your next 7 days",
+        body: "☐ Write your offer in one sentence. I help [her] get [result] without [the pain].\n\n☐ Set your price and make sure your link takes her straight to it.\n\n☐ Run a mini launch: tease, open, prove, last call.\n\n☐ The challenge: make your first sale, or your next one, and send me your launch post for review.",
+      },
+      {
+        heading: "SEEN. HEARD. NOW GO EARN.",
+        body: "You've got this, girls.",
+      },
+    ],
+    action: "Do all four, send your launch post to Becca for review, then tick this chapter off.",
+    worksheetPrompt: "My offer sentence… My price… My launch dates…",
+  }),
+];
+
 /** Scaffold for Seen. Heard. Earn. — published; portal gates until courses open for buyers. */
 export const SEEN_HEARD_EARN_TRACK: StudioTrack = {
   id: "seen-heard-earn",
@@ -218,40 +642,7 @@ export const SEEN_HEARD_EARN_TRACK: StudioTrack = {
   studio: true,
   lessons: [
     ...SEEN_LESSONS,
-    {
-      id: "she-day-2",
-      title: "Day 2 — Heard.",
-      duration: 45,
-      membersOnly: true,
-      videoUrl: "",
-      objectives: ["Shape a message people actually remember"],
-      sections: [
-        {
-          heading: "Welcome to Day 2",
-          body: "Today we get you Heard. — voice, offer language, and the words that convert.",
-        },
-      ],
-      action: "Draft your core offer paragraph out loud, then tighten it.",
-      worksheetPrompt: "Message and offer notes…",
-      studio: true,
-    },
-    {
-      id: "she-day-3",
-      title: "Day 3 — Earn.",
-      duration: 45,
-      membersOnly: true,
-      videoUrl: "",
-      objectives: ["Connect your brand to paid opportunities"],
-      sections: [
-        {
-          heading: "Welcome to Day 3",
-          body: "Today we get you Earn. — pricing confidence and the path from attention to income.",
-        },
-      ],
-      action:
-        "Write your next paid ask and who you will send it to this week.",
-      worksheetPrompt: "Earn plan notes…",
-      studio: true,
-    },
+    ...HEARD_LESSONS,
+    ...EARN_LESSONS,
   ],
 };

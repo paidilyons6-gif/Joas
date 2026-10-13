@@ -97,7 +97,18 @@ export function LessonPage() {
                 <div className="lesson-images">
                   {section.images.map((img) => (
                     <figure key={img.src}>
-                      <img src={img.src} alt={img.caption || section.heading} loading="lazy" />
+                      <img
+                        src={img.src}
+                        alt={img.caption || section.heading}
+                        loading="lazy"
+                        onLoad={(e) => {
+                          const el = e.currentTarget;
+                          el.parentElement?.classList.toggle(
+                            "lesson-images__wide",
+                            el.naturalWidth > el.naturalHeight,
+                          );
+                        }}
+                      />
                       {img.caption && <figcaption>{img.caption}</figcaption>}
                     </figure>
                   ))}
