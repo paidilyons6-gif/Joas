@@ -1,9 +1,12 @@
--- Photos on The Office posts.
+-- Photos and Bunny video links on The Office posts.
 -- Safe to re-run in Supabase SQL Editor.
 
--- 1) Posts can carry up to 4 photos, and a photo-only post is allowed
+-- 1) Posts can carry up to 4 photos and/or a video link; photo-only or video-only is allowed
 alter table public.village_posts
   add column if not exists images text[] not null default '{}';
+
+alter table public.village_posts
+  add column if not exists video_url text not null default '';
 
 do $$
 declare
@@ -20,10 +23,15 @@ begin
   end loop;
 end $$;
 alter table public.village_posts
-  add constraint village_posts_body_or_images check (
+  add constraint village_posts_body_or_media check (
     char_length(body) <= 2000
     and cardinality(images) <= 4
-    and (char_length(body) >= 1 or cardinality(images) >= 1)
+    and char_length(video_url) <= 2000
+    and (
+      char_length(body) >= 1
+      or cardinality(images) >= 1
+      or char_length(video_url) >= 1
+    )
   );
 
 -- 2) Private photo bucket: 10 MB per photo, images only
@@ -75,4 +83,6 @@ create policy "Owners or admins delete office photos"
 select
   (select count(*) from information_schema.columns
     where table_name = 'village_posts' and column_name = 'images') as images_column,
+  (select count(*) from information_schema.columns
+    where table_name = 'village_posts' and column_name = 'video_url') as video_url_column,
   (select count(*) from storage.buckets where id = 'office-photos') as photo_bucket;

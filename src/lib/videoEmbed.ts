@@ -1,4 +1,4 @@
-/** Turn a YouTube / Vimeo / direct URL into something the lesson player can show. */
+/** Turn a YouTube / Vimeo / Loom / Bunny / direct URL into something a player can show. */
 export function resolveLessonVideo(url?: string | null): {
   kind: "iframe" | "file";
   src: string;
@@ -9,6 +9,30 @@ export function resolveLessonVideo(url?: string | null): {
   try {
     const parsed = new URL(raw);
     const host = parsed.hostname.replace(/^www\./, "");
+
+    // Bunny Stream — paste the play or embed link from bunny.net
+    if (
+      host === "iframe.mediadelivery.net" ||
+      host === "video.bunnycdn.com" ||
+      host.endsWith(".b-cdn.net")
+    ) {
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      // /embed/{libraryId}/{videoId} or /play/{libraryId}/{videoId}
+      if (
+        (parts[0] === "embed" || parts[0] === "play") &&
+        parts[1] &&
+        parts[2]
+      ) {
+        const query = parsed.search || "";
+        return {
+          kind: "iframe",
+          src: `https://iframe.mediadelivery.net/embed/${parts[1]}/${parts[2]}${query}`,
+        };
+      }
+      if (/^https?:\/\//i.test(raw)) {
+        return { kind: "iframe", src: raw };
+      }
+    }
 
     if (host === "youtu.be") {
       const id = parsed.pathname.split("/").filter(Boolean)[0];
@@ -65,4 +89,19 @@ export function resolveLessonVideo(url?: string | null): {
   }
 
   return null;
+}
+
+/** True when the URL looks like a Bunny Stream play/embed link. */
+export function looksLikeBunnyVideo(url?: string | null): boolean {
+  if (!url?.trim()) return false;
+  try {
+    const host = new URL(url.trim()).hostname.replace(/^www\./, "");
+    return (
+      host === "iframe.mediadelivery.net" ||
+      host === "video.bunnycdn.com" ||
+      host.endsWith(".b-cdn.net")
+    );
+  } catch {
+    return false;
+  }
 }

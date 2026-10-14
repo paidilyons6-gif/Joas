@@ -8,6 +8,8 @@ export type VaultItem = {
   size: number;
   createdAt: string;
   url: string | null;
+  /** Bunny (or other) video link — watch inline */
+  videoUrl?: string | null;
 };
 
 const ENDPOINT = "/.netlify/functions/vault";
@@ -44,8 +46,21 @@ export async function uploadVaultFile(file: File, title: string, blurb: string) 
   await post({ action: "add", path, fileName: file.name, size: file.size, title, blurb });
 }
 
-export function updateVaultFile(id: string, title: string, blurb: string) {
-  return post({ action: "update", id, title, blurb });
+export async function addVaultVideo(title: string, blurb: string, videoUrl: string) {
+  await post({ action: "add-video", title, blurb, videoUrl });
+}
+
+export function updateVaultFile(
+  id: string,
+  title: string,
+  blurb: string,
+  videoUrl?: string,
+) {
+  return post(
+    videoUrl === undefined
+      ? { action: "update", id, title, blurb }
+      : { action: "update", id, title, blurb, videoUrl },
+  );
 }
 
 export function moveVaultFile(id: string, direction: "up" | "down") {
@@ -62,7 +77,8 @@ export function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function fileKind(fileName: string) {
+export function fileKind(fileName: string, videoUrl?: string | null) {
+  if (videoUrl) return "Video";
   const ext = fileName.split(".").pop()?.toLowerCase() || "";
   const kinds: Record<string, string> = {
     pdf: "PDF",

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { VideoPlayer } from "../../components/VideoPlayer";
 import { useAuth } from "../../lib/auth";
 import { canAccessContent } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
 import {
+  addVaultVideo,
   deleteVaultFile,
   fileKind,
   formatFileSize,
@@ -25,10 +27,14 @@ export function ResourcesPage() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [blurb, setBlurb] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
+  const [videoBlurb, setVideoBlurb] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [status, setStatus] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBlurb, setEditBlurb] = useState("");
+  const [editVideoUrl, setEditVideoUrl] = useState("");
   const userId = user?.id;
 
   const refresh = useCallback(async () => {
@@ -79,10 +85,22 @@ export function ResourcesPage() {
     }, "Added to the Vault ♡");
   }
 
+  function onAddVideo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!videoUrl.trim()) return;
+    void run(async () => {
+      await addVaultVideo(videoTitle || "Video", videoBlurb, videoUrl.trim());
+      setVideoTitle("");
+      setVideoBlurb("");
+      setVideoUrl("");
+    }, "Video added ♡");
+  }
+
   function startEdit(item: VaultItem) {
     setEditingId(item.id);
     setEditTitle(item.title);
     setEditBlurb(item.blurb);
+    setEditVideoUrl(item.videoUrl || "");
   }
 
   return (
@@ -92,7 +110,7 @@ export function ResourcesPage() {
         Your <em>Vault</em>
       </h1>
       <p className="portal-lede">
-        Slides, guides and downloads from your program, yours to keep.
+        Slides, guides, videos and downloads from your program, yours to keep.
       </p>
 
       {!member && (
@@ -108,38 +126,84 @@ export function ResourcesPage() {
       )}
 
       {coach && (
-        <form className="lesson-panel vault-upload" onSubmit={onUpload}>
-          <h2>Add a file</h2>
-          <label className="calc-field">
-            <span>File (PDF, PowerPoint, Keynote, Word, images, up to 50 MB)</span>
-            <input
-              type="file"
-              required
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-          </label>
-          <label className="calc-field">
-            <span>Title</span>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={file ? file.name.replace(/\.[^.]+$/, "") : "e.g. Day 1 · SEEN slides"}
-            />
-          </label>
-          <label className="calc-field">
-            <span>Short description (optional)</span>
-            <input value={blurb} onChange={(e) => setBlurb(e.target.value)} />
-          </label>
-          <div className="account-actions">
-            <button className="btn btn--primary" type="submit" disabled={busy || !file}>
-              {busy ? "Working…" : "Upload →"}
-            </button>
-            {status && <p className="form-status">{status}</p>}
-          </div>
-        </form>
+        <>
+          <form className="lesson-panel vault-upload" onSubmit={onUpload}>
+            <h2>Add a file</h2>
+            <label className="calc-field">
+              <span>File (PDF, PowerPoint, Keynote, Word, images, up to 50 MB)</span>
+              <input
+                type="file"
+                required
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+              />
+            </label>
+            <label className="calc-field">
+              <span>Title</span>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={file ? file.name.replace(/\.[^.]+$/, "") : "e.g. Day 1 · SEEN slides"}
+              />
+            </label>
+            <label className="calc-field">
+              <span>Short description (optional)</span>
+              <input value={blurb} onChange={(e) => setBlurb(e.target.value)} />
+            </label>
+            <div className="account-actions">
+              <button className="btn btn--primary" type="submit" disabled={busy || !file}>
+                {busy ? "Working…" : "Upload →"}
+              </button>
+            </div>
+          </form>
+
+          <form className="lesson-panel vault-upload" onSubmit={onAddVideo}>
+            <h2>Add a video (Bunny.net link)</h2>
+            <p className="portal-lede" style={{ marginTop: 0 }}>
+              Same as BodiesByBecca — upload the video on Bunny, then paste the
+              play or embed link here. Members watch it in the Vault (no file
+              download).
+            </p>
+            <label className="calc-field">
+              <span>Bunny play or embed link</span>
+              <input
+                type="url"
+                required
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://iframe.mediadelivery.net/play/…"
+              />
+            </label>
+            <label className="calc-field">
+              <span>Title</span>
+              <input
+                value={videoTitle}
+                onChange={(e) => setVideoTitle(e.target.value)}
+                placeholder="e.g. LIVE Day 1 · SEEN replay"
+              />
+            </label>
+            <label className="calc-field">
+              <span>Short description (optional)</span>
+              <input
+                value={videoBlurb}
+                onChange={(e) => setVideoBlurb(e.target.value)}
+              />
+            </label>
+            <div className="account-actions">
+              <button
+                className="btn btn--primary"
+                type="submit"
+                disabled={busy || !videoUrl.trim()}
+              >
+                {busy ? "Working…" : "Add video →"}
+              </button>
+              {status && <p className="form-status">{status}</p>}
+            </div>
+          </form>
+        </>
       )}
 
       {error && <p className="form-error">{error}</p>}
+      {coach && status && !files.length && <p className="form-status">{status}</p>}
 
       <div className="vault-list">
         {loading ? (
@@ -149,13 +213,14 @@ export function ResourcesPage() {
             <h3>Nothing here yet</h3>
             <p>
               {coach
-                ? "Upload your first file above."
+                ? "Upload a file or paste a Bunny video link above."
                 : "New downloads will appear here."}
             </p>
           </div>
         ) : (
           files.map((item, index) => {
             const editing = editingId === item.id;
+            const isVideo = !!item.videoUrl;
             return (
               <article
                 key={item.id}
@@ -164,8 +229,10 @@ export function ResourcesPage() {
                 <div className="vault-card__top">
                   <div>
                     <p className="module-card__phase">
-                      {fileKind(item.fileName)}
-                      {item.size ? ` · ${formatFileSize(item.size)}` : ""}
+                      {fileKind(item.fileName, item.videoUrl)}
+                      {!isVideo && item.size
+                        ? ` · ${formatFileSize(item.size)}`
+                        : ""}
                     </p>
                     {editing ? (
                       <>
@@ -183,6 +250,16 @@ export function ResourcesPage() {
                             onChange={(e) => setEditBlurb(e.target.value)}
                           />
                         </label>
+                        {isVideo && (
+                          <label className="calc-field">
+                            <span>Bunny video link</span>
+                            <input
+                              type="url"
+                              value={editVideoUrl}
+                              onChange={(e) => setEditVideoUrl(e.target.value)}
+                            />
+                          </label>
+                        )}
                       </>
                     ) : (
                       <>
@@ -196,6 +273,7 @@ export function ResourcesPage() {
                       Unlock →
                     </Link>
                   ) : (
+                    !isVideo &&
                     item.url && (
                       <a className="btn btn--ink" href={item.url}>
                         Download ↓
@@ -203,6 +281,13 @@ export function ResourcesPage() {
                     )
                   )}
                 </div>
+                {member && isVideo && item.videoUrl && !editing && (
+                  <VideoPlayer
+                    url={item.videoUrl}
+                    title={item.title}
+                    className="vault-card__video"
+                  />
+                )}
                 {coach && (
                   <div className="account-actions vault-card__coach">
                     {editing ? (
@@ -213,7 +298,12 @@ export function ResourcesPage() {
                           disabled={busy}
                           onClick={() =>
                             void run(async () => {
-                              await updateVaultFile(item.id, editTitle, editBlurb);
+                              await updateVaultFile(
+                                item.id,
+                                editTitle,
+                                editBlurb,
+                                isVideo ? editVideoUrl : undefined,
+                              );
                               setEditingId(null);
                             }, "Saved ♡")
                           }
@@ -264,6 +354,9 @@ export function ResourcesPage() {
                     >
                       Delete
                     </button>
+                    {status && editingId === item.id && (
+                      <p className="form-status">{status}</p>
+                    )}
                   </div>
                 )}
               </article>
@@ -271,6 +364,11 @@ export function ResourcesPage() {
           })
         )}
       </div>
+      {coach && status && files.length > 0 && (
+        <p className="form-status" style={{ marginTop: "1rem" }}>
+          {status}
+        </p>
+      )}
     </div>
   );
 }

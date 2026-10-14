@@ -1,5 +1,6 @@
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { VideoPlayer } from "../../components/VideoPlayer";
 import { useAuth } from "../../lib/auth";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
@@ -19,6 +20,7 @@ export function OfficePage() {
   const { preview } = useClientPreview();
   const [posts, setPosts] = useState<VillagePost[]>([]);
   const [body, setBody] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -41,6 +43,7 @@ export function OfficePage() {
     if (!user) return;
     if (busy) return;
     const sentBody = body;
+    const sentVideo = videoUrl;
     const sent = photos;
     setError("");
     setBusy(true);
@@ -50,8 +53,10 @@ export function OfficePage() {
         authorName: user.name,
         body: sentBody,
         photos: sent.map((p) => p.file),
+        videoUrl: sentVideo,
       });
       setBody((current) => (current === sentBody ? "" : current));
+      setVideoUrl((current) => (current === sentVideo ? "" : current));
       sent.forEach((p) => URL.revokeObjectURL(p.preview));
       setPhotos((current) => current.filter((p) => !sent.includes(p)));
       await refresh();
@@ -145,7 +150,17 @@ export function OfficePage() {
               onChange={(e) => setBody(e.target.value)}
               placeholder="Win, question, or sticky problem…"
               maxLength={2000}
-              required={photos.length === 0}
+              required={photos.length === 0 && !videoUrl.trim()}
+            />
+          </label>
+          <label className="calc-field">
+            <span>Video link (optional — Bunny.net play or embed link)</span>
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://iframe.mediadelivery.net/play/…"
+              maxLength={2000}
             />
           </label>
           {photos.length > 0 && (
@@ -206,6 +221,13 @@ export function OfficePage() {
                 </time>
               </div>
               {post.body && <p>{post.body}</p>}
+              {post.videoUrl && (
+                <VideoPlayer
+                  url={post.videoUrl}
+                  title={`Video from ${post.authorName}`}
+                  className="office-post__video"
+                />
+              )}
               {post.imageUrls.some(Boolean) && (
                 <div
                   className={`office-post__photos office-post__photos--${Math.min(post.imageUrls.length, 4)}`}

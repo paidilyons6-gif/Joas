@@ -1819,6 +1819,22 @@ a.module-card:hover {
   color: var(--ink-muted);
 }
 
+.vault-card__video {
+  margin: 0.85rem 0 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111;
+  aspect-ratio: 16 / 9;
+}
+
+.vault-card__video iframe,
+.vault-card__video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 .vault-card__coach {
   margin-top: 0.9rem;
   padding-top: 0.9rem;
@@ -2576,6 +2592,22 @@ a.module-card:hover {
 .office-composer__add.is-disabled {
   opacity: 0.45;
   pointer-events: none;
+}
+
+.office-post__video {
+  margin: 0.85rem 0 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111;
+  aspect-ratio: 16 / 9;
+}
+
+.office-post__video iframe,
+.office-post__video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 
 .office-post__photos {

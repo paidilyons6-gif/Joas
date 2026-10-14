@@ -1,6 +1,7 @@
 import { getSupabase } from "./supabase";
 import { hasLiveBackend } from "./demo";
 import { shrinkPhoto } from "./imageResize";
+import { resolveLessonVideo } from "./videoEmbed";
 
 export type VillagePost = {
   id: string;
@@ -13,14 +14,16 @@ export type VillagePost = {
   images: string[];
   /** Signed (or local data) URLs, same order as images */
   imageUrls: string[];
+  /** Bunny (or other) video link — played inline */
+  videoUrl: string;
 };
 
 export const MAX_POST_PHOTOS = 4;
 const PHOTO_BUCKET = "office-photos";
 const PHOTO_URL_TTL_SECONDS = 60 * 60 * 6;
 const LOCAL_KEY = "bbb_village_posts_v1";
-const PHOTOS_SQL_HINT =
-  "Photos need a quick database update: run supabase/migrations/016_office_photos.sql in Supabase.";
+const MEDIA_SQL_HINT =
+  "Photos and videos need a quick database update: run supabase/migrations/016_office_photos.sql in Supabase.";
 
 function normalizePost(raw: Partial<VillagePost> & { id: string }): VillagePost {
   return {
@@ -32,6 +35,7 @@ function normalizePost(raw: Partial<VillagePost> & { id: string }): VillagePost 
     pinned: !!raw.pinned,
     images: raw.images || [],
     imageUrls: raw.imageUrls || raw.images || [],
+    videoUrl: raw.videoUrl || "",
   };
 }
 
@@ -63,6 +67,7 @@ type DbPost = {
   created_at: string;
   pinned?: boolean;
   images?: string[] | null;
+  video_url?: string | null;
 };
 
 function fromDb(p: DbPost): VillagePost {
@@ -75,6 +80,7 @@ function fromDb(p: DbPost): VillagePost {
     pinned: !!p.pinned,
     images: p.images || [],
     imageUrls: [],
+    videoUrl: p.video_url || "",
   });
 }
 
@@ -97,6 +103,7 @@ async function attachPhotoUrls(posts: VillagePost[]): Promise<VillagePost[]> {
 }
 
 const COLUMN_SETS = [
+  "id, author_id, author_name, body, created_at, pinned, images, video_url",
   "id, author_id, author_name, body, created_at, pinned, images",
   "id, author_id, author_name, body, created_at, pinned",
   "id, author_id, author_name, body, created_at",
@@ -109,7 +116,7 @@ export async function listVillagePosts(): Promise<VillagePost[]> {
   const supabase = getSupabase();
   if (!supabase) return sortPosts(readLocal());
 
-  // Older databases may be missing pinned/images; fall back column by column.
+  // Older databases may be missing pinned/images/video_url; fall back column by column.
   for (const columns of COLUMN_SETS) {
     let query = supabase.from("village_posts").select(columns);
     if (columns.includes("pinned")) query = query.order("pinned", { ascending: false });
@@ -134,15 +141,28 @@ function readAsDataUrl(blob: Blob) {
   });
 }
 
+function normalizeVideoUrl(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  if (!resolveLessonVideo(trimmed)) {
+    throw new Error("That video link doesn't look right. Paste the Bunny play or embed link.");
+  }
+  return trimmed.slice(0, 2000);
+}
+
 export async function createVillagePost(input: {
   authorId: string;
   authorName: string;
   body: string;
   photos?: File[];
+  videoUrl?: string;
 }): Promise<VillagePost> {
   const body = input.body.trim();
   const photos = (input.photos || []).slice(0, MAX_POST_PHOTOS);
-  if (!body && !photos.length) throw new Error("Write something or add a photo first");
+  const videoUrl = normalizeVideoUrl(input.videoUrl || "");
+  if (!body && !photos.length && !videoUrl) {
+    throw new Error("Write something, add a photo, or paste a video link first");
+  }
 
   if (!hasLiveBackend()) {
     const urls = await Promise.all(
@@ -157,6 +177,7 @@ export async function createVillagePost(input: {
       pinned: false,
       images: urls,
       imageUrls: urls,
+      videoUrl,
     });
     writeLocal([post, ...readLocal()]);
     return post;
@@ -177,7 +198,7 @@ export async function createVillagePost(input: {
       if (error) {
         throw new Error(
           /bucket not found|row-level security|policy/i.test(error.message)
-            ? PHOTOS_SQL_HINT
+            ? MEDIA_SQL_HINT
             : `Photo upload failed: ${error.message}`,
         );
       }
@@ -190,9 +211,11 @@ export async function createVillagePost(input: {
       body,
     };
     if (uploaded.length) row.images = uploaded;
+    if (videoUrl) row.video_url = videoUrl;
 
     for (const columns of COLUMN_SETS) {
       if (uploaded.length && !columns.includes("images")) break;
+      if (videoUrl && !columns.includes("video_url")) break;
       const { data, error } = await supabase
         .from("village_posts")
         .insert(row)
@@ -202,14 +225,17 @@ export async function createVillagePost(input: {
         const [post] = await attachPhotoUrls([fromDb(data as unknown as DbPost)]);
         return post;
       }
-      if (uploaded.length && /images|check constraint/i.test(error?.message || "")) {
-        throw new Error(PHOTOS_SQL_HINT);
+      if (
+        (uploaded.length || videoUrl) &&
+        /images|video_url|check constraint/i.test(error?.message || "")
+      ) {
+        throw new Error(MEDIA_SQL_HINT);
       }
       if (columns === COLUMN_SETS[COLUMN_SETS.length - 1]) {
         throw new Error(error?.message || "Could not post");
       }
     }
-    throw new Error(PHOTOS_SQL_HINT);
+    throw new Error(MEDIA_SQL_HINT);
   } catch (err) {
     if (uploaded.length) await supabase.storage.from(PHOTO_BUCKET).remove(uploaded);
     throw err;
@@ -230,7 +256,6 @@ export async function setVillagePostPinned(id: string, pinned: boolean) {
     .update({ pinned })
     .eq("id", id);
   if (error) {
-    // Keep local mirror so coach can still pin in demo/offline
     writeLocal(
       (await listVillagePosts()).map((p) =>
         p.id === id ? { ...p, pinned } : p,

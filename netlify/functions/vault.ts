@@ -17,10 +17,13 @@ export type VaultFile = {
   id: string;
   title: string;
   blurb: string;
+  /** Empty when this entry is a Bunny (or other) video link */
   path: string;
   fileName: string;
   size: number;
   createdAt: string;
+  /** Bunny play/embed URL — members watch inline instead of downloading */
+  videoUrl?: string;
 };
 
 type Viewer = { isAdmin: boolean; isMember: boolean };
@@ -119,6 +122,10 @@ export const handler: Handler = async (event) => {
     }
     const withUrls = await Promise.all(
       files.map(async (f) => {
+        if (f.videoUrl) {
+          return { ...f, url: null, videoUrl: f.videoUrl };
+        }
+        if (!f.path) return { ...f, url: null };
         const { data } = await supabase.storage
           .from(BUCKET)
           .createSignedUrl(f.path, DOWNLOAD_TTL_SECONDS, { download: f.fileName });
@@ -166,16 +173,48 @@ export const handler: Handler = async (event) => {
         await writeIndex(supabase, [...files, entry]);
         return json(200, { ok: true, file: entry });
       }
+      case "add-video": {
+        const videoUrl = String(body.videoUrl || "").trim();
+        if (!/^https?:\/\//i.test(videoUrl)) {
+          return json(400, { error: "Paste a Bunny play or embed link." });
+        }
+        if (videoUrl.length > 2000) {
+          return json(400, { error: "That video link is too long." });
+        }
+        const entry: VaultFile = {
+          id: randomUUID(),
+          title: String(body.title || "").trim() || "Video",
+          blurb: String(body.blurb || "").trim(),
+          path: "",
+          fileName: "bunny-video",
+          size: 0,
+          createdAt: new Date().toISOString(),
+          videoUrl,
+        };
+        await writeIndex(supabase, [...files, entry]);
+        return json(200, { ok: true, file: entry });
+      }
       case "update": {
-        const next = files.map((f) =>
-          f.id === body.id
-            ? {
-                ...f,
-                title: String(body.title ?? f.title).trim() || f.title,
-                blurb: String(body.blurb ?? f.blurb).trim(),
-              }
-            : f,
-        );
+        const next = files.map((f) => {
+          if (f.id !== body.id) return f;
+          const nextVideo =
+            body.videoUrl !== undefined
+              ? String(body.videoUrl || "").trim()
+              : f.videoUrl;
+          if (f.videoUrl || body.videoUrl !== undefined) {
+            if (nextVideo && !/^https?:\/\//i.test(nextVideo)) {
+              throw new Error("Paste a Bunny play or embed link.");
+            }
+          }
+          return {
+            ...f,
+            title: String(body.title ?? f.title).trim() || f.title,
+            blurb: String(body.blurb ?? f.blurb).trim(),
+            ...(f.videoUrl || body.videoUrl !== undefined
+              ? { videoUrl: nextVideo || f.videoUrl }
+              : {}),
+          };
+        });
         await writeIndex(supabase, next);
         return json(200, { ok: true });
       }
@@ -191,7 +230,7 @@ export const handler: Handler = async (event) => {
       case "delete": {
         const hit = files.find((f) => f.id === body.id);
         if (!hit) return json(200, { ok: true });
-        await supabase.storage.from(BUCKET).remove([hit.path]);
+        if (hit.path) await supabase.storage.from(BUCKET).remove([hit.path]);
         await writeIndex(
           supabase,
           files.filter((f) => f.id !== body.id),

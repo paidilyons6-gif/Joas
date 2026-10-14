@@ -1203,12 +1203,12 @@ export function StudioEditorPage() {
                 type="url"
                 value={lesson.videoUrl || ""}
                 onChange={(e) => updateLesson({ videoUrl: e.target.value })}
-                placeholder="YouTube, Vimeo, Loom, or direct .mp4 link"
+                placeholder="Bunny.net play/embed, YouTube, Vimeo, Loom…"
               />
             </label>
             <p className="portal-lede" style={{ marginTop: "-0.5rem" }}>
-              Paste a link — members see the video at the top of this lesson
-              part.
+              Paste a Bunny.net link (same as BodiesByBecca) — members see the
+              video at the top of this lesson part.
             </p>
             <label className="check-item">
               <input
