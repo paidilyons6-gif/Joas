@@ -63,16 +63,32 @@ async function ensureBucket(supabase: SupabaseClient) {
   if (!data) await supabase.storage.createBucket(BUCKET, { public: false });
 }
 
+/** Storage's CDN can serve an old copy of a just-overwritten object; a unique query string skips it. */
+export async function readFreshObject(bucket: string, path: string): Promise<string | null> {
+  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  const res = await fetch(
+    `${url}/storage/v1/object/authenticated/${bucket}/${path}?fresh=${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    {
+      headers: { Authorization: `Bearer ${key}`, apikey: key, "Cache-Control": "no-cache" },
+      cache: "no-store",
+    },
+  );
+  if (!res.ok) return null;
+  return res.text();
+}
+
 export async function readJson<T>(
   supabase: SupabaseClient,
   path: string,
   fallback: T,
 ): Promise<T> {
   await ensureBucket(supabase);
-  const { data, error } = await supabase.storage.from(BUCKET).download(path);
-  if (error || !data) return fallback;
+  const text = await readFreshObject(BUCKET, path);
+  if (text === null) return fallback;
   try {
-    return JSON.parse(await data.text()) as T;
+    return JSON.parse(text) as T;
   } catch {
     return fallback;
   }

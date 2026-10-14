@@ -8,6 +8,7 @@ export type BroadcastJobSummary = {
   subject: string;
   createdAt: string;
   total: number;
+  cursor: number;
   sent: number;
   remaining: number;
   failures: { email: string; error: string }[];
@@ -55,14 +56,27 @@ export async function startBroadcast(audience: string, subject: string, body: st
 
 /** Sends batch after batch until the job is finished, reporting progress after each one. */
 export async function runBroadcast(
-  jobId: string,
+  start: BroadcastJobSummary,
   onProgress: (job: BroadcastJobSummary) => void,
 ) {
+  let from = start.cursor;
+  let retries = 0;
   for (;;) {
-    const { job } = await post<{ job: BroadcastJobSummary }>({
-      action: "continue",
-      job: jobId,
-    });
+    let job: BroadcastJobSummary;
+    try {
+      ({ job } = await post<{ job: BroadcastJobSummary }>({
+        action: "continue",
+        job: start.id,
+        from,
+      }));
+      retries = 0;
+    } catch (err) {
+      // A batch can be cut off by Netlify's time limit; progress is saved per email, so just try again.
+      if (++retries > 4) throw err;
+      await new Promise((r) => setTimeout(r, 6000));
+      continue;
+    }
+    from = Math.max(from, job.cursor);
     onProgress(job);
     if (job.status === "done") return job;
   }

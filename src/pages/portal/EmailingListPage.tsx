@@ -73,11 +73,11 @@ export function EmailingListPage() {
   const selected = overview?.audiences.find((a) => a.id === audience);
   const running = progress?.status === "sending";
 
-  async function send(jobId: string) {
+  async function send(job: BroadcastJobSummary) {
     setBusy(true);
     setMsg("");
     try {
-      const done = await runBroadcast(jobId, setProgress);
+      const done = await runBroadcast(job, setProgress);
       setMsg(
         `Sent ${done.sent} of ${done.total}${done.failures.length ? ` — ${done.failures.length} couldn't be delivered` : ""} ♡`,
       );
@@ -112,7 +112,7 @@ export function EmailingListPage() {
     try {
       const job = await startBroadcast(selected.id, subject.trim(), body.trim());
       setProgress(job);
-      await send(job.id);
+      await send(job);
     } catch (err) {
       setMsg(err instanceof Error ? err.message : "Could not send.");
       setBusy(false);
@@ -289,7 +289,7 @@ export function EmailingListPage() {
                     type="button"
                     onClick={() => {
                       setProgress(job);
-                      void send(job.id);
+                      void send(job);
                     }}
                   >
                     Resume ({job.remaining} left) →

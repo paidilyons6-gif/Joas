@@ -14,8 +14,8 @@ import {
   type BroadcastJob,
 } from "./_broadcast";
 
-/** Each call stays well under Netlify's 10s function limit; the page keeps calling "continue". */
-const CHUNK_BUDGET_MS = 6500;
+/** No new send starts after this, so a call (plus one slow SMTP send) stays under Netlify's 10s limit. */
+const CHUNK_BUDGET_MS = 3000;
 const LOCK_MS = 20000;
 const PACE_MS = 250;
 
@@ -34,6 +34,7 @@ function summary(job: BroadcastJob) {
     subject: job.subject,
     createdAt: job.createdAt,
     total: job.recipients.length,
+    cursor: job.cursor,
     sent: job.sent,
     remaining: job.recipients.length - job.cursor,
     failures: job.failures,
@@ -127,12 +128,15 @@ export const handler: Handler = async (event) => {
       if (job.lockUntil > Date.now()) {
         return json(409, { error: "This send is already running in another window." });
       }
-      job.lockUntil = Date.now() + LOCK_MS;
+      const started = Date.now();
+      // The page passes back the cursor it was given, so a stale read of the job file can't resend.
+      const from = Number(input.from);
+      if (Number.isInteger(from) && from > job.cursor) job.cursor = Math.min(from, job.recipients.length);
+      job.lockUntil = started + LOCK_MS;
       await writeJson(supabase, jobPath(job.id), job);
 
       const blocked = new Set(await readUnsubscribes(supabase));
       const transport = transporter({ pool: true });
-      const started = Date.now();
       try {
         while (job.cursor < job.recipients.length && Date.now() - started < CHUNK_BUDGET_MS) {
           const recipient = job.recipients[job.cursor];
@@ -148,6 +152,7 @@ export const handler: Handler = async (event) => {
               error: err instanceof Error ? err.message.slice(0, 200) : "failed",
             });
           }
+          await writeJson(supabase, jobPath(job.id), job);
           await new Promise((r) => setTimeout(r, PACE_MS));
         }
       } finally {

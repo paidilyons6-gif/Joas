@@ -1,6 +1,7 @@
 import type { Handler } from "@netlify/functions";
 import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { readFreshObject } from "./_broadcast";
 
 const ADMIN_EMAILS = (process.env.VITE_ADMIN_EMAILS || "r.lyons1@icloud.com")
   .split(",")
@@ -41,11 +42,11 @@ async function ensureBucket(supabase: SupabaseClient) {
   });
 }
 
-async function readIndex(supabase: SupabaseClient): Promise<VaultFile[]> {
-  const { data, error } = await supabase.storage.from(BUCKET).download(INDEX_PATH);
-  if (error || !data) return [];
+async function readIndex(): Promise<VaultFile[]> {
+  const text = await readFreshObject(BUCKET, INDEX_PATH);
+  if (text === null) return [];
   try {
-    const parsed = JSON.parse(await data.text());
+    const parsed = JSON.parse(text);
     return Array.isArray(parsed) ? (parsed as VaultFile[]) : [];
   } catch {
     return [];
@@ -109,7 +110,7 @@ export const handler: Handler = async (event) => {
   await ensureBucket(supabase);
 
   if (event.httpMethod === "GET") {
-    const files = await readIndex(supabase);
+    const files = await readIndex();
     if (!viewer.isMember) {
       return json(200, {
         files: files.map((f) => ({ ...f, path: "", url: null })),
@@ -138,7 +139,7 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const files = await readIndex(supabase);
+    const files = await readIndex();
 
     switch (body.action) {
       case "upload-url": {

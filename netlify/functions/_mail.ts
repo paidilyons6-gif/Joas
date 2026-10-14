@@ -35,6 +35,9 @@ export function transporter(options: { pool?: boolean } = {}) {
     port: Number(process.env.SMTP_PORT || 465),
     secure: true,
     pool: options.pool,
+    connectionTimeout: 4000,
+    greetingTimeout: 4000,
+    socketTimeout: 5000,
     auth: {
       user: smtpUser,
       pass: smtpPass,
