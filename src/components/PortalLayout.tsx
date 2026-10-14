@@ -139,7 +139,7 @@ export function PortalLayout() {
               Home
             </NavLink>
             <NavLink to="/portal/courses">Courses</NavLink>
-            <NavLink to="/portal/emailing">Emailing list</NavLink>
+            <NavLink to="/portal/emailing">Send an email</NavLink>
             <NavLink to="/portal/office">The Office</NavLink>
             <NavLink to="/portal/calendar">Calendar</NavLink>
             <NavLink to="/portal/calculators">Calculators</NavLink>

@@ -1,4 +1,4 @@
-import { getSupabase } from "./supabase";
+import { authJsonHeaders, getSupabase } from "./supabase";
 
 export type VaultItem = {
   id: string;
@@ -12,17 +12,8 @@ export type VaultItem = {
 
 const ENDPOINT = "/.netlify/functions/vault";
 
-async function authHeaders(): Promise<Record<string, string>> {
-  const supabase = getSupabase();
-  if (!supabase) throw new Error("The Vault needs the live site.");
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (!token) throw new Error("Sign in again to open the Vault.");
-  return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-}
-
 async function call<T>(init: RequestInit): Promise<T> {
-  const res = await fetch(ENDPOINT, { ...init, headers: await authHeaders() });
+  const res = await fetch(ENDPOINT, { ...init, headers: await authJsonHeaders() });
   const body = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (!res.ok) throw new Error(body.error || `Vault error (${res.status})`);
   return body;

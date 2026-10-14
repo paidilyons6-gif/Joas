@@ -24,7 +24,7 @@ export function getMailFrom() {
   return `"${name}" <${fromAddress}>`;
 }
 
-function transporter() {
+export function transporter(options: { pool?: boolean } = {}) {
   if (!mailConfigured()) {
     throw new Error(
       "Email is not configured. Set GMAIL_APP_PASSWORD (or MAIL_PASS) on Netlify for paidilyons6@gmail.com.",
@@ -34,6 +34,7 @@ function transporter() {
     host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: Number(process.env.SMTP_PORT || 465),
     secure: true,
+    pool: options.pool,
     auth: {
       user: smtpUser,
       pass: smtpPass,
@@ -48,8 +49,10 @@ export async function sendMail(input: {
   html?: string;
   bcc?: string | string[];
   replyTo?: string;
+  headers?: Record<string, string>;
+  transport?: ReturnType<typeof transporter>;
 }) {
-  const transport = transporter();
+  const transport = input.transport || transporter();
   const info = await transport.sendMail({
     from: getMailFrom(),
     to: input.to,
@@ -58,6 +61,7 @@ export async function sendMail(input: {
     subject: input.subject,
     text: input.text,
     html: input.html || input.text.replace(/\n/g, "<br/>"),
+    headers: input.headers,
   });
   return info;
 }
