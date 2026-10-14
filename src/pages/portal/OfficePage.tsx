@@ -39,17 +39,21 @@ export function OfficePage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (!user) return;
+    if (busy) return;
+    const sentBody = body;
+    const sent = photos;
     setError("");
     setBusy(true);
     try {
       await createVillagePost({
         authorId: user.id,
         authorName: user.name,
-        body,
-        photos: photos.map((p) => p.file),
+        body: sentBody,
+        photos: sent.map((p) => p.file),
       });
-      setBody("");
-      clearPhotos();
+      setBody((current) => (current === sentBody ? "" : current));
+      sent.forEach((p) => URL.revokeObjectURL(p.preview));
+      setPhotos((current) => current.filter((p) => !sent.includes(p)));
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not post");
@@ -81,11 +85,6 @@ export function OfficePage() {
       URL.revokeObjectURL(prev[index].preview);
       return prev.filter((_, i) => i !== index);
     });
-  }
-
-  function clearPhotos() {
-    photos.forEach((p) => URL.revokeObjectURL(p.preview));
-    setPhotos([]);
   }
 
   async function onDelete(post: VillagePost) {
