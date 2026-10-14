@@ -1,5 +1,6 @@
 import { getSupabase } from "./supabase";
 import { hasLiveBackend } from "./demo";
+import { shrinkPhoto } from "./imageResize";
 
 export type VillagePost = {
   id: string;
@@ -8,9 +9,18 @@ export type VillagePost = {
   body: string;
   createdAt: string;
   pinned: boolean;
+  /** Storage paths in the office-photos bucket */
+  images: string[];
+  /** Signed (or local data) URLs, same order as images */
+  imageUrls: string[];
 };
 
+export const MAX_POST_PHOTOS = 4;
+const PHOTO_BUCKET = "office-photos";
+const PHOTO_URL_TTL_SECONDS = 60 * 60 * 6;
 const LOCAL_KEY = "bbb_village_posts_v1";
+const PHOTOS_SQL_HINT =
+  "Photos need a quick database update: run supabase/migrations/016_office_photos.sql in Supabase.";
 
 function normalizePost(raw: Partial<VillagePost> & { id: string }): VillagePost {
   return {
@@ -20,6 +30,8 @@ function normalizePost(raw: Partial<VillagePost> & { id: string }): VillagePost 
     body: raw.body || "",
     createdAt: raw.createdAt || new Date().toISOString(),
     pinned: !!raw.pinned,
+    images: raw.images || [],
+    imageUrls: raw.imageUrls || raw.images || [],
   };
 }
 
@@ -43,6 +55,53 @@ function writeLocal(posts: VillagePost[]) {
   localStorage.setItem(LOCAL_KEY, JSON.stringify(posts.slice(0, 200)));
 }
 
+type DbPost = {
+  id: string;
+  author_id: string;
+  author_name: string;
+  body: string;
+  created_at: string;
+  pinned?: boolean;
+  images?: string[] | null;
+};
+
+function fromDb(p: DbPost): VillagePost {
+  return normalizePost({
+    id: p.id,
+    authorId: p.author_id,
+    authorName: p.author_name,
+    body: p.body,
+    createdAt: p.created_at,
+    pinned: !!p.pinned,
+    images: p.images || [],
+    imageUrls: [],
+  });
+}
+
+async function attachPhotoUrls(posts: VillagePost[]): Promise<VillagePost[]> {
+  const supabase = getSupabase();
+  const paths = posts.flatMap((p) => p.images);
+  if (!supabase || !paths.length) return posts;
+  const { data } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .createSignedUrls(paths, PHOTO_URL_TTL_SECONDS);
+  const urls = new Map(
+    (data || [])
+      .filter((d) => d.signedUrl && d.path)
+      .map((d) => [d.path as string, d.signedUrl]),
+  );
+  return posts.map((p) => ({
+    ...p,
+    imageUrls: p.images.map((path) => urls.get(path) || ""),
+  }));
+}
+
+const COLUMN_SETS = [
+  "id, author_id, author_name, body, created_at, pinned, images",
+  "id, author_id, author_name, body, created_at, pinned",
+  "id, author_id, author_name, body, created_at",
+];
+
 export async function listVillagePosts(): Promise<VillagePost[]> {
   if (!hasLiveBackend()) {
     return sortPosts(readLocal());
@@ -50,57 +109,45 @@ export async function listVillagePosts(): Promise<VillagePost[]> {
   const supabase = getSupabase();
   if (!supabase) return sortPosts(readLocal());
 
-  const { data, error } = await supabase
-    .from("village_posts")
-    .select("id, author_id, author_name, body, created_at, pinned")
-    .order("pinned", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(100);
-
-  if (error || !data) {
-    // Column may not exist yet — retry without pinned
-    const fallback = await supabase
-      .from("village_posts")
-      .select("id, author_id, author_name, body, created_at")
+  // Older databases may be missing pinned/images; fall back column by column.
+  for (const columns of COLUMN_SETS) {
+    let query = supabase.from("village_posts").select(columns);
+    if (columns.includes("pinned")) query = query.order("pinned", { ascending: false });
+    const { data, error } = await query
       .order("created_at", { ascending: false })
       .limit(100);
-    if (fallback.error || !fallback.data) return sortPosts(readLocal());
-    return sortPosts(
-      fallback.data.map((p) =>
-        normalizePost({
-          id: p.id as string,
-          authorId: p.author_id as string,
-          authorName: p.author_name as string,
-          body: p.body as string,
-          createdAt: p.created_at as string,
-          pinned: false,
-        }),
-      ),
-    );
+    if (!error && data) {
+      return sortPosts(
+        await attachPhotoUrls((data as unknown as DbPost[]).map(fromDb)),
+      );
+    }
   }
-  return sortPosts(
-    data.map((p) =>
-      normalizePost({
-        id: p.id as string,
-        authorId: p.author_id as string,
-        authorName: p.author_name as string,
-        body: p.body as string,
-        createdAt: p.created_at as string,
-        pinned: !!(p as { pinned?: boolean }).pinned,
-      }),
-    ),
-  );
+  return sortPosts(readLocal());
+}
+
+function readAsDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Couldn't read that photo"));
+    reader.readAsDataURL(blob);
+  });
 }
 
 export async function createVillagePost(input: {
   authorId: string;
   authorName: string;
   body: string;
+  photos?: File[];
 }): Promise<VillagePost> {
   const body = input.body.trim();
-  if (!body) throw new Error("Write something first");
+  const photos = (input.photos || []).slice(0, MAX_POST_PHOTOS);
+  if (!body && !photos.length) throw new Error("Write something or add a photo first");
 
   if (!hasLiveBackend()) {
+    const urls = await Promise.all(
+      photos.map(async (f) => readAsDataUrl(await shrinkPhoto(f, 900, 0.75))),
+    );
     const post = normalizePost({
       id: crypto.randomUUID(),
       authorId: input.authorId,
@@ -108,6 +155,8 @@ export async function createVillagePost(input: {
       body,
       createdAt: new Date().toISOString(),
       pinned: false,
+      images: urls,
+      imageUrls: urls,
     });
     writeLocal([post, ...readLocal()]);
     return post;
@@ -115,46 +164,56 @@ export async function createVillagePost(input: {
 
   const supabase = getSupabase();
   if (!supabase) throw new Error("Supabase not configured");
-  const { data, error } = await supabase
-    .from("village_posts")
-    .insert({
+
+  const uploaded: string[] = [];
+  try {
+    for (const photo of photos) {
+      const blob = await shrinkPhoto(photo);
+      const ext = blob.type === "image/jpeg" ? "jpg" : blob.type.split("/")[1] || "jpg";
+      const path = `${input.authorId}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .upload(path, blob, { contentType: blob.type || "image/jpeg", upsert: false });
+      if (error) {
+        throw new Error(
+          /bucket not found|row-level security|policy/i.test(error.message)
+            ? PHOTOS_SQL_HINT
+            : `Photo upload failed: ${error.message}`,
+        );
+      }
+      uploaded.push(path);
+    }
+
+    const row: Record<string, unknown> = {
       author_id: input.authorId,
       author_name: input.authorName,
       body,
-    })
-    .select("id, author_id, author_name, body, created_at, pinned")
-    .single();
-  if (error || !data) {
-    // Retry without pinned column for older schemas
-    const retry = await supabase
-      .from("village_posts")
-      .insert({
-        author_id: input.authorId,
-        author_name: input.authorName,
-        body,
-      })
-      .select("id, author_id, author_name, body, created_at")
-      .single();
-    if (retry.error || !retry.data) {
-      throw new Error(error?.message || retry.error?.message || "Could not post");
+    };
+    if (uploaded.length) row.images = uploaded;
+
+    for (const columns of COLUMN_SETS) {
+      if (uploaded.length && !columns.includes("images")) break;
+      const { data, error } = await supabase
+        .from("village_posts")
+        .insert(row)
+        .select(columns)
+        .single();
+      if (!error && data) {
+        const [post] = await attachPhotoUrls([fromDb(data as unknown as DbPost)]);
+        return post;
+      }
+      if (uploaded.length && /images|check constraint/i.test(error?.message || "")) {
+        throw new Error(PHOTOS_SQL_HINT);
+      }
+      if (columns === COLUMN_SETS[COLUMN_SETS.length - 1]) {
+        throw new Error(error?.message || "Could not post");
+      }
     }
-    return normalizePost({
-      id: retry.data.id as string,
-      authorId: retry.data.author_id as string,
-      authorName: retry.data.author_name as string,
-      body: retry.data.body as string,
-      createdAt: retry.data.created_at as string,
-      pinned: false,
-    });
+    throw new Error(PHOTOS_SQL_HINT);
+  } catch (err) {
+    if (uploaded.length) await supabase.storage.from(PHOTO_BUCKET).remove(uploaded);
+    throw err;
   }
-  return normalizePost({
-    id: data.id as string,
-    authorId: data.author_id as string,
-    authorName: data.author_name as string,
-    body: data.body as string,
-    createdAt: data.created_at as string,
-    pinned: !!(data as { pinned?: boolean }).pinned,
-  });
 }
 
 export async function setVillagePostPinned(id: string, pinned: boolean) {
@@ -185,12 +244,16 @@ export async function setVillagePostPinned(id: string, pinned: boolean) {
   }
 }
 
-export async function deleteVillagePost(id: string) {
+export async function deleteVillagePost(post: Pick<VillagePost, "id" | "images">) {
   if (!hasLiveBackend()) {
-    writeLocal(readLocal().filter((p) => p.id !== id));
+    writeLocal(readLocal().filter((p) => p.id !== post.id));
     return;
   }
   const supabase = getSupabase();
   if (!supabase) return;
-  await supabase.from("village_posts").delete().eq("id", id);
+  const { error } = await supabase.from("village_posts").delete().eq("id", post.id);
+  if (error) throw new Error(error.message);
+  if (post.images.length) {
+    await supabase.storage.from(PHOTO_BUCKET).remove(post.images);
+  }
 }

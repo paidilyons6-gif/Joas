@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../lib/auth";
 import { isAdminEmail } from "../../lib/admin";
@@ -7,6 +7,7 @@ import {
   createVillagePost,
   deleteVillagePost,
   listVillagePosts,
+  MAX_POST_PHOTOS,
   setVillagePostPinned,
   type VillagePost,
 } from "../../lib/villageRepo";
@@ -18,6 +19,7 @@ export function OfficePage() {
   const { preview } = useClientPreview();
   const [posts, setPosts] = useState<VillagePost[]>([]);
   const [body, setBody] = useState("");
+  const [photos, setPhotos] = useState<{ file: File; preview: string }[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -44,8 +46,10 @@ export function OfficePage() {
         authorId: user.id,
         authorName: user.name,
         body,
+        photos: photos.map((p) => p.file),
       });
       setBody("");
+      clearPhotos();
       await refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not post");
@@ -54,9 +58,44 @@ export function OfficePage() {
     }
   }
 
-  async function onDelete(id: string) {
+  function onPickPhotos(event: ChangeEvent<HTMLInputElement>) {
+    const picked = Array.from(event.target.files || []).filter((f) =>
+      f.type.startsWith("image/") || /\.(heic|heif)$/i.test(f.name),
+    );
+    event.target.value = "";
+    const room = MAX_POST_PHOTOS - photos.length;
+    if (picked.length > room) {
+      setError(`Up to ${MAX_POST_PHOTOS} photos per post.`);
+    }
+    setPhotos((prev) => [
+      ...prev,
+      ...picked.slice(0, Math.max(0, room)).map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      })),
+    ]);
+  }
+
+  function removePhoto(index: number) {
+    setPhotos((prev) => {
+      URL.revokeObjectURL(prev[index].preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
+
+  function clearPhotos() {
+    photos.forEach((p) => URL.revokeObjectURL(p.preview));
+    setPhotos([]);
+  }
+
+  async function onDelete(post: VillagePost) {
     if (!confirm("Delete this post?")) return;
-    await deleteVillagePost(id);
+    setError("");
+    try {
+      await deleteVillagePost(post);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete post");
+    }
     await refresh();
   }
 
@@ -107,13 +146,44 @@ export function OfficePage() {
               onChange={(e) => setBody(e.target.value)}
               placeholder="Win, question, or sticky problem…"
               maxLength={2000}
-              required
+              required={photos.length === 0}
             />
           </label>
+          {photos.length > 0 && (
+            <div className="office-composer__photos">
+              {photos.map((p, index) => (
+                <div className="office-composer__photo" key={p.preview}>
+                  <img src={p.preview} alt={`Photo ${index + 1}`} />
+                  <button
+                    type="button"
+                    aria-label="Remove photo"
+                    onClick={() => removePhoto(index)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           {error && <p className="form-error">{error}</p>}
-          <button className="btn btn--primary" type="submit" disabled={busy}>
-            {busy ? "Posting…" : "Post →"}
-          </button>
+          <div className="account-actions">
+            <label
+              className={`btn btn--ghost-ink office-composer__add ${photos.length >= MAX_POST_PHOTOS ? "is-disabled" : ""}`}
+            >
+              + Add photos
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                disabled={busy || photos.length >= MAX_POST_PHOTOS}
+                onChange={onPickPhotos}
+              />
+            </label>
+            <button className="btn btn--primary" type="submit" disabled={busy}>
+              {busy ? (photos.length ? "Uploading…" : "Posting…") : "Post →"}
+            </button>
+          </div>
         </form>
       )}
 
@@ -136,7 +206,24 @@ export function OfficePage() {
                   {new Date(post.createdAt).toLocaleString()}
                 </time>
               </div>
-              <p>{post.body}</p>
+              {post.body && <p>{post.body}</p>}
+              {post.imageUrls.some(Boolean) && (
+                <div
+                  className={`office-post__photos office-post__photos--${Math.min(post.imageUrls.length, 4)}`}
+                >
+                  {post.imageUrls.map((src, index) =>
+                    src ? (
+                      <a key={src} href={src} target="_blank" rel="noreferrer">
+                        <img
+                          src={src}
+                          alt={`Photo ${index + 1} from ${post.authorName}`}
+                          loading="lazy"
+                        />
+                      </a>
+                    ) : null,
+                  )}
+                </div>
+              )}
               <div className="office-post__actions">
                 {admin && (
                   <button
@@ -151,7 +238,7 @@ export function OfficePage() {
                   <button
                     className="btn btn--ghost-ink"
                     type="button"
-                    onClick={() => void onDelete(post.id)}
+                    onClick={() => void onDelete(post)}
                   >
                     Delete
                   </button>

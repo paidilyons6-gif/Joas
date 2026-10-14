@@ -2535,6 +2535,78 @@ a.module-card:hover {
   color: var(--ink);
 }
 
+.office-composer__photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.office-composer__photo {
+  position: relative;
+  width: 96px;
+  height: 96px;
+}
+
+.office-composer__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+}
+
+.office-composer__photo button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.office-composer__add {
+  cursor: pointer;
+}
+
+.office-composer__add.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.office-post__photos {
+  display: grid;
+  gap: 0.4rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.office-post__photos--1 {
+  grid-template-columns: 1fr;
+}
+
+.office-post__photos a {
+  display: block;
+}
+
+.office-post__photos img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1.5px solid rgba(26, 26, 26, 0.08);
+}
+
+.office-post__photos--1 img {
+  aspect-ratio: auto;
+  max-height: 560px;
+  object-fit: contain;
+  background: var(--clean);
+}
+
 /* ——— Calendar ——— */
 .calendar-form {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
