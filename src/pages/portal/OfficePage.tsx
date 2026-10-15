@@ -26,7 +26,7 @@ export function OfficePage() {
   const [error, setError] = useState("");
 
   async function refresh() {
-    setPosts(await listVillagePosts());
+    setPosts(await listVillagePosts("office"));
   }
 
   useEffect(() => {
@@ -54,6 +54,7 @@ export function OfficePage() {
         body: sentBody,
         photos: sent.map((p) => p.file),
         videoUrl: sentVideo,
+        channel: "office",
       });
       setBody((current) => (current === sentBody ? "" : current));
       setVideoUrl((current) => (current === sentVideo ? "" : current));

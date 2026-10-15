@@ -200,6 +200,10 @@ export function PortalHome() {
           <p className="pin-card__label">Community</p>
           <h3>The Office</h3>
         </Link>
+        <Link className="pin-card" to="/portal/ask">
+          <p className="pin-card__label">Community</p>
+          <h3>Ask Becca</h3>
+        </Link>
         <Link className="pin-card" to="/programs">
           <p className="pin-card__label">Shop</p>
           <h3>More programs</h3>

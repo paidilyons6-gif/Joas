@@ -3,6 +3,8 @@ import { hasLiveBackend } from "./demo";
 import { shrinkPhoto } from "./imageResize";
 import { resolveLessonVideo } from "./videoEmbed";
 
+export type VillageChannel = "office" | "ask";
+
 export type VillagePost = {
   id: string;
   authorId: string;
@@ -16,14 +18,24 @@ export type VillagePost = {
   imageUrls: string[];
   /** Bunny (or other) video link — played inline */
   videoUrl: string;
+  channel: VillageChannel;
+  /** Parent question id when this is a reply on Ask Becca */
+  replyTo: string | null;
+};
+
+export type AskThread = {
+  question: VillagePost;
+  replies: VillagePost[];
 };
 
 export const MAX_POST_PHOTOS = 4;
 const PHOTO_BUCKET = "office-photos";
 const PHOTO_URL_TTL_SECONDS = 60 * 60 * 6;
-const LOCAL_KEY = "bbb_village_posts_v1";
+const LOCAL_KEY = "bbb_village_posts_v2";
 const MEDIA_SQL_HINT =
   "Photos and videos need a quick database update: run supabase/migrations/016_office_photos.sql in Supabase.";
+export const ASK_SQL_HINT =
+  "Ask Becca needs a quick database update: run supabase/migrations/017_ask_becca.sql in Supabase.";
 
 function normalizePost(raw: Partial<VillagePost> & { id: string }): VillagePost {
   return {
@@ -36,6 +48,8 @@ function normalizePost(raw: Partial<VillagePost> & { id: string }): VillagePost 
     images: raw.images || [],
     imageUrls: raw.imageUrls || raw.images || [],
     videoUrl: raw.videoUrl || "",
+    channel: raw.channel === "ask" ? "ask" : "office",
+    replyTo: raw.replyTo || null,
   };
 }
 
@@ -56,7 +70,7 @@ function readLocal(): VillagePost[] {
 }
 
 function writeLocal(posts: VillagePost[]) {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(posts.slice(0, 200)));
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(posts.slice(0, 300)));
 }
 
 type DbPost = {
@@ -68,6 +82,8 @@ type DbPost = {
   pinned?: boolean;
   images?: string[] | null;
   video_url?: string | null;
+  channel?: string | null;
+  reply_to?: string | null;
 };
 
 function fromDb(p: DbPost): VillagePost {
@@ -81,6 +97,8 @@ function fromDb(p: DbPost): VillagePost {
     images: p.images || [],
     imageUrls: [],
     videoUrl: p.video_url || "",
+    channel: p.channel === "ask" ? "ask" : "office",
+    replyTo: p.reply_to || null,
   });
 }
 
@@ -103,22 +121,35 @@ async function attachPhotoUrls(posts: VillagePost[]): Promise<VillagePost[]> {
 }
 
 const COLUMN_SETS = [
+  "id, author_id, author_name, body, created_at, pinned, images, video_url, channel, reply_to",
   "id, author_id, author_name, body, created_at, pinned, images, video_url",
   "id, author_id, author_name, body, created_at, pinned, images",
   "id, author_id, author_name, body, created_at, pinned",
   "id, author_id, author_name, body, created_at",
 ];
 
-export async function listVillagePosts(): Promise<VillagePost[]> {
+function filterChannel(posts: VillagePost[], channel: VillageChannel) {
+  return posts.filter((p) => p.channel === channel && !p.replyTo);
+}
+
+export async function listVillagePosts(
+  channel: VillageChannel = "office",
+): Promise<VillagePost[]> {
   if (!hasLiveBackend()) {
-    return sortPosts(readLocal());
+    return sortPosts(filterChannel(readLocal(), channel));
   }
   const supabase = getSupabase();
-  if (!supabase) return sortPosts(readLocal());
+  if (!supabase) return sortPosts(filterChannel(readLocal(), channel));
 
-  // Older databases may be missing pinned/images/video_url; fall back column by column.
   for (const columns of COLUMN_SETS) {
     let query = supabase.from("village_posts").select(columns);
+    if (columns.includes("channel")) {
+      query = query.eq("channel", channel);
+      if (columns.includes("reply_to")) query = query.is("reply_to", null);
+    } else if (channel === "ask") {
+      // Ask Becca needs the channel column — skip until migration 017 runs
+      continue;
+    }
     if (columns.includes("pinned")) query = query.order("pinned", { ascending: false });
     const { data, error } = await query
       .order("created_at", { ascending: false })
@@ -129,7 +160,54 @@ export async function listVillagePosts(): Promise<VillagePost[]> {
       );
     }
   }
-  return sortPosts(readLocal());
+  if (channel === "ask") return [];
+  return sortPosts(filterChannel(readLocal(), channel));
+}
+
+export async function listAskThreads(): Promise<AskThread[]> {
+  if (!hasLiveBackend()) {
+    const all = readLocal().filter((p) => p.channel === "ask");
+    return nestThreads(all);
+  }
+  const supabase = getSupabase();
+  if (!supabase) {
+    return nestThreads(readLocal().filter((p) => p.channel === "ask"));
+  }
+
+  for (const columns of COLUMN_SETS) {
+    if (!columns.includes("channel") || !columns.includes("reply_to")) continue;
+    const { data, error } = await supabase
+      .from("village_posts")
+      .select(columns)
+      .eq("channel", "ask")
+      .order("created_at", { ascending: true })
+      .limit(300);
+    if (!error && data) {
+      const posts = await attachPhotoUrls((data as unknown as DbPost[]).map(fromDb));
+      return nestThreads(posts);
+    }
+    if (/channel|reply_to/i.test(error?.message || "")) {
+      throw new Error(ASK_SQL_HINT);
+    }
+  }
+  throw new Error(ASK_SQL_HINT);
+}
+
+function nestThreads(posts: VillagePost[]): AskThread[] {
+  const questions = sortPosts(posts.filter((p) => !p.replyTo));
+  const byParent = new Map<string, VillagePost[]>();
+  for (const p of posts) {
+    if (!p.replyTo) continue;
+    const list = byParent.get(p.replyTo) || [];
+    list.push(p);
+    byParent.set(p.replyTo, list);
+  }
+  return questions.map((question) => ({
+    question,
+    replies: (byParent.get(question.id) || []).sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
+    ),
+  }));
 }
 
 function readAsDataUrl(blob: Blob) {
@@ -156,12 +234,19 @@ export async function createVillagePost(input: {
   body: string;
   photos?: File[];
   videoUrl?: string;
+  channel?: VillageChannel;
+  replyTo?: string | null;
 }): Promise<VillagePost> {
   const body = input.body.trim();
   const photos = (input.photos || []).slice(0, MAX_POST_PHOTOS);
   const videoUrl = normalizeVideoUrl(input.videoUrl || "");
+  const channel: VillageChannel = input.channel === "ask" ? "ask" : "office";
+  const replyTo = input.replyTo || null;
   if (!body && !photos.length && !videoUrl) {
     throw new Error("Write something, add a photo, or paste a video link first");
+  }
+  if (replyTo && !body) {
+    throw new Error("Write a reply first");
   }
 
   if (!hasLiveBackend()) {
@@ -178,6 +263,8 @@ export async function createVillagePost(input: {
       images: urls,
       imageUrls: urls,
       videoUrl,
+      channel,
+      replyTo,
     });
     writeLocal([post, ...readLocal()]);
     return post;
@@ -213,17 +300,29 @@ export async function createVillagePost(input: {
     if (uploaded.length) row.images = uploaded;
     if (videoUrl) row.video_url = videoUrl;
 
+    // Prefer inserts that include channel/reply_to when Ask Becca needs them
+    const preferChannel = channel === "ask" || !!replyTo;
     for (const columns of COLUMN_SETS) {
       if (uploaded.length && !columns.includes("images")) break;
       if (videoUrl && !columns.includes("video_url")) break;
+      if (preferChannel && !columns.includes("channel")) continue;
+      if (replyTo && !columns.includes("reply_to")) continue;
+
+      const insertRow = { ...row };
+      if (columns.includes("channel")) insertRow.channel = channel;
+      if (columns.includes("reply_to") && replyTo) insertRow.reply_to = replyTo;
+
       const { data, error } = await supabase
         .from("village_posts")
-        .insert(row)
+        .insert(insertRow)
         .select(columns)
         .single();
       if (!error && data) {
         const [post] = await attachPhotoUrls([fromDb(data as unknown as DbPost)]);
         return post;
+      }
+      if (preferChannel && /channel|reply_to/i.test(error?.message || "")) {
+        throw new Error(ASK_SQL_HINT);
       }
       if (
         (uploaded.length || videoUrl) &&
@@ -232,10 +331,12 @@ export async function createVillagePost(input: {
         throw new Error(MEDIA_SQL_HINT);
       }
       if (columns === COLUMN_SETS[COLUMN_SETS.length - 1]) {
-        throw new Error(error?.message || "Could not post");
+        throw new Error(
+          preferChannel ? ASK_SQL_HINT : error?.message || "Could not post",
+        );
       }
     }
-    throw new Error(MEDIA_SQL_HINT);
+    throw new Error(preferChannel ? ASK_SQL_HINT : MEDIA_SQL_HINT);
   } catch (err) {
     if (uploaded.length) await supabase.storage.from(PHOTO_BUCKET).remove(uploaded);
     throw err;
@@ -271,14 +372,27 @@ export async function setVillagePostPinned(id: string, pinned: boolean) {
 
 export async function deleteVillagePost(post: Pick<VillagePost, "id" | "images">) {
   if (!hasLiveBackend()) {
-    writeLocal(readLocal().filter((p) => p.id !== post.id));
+    writeLocal(
+      readLocal().filter((p) => p.id !== post.id && p.replyTo !== post.id),
+    );
     return;
   }
   const supabase = getSupabase();
   if (!supabase) return;
+
+  // Collect reply photos before cascade delete removes the rows
+  const paths = [...post.images];
+  const { data: replies } = await supabase
+    .from("village_posts")
+    .select("images")
+    .eq("reply_to", post.id);
+  for (const r of replies || []) {
+    if (Array.isArray(r.images)) paths.push(...r.images);
+  }
+
   const { error } = await supabase.from("village_posts").delete().eq("id", post.id);
   if (error) throw new Error(error.message);
-  if (post.images.length) {
-    await supabase.storage.from(PHOTO_BUCKET).remove(post.images);
+  if (paths.length) {
+    await supabase.storage.from(PHOTO_BUCKET).remove(paths);
   }
 }
