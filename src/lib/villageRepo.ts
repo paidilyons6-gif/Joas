@@ -28,14 +28,36 @@ export type AskThread = {
   replies: VillagePost[];
 };
 
+export type PostEngagement = {
+  likeCount: number;
+  likedByMe: boolean;
+  /** First names of people who liked (newest first, capped) */
+  likedBy: string[];
+};
+
+export type EngagedPost = VillagePost & PostEngagement;
+
+export type OfficeComment = EngagedPost & {
+  replies: EngagedPost[];
+};
+
+export type OfficeThread = {
+  post: EngagedPost;
+  comments: OfficeComment[];
+  commentCount: number;
+};
+
 export const MAX_POST_PHOTOS = 4;
 const PHOTO_BUCKET = "office-photos";
 const PHOTO_URL_TTL_SECONDS = 60 * 60 * 6;
 const LOCAL_KEY = "bbb_village_posts_v2";
+const LIKES_KEY = "bbb_village_likes_v1";
 const MEDIA_SQL_HINT =
   "Photos and videos need a quick database update: run supabase/migrations/016_office_photos.sql in Supabase.";
 export const ASK_SQL_HINT =
   "Ask Becca needs a quick database update: run supabase/migrations/017_ask_becca.sql in Supabase.";
+export const LIKES_SQL_HINT =
+  "Likes need a quick database update: run supabase/migrations/018_office_likes.sql in Supabase.";
 
 function normalizePost(raw: Partial<VillagePost> & { id: string }): VillagePost {
   return {
@@ -375,6 +397,9 @@ export async function deleteVillagePost(post: Pick<VillagePost, "id" | "images">
     writeLocal(
       readLocal().filter((p) => p.id !== post.id && p.replyTo !== post.id),
     );
+    writeLocalLikes(
+      readLocalLikes().filter((l) => l.postId !== post.id),
+    );
     return;
   }
   const supabase = getSupabase();
@@ -384,10 +409,21 @@ export async function deleteVillagePost(post: Pick<VillagePost, "id" | "images">
   const paths = [...post.images];
   const { data: replies } = await supabase
     .from("village_posts")
-    .select("images")
+    .select("id, images")
     .eq("reply_to", post.id);
+  const replyIds = (replies || []).map((r) => r.id as string);
   for (const r of replies || []) {
     if (Array.isArray(r.images)) paths.push(...r.images);
+  }
+  // Nested replies under comments
+  if (replyIds.length) {
+    const { data: nested } = await supabase
+      .from("village_posts")
+      .select("images")
+      .in("reply_to", replyIds);
+    for (const r of nested || []) {
+      if (Array.isArray(r.images)) paths.push(...r.images);
+    }
   }
 
   const { error } = await supabase.from("village_posts").delete().eq("id", post.id);
@@ -395,4 +431,257 @@ export async function deleteVillagePost(post: Pick<VillagePost, "id" | "images">
   if (paths.length) {
     await supabase.storage.from(PHOTO_BUCKET).remove(paths);
   }
+}
+
+type LocalLike = { postId: string; userId: string; name: string; createdAt: string };
+
+function readLocalLikes(): LocalLike[] {
+  try {
+    return JSON.parse(localStorage.getItem(LIKES_KEY) || "[]") as LocalLike[];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalLikes(likes: LocalLike[]) {
+  localStorage.setItem(LIKES_KEY, JSON.stringify(likes.slice(0, 2000)));
+}
+
+function emptyEngagement(): PostEngagement {
+  return { likeCount: 0, likedByMe: false, likedBy: [] };
+}
+
+function withEngagement(post: VillagePost, eng: PostEngagement): EngagedPost {
+  return { ...post, ...eng };
+}
+
+async function loadEngagementMap(
+  postIds: string[],
+  viewerId: string,
+): Promise<Map<string, PostEngagement>> {
+  const map = new Map<string, PostEngagement>();
+  for (const id of postIds) map.set(id, emptyEngagement());
+  if (!postIds.length) return map;
+
+  if (!hasLiveBackend()) {
+    const likes = readLocalLikes().filter((l) => postIds.includes(l.postId));
+    for (const id of postIds) {
+      const mine = likes.filter((l) => l.postId === id);
+      map.set(id, {
+        likeCount: mine.length,
+        likedByMe: mine.some((l) => l.userId === viewerId),
+        likedBy: mine
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+          .map((l) => l.name.split(" ")[0] || "Member")
+          .slice(0, 8),
+      });
+    }
+    return map;
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) return map;
+
+  const { data, error } = await supabase
+    .from("village_likes")
+    .select("post_id, user_id, created_at")
+    .in("post_id", postIds);
+  if (error) {
+    if (/village_likes|schema cache|does not exist/i.test(error.message)) {
+      throw new Error(LIKES_SQL_HINT);
+    }
+    throw new Error(error.message);
+  }
+
+  const rows = data || [];
+  const userIds = [...new Set(rows.map((r) => r.user_id as string))];
+  const names = new Map<string, string>();
+  if (userIds.length) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", userIds);
+    for (const p of profiles || []) {
+      const first = String(p.full_name || "Member").trim().split(/\s+/)[0] || "Member";
+      names.set(p.id as string, first);
+    }
+  }
+
+  const byPost = new Map<string, { userId: string; createdAt: string }[]>();
+  for (const r of rows) {
+    const list = byPost.get(r.post_id as string) || [];
+    list.push({ userId: r.user_id as string, createdAt: r.created_at as string });
+    byPost.set(r.post_id as string, list);
+  }
+  for (const id of postIds) {
+    const list = (byPost.get(id) || []).sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
+    );
+    map.set(id, {
+      likeCount: list.length,
+      likedByMe: list.some((l) => l.userId === viewerId),
+      likedBy: list.map((l) => names.get(l.userId) || "Member").slice(0, 8),
+    });
+  }
+  return map;
+}
+
+function nestOfficeThreads(
+  posts: VillagePost[],
+  engagement: Map<string, PostEngagement>,
+): OfficeThread[] {
+  const eng = (p: VillagePost) =>
+    withEngagement(p, engagement.get(p.id) || emptyEngagement());
+  const roots = sortPosts(posts.filter((p) => !p.replyTo));
+  const byParent = new Map<string, VillagePost[]>();
+  for (const p of posts) {
+    if (!p.replyTo) continue;
+    const list = byParent.get(p.replyTo) || [];
+    list.push(p);
+    byParent.set(p.replyTo, list);
+  }
+  return roots.map((post) => {
+    const topComments = (byParent.get(post.id) || []).sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
+    );
+    const comments: OfficeComment[] = topComments.map((c) => {
+      const replies = (byParent.get(c.id) || [])
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+        .map(eng);
+      return { ...eng(c), replies };
+    });
+    const commentCount =
+      comments.length + comments.reduce((n, c) => n + c.replies.length, 0);
+    return { post: eng(post), comments, commentCount };
+  });
+}
+
+/** Office feed with likes + two-level comment threads. */
+export async function listOfficeThreads(viewerId: string): Promise<OfficeThread[]> {
+  if (!hasLiveBackend()) {
+    const all = readLocal().filter((p) => p.channel === "office");
+    const eng = await loadEngagementMap(
+      all.map((p) => p.id),
+      viewerId,
+    );
+    return nestOfficeThreads(all, eng);
+  }
+  const supabase = getSupabase();
+  if (!supabase) {
+    const all = readLocal().filter((p) => p.channel === "office");
+    const eng = await loadEngagementMap(
+      all.map((p) => p.id),
+      viewerId,
+    );
+    return nestOfficeThreads(all, eng);
+  }
+
+  for (const columns of COLUMN_SETS) {
+    if (!columns.includes("channel") || !columns.includes("reply_to")) continue;
+    const { data, error } = await supabase
+      .from("village_posts")
+      .select(columns)
+      .eq("channel", "office")
+      .order("created_at", { ascending: true })
+      .limit(400);
+    if (!error && data) {
+      const posts = await attachPhotoUrls((data as unknown as DbPost[]).map(fromDb));
+      let engagement: Map<string, PostEngagement>;
+      try {
+        engagement = await loadEngagementMap(
+          posts.map((p) => p.id),
+          viewerId,
+        );
+      } catch (err) {
+        if (err instanceof Error && err.message === LIKES_SQL_HINT) {
+          engagement = new Map(
+            posts.map((p) => [p.id, emptyEngagement()] as const),
+          );
+        } else {
+          throw err;
+        }
+      }
+      return nestOfficeThreads(posts, engagement);
+    }
+    if (/channel|reply_to/i.test(error?.message || "")) {
+      // Fall back to flat posts without comments until 017
+      const flat = await listVillagePosts("office");
+      const engagement = new Map(
+        flat.map((p) => [p.id, emptyEngagement()] as const),
+      );
+      return nestOfficeThreads(flat, engagement);
+    }
+  }
+  const flat = await listVillagePosts("office");
+  return nestOfficeThreads(
+    flat,
+    new Map(flat.map((p) => [p.id, emptyEngagement()] as const)),
+  );
+}
+
+export async function toggleVillageLike(input: {
+  postId: string;
+  userId: string;
+  userName: string;
+  currentlyLiked: boolean;
+}): Promise<PostEngagement> {
+  if (!hasLiveBackend()) {
+    let likes = readLocalLikes();
+    if (input.currentlyLiked) {
+      likes = likes.filter(
+        (l) => !(l.postId === input.postId && l.userId === input.userId),
+      );
+    } else {
+      likes = [
+        {
+          postId: input.postId,
+          userId: input.userId,
+          name: input.userName,
+          createdAt: new Date().toISOString(),
+        },
+        ...likes,
+      ];
+    }
+    writeLocalLikes(likes);
+    const map = await loadEngagementMap([input.postId], input.userId);
+    return map.get(input.postId) || emptyEngagement();
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase not configured");
+
+  if (input.currentlyLiked) {
+    const { error } = await supabase
+      .from("village_likes")
+      .delete()
+      .eq("post_id", input.postId)
+      .eq("user_id", input.userId);
+    if (error) {
+      throw new Error(
+        /village_likes|schema cache|does not exist/i.test(error.message)
+          ? LIKES_SQL_HINT
+          : error.message,
+      );
+    }
+  } else {
+    const { error } = await supabase.from("village_likes").insert({
+      post_id: input.postId,
+      user_id: input.userId,
+    });
+    if (error) {
+      if (/duplicate|unique/i.test(error.message)) {
+        // already liked
+      } else {
+        throw new Error(
+          /village_likes|schema cache|does not exist|row-level security|policy/i.test(
+            error.message,
+          )
+            ? LIKES_SQL_HINT
+            : error.message,
+        );
+      }
+    }
+  }
+  const map = await loadEngagementMap([input.postId], input.userId);
+  return map.get(input.postId) || emptyEngagement();
 }

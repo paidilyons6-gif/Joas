@@ -2594,6 +2594,113 @@ a.module-card:hover {
   pointer-events: none;
 }
 
+.office-post__body p {
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.office-post__more {
+  margin-top: 0.35rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pink-deep, #c45b7a);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.office-engage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.85rem;
+}
+
+.office-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1.5px solid rgba(26, 26, 26, 0.12);
+  background: var(--white);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  color: var(--ink);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.office-like span {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.office-like.is-liked {
+  background: rgba(232, 160, 191, 0.28);
+  border-color: rgba(196, 91, 122, 0.35);
+  color: #8f3d58;
+  animation: office-like-pop 0.28s ease;
+}
+
+.office-like:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes office-like-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.office-like__who {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-muted);
+}
+
+.office-comments {
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(26, 26, 26, 0.08);
+  display: grid;
+  gap: 0.85rem;
+}
+
+.office-comment {
+  padding: 0.75rem 0.85rem;
+  background: rgba(26, 26, 26, 0.03);
+  border-radius: 10px;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.office-comment--coach {
+  background: rgba(232, 160, 191, 0.16);
+}
+
+.office-comment__replies {
+  margin: 0.35rem 0 0 0.65rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid rgba(26, 26, 26, 0.1);
+  display: grid;
+  gap: 0.65rem;
+}
+
+.office-comment--nested {
+  background: transparent;
+  padding: 0.45rem 0;
+}
+
+.office-comment-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
 .ask-replies {
   margin: 1rem 0 0;
   padding: 0.85rem 0 0 1rem;
