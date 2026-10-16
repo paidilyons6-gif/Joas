@@ -41,7 +41,7 @@ type DbLesson = {
   members_only: boolean;
   video_url?: string | null;
   objectives: string[];
-  sections: { heading: string; body: string }[];
+  sections: CourseLesson["sections"];
   action: string;
   worksheet_prompt: string;
   sort_order: number;
@@ -204,7 +204,7 @@ export async function saveStudioTrackRemote(track: StudioTrack) {
   const supabase = getSupabase();
   if (!supabase) return;
 
-  await supabase.from("course_tracks").upsert({
+  const { error: trackError } = await supabase.from("course_tracks").upsert({
     id: track.id,
     title: track.title,
     blurb: track.blurb,
@@ -214,12 +214,17 @@ export async function saveStudioTrackRemote(track: StudioTrack) {
     sort_order: 0,
     updated_at: new Date().toISOString(),
   });
+  if (trackError) throw remoteSaveError(trackError);
 
   // Replace lessons for track
-  await supabase.from("course_lessons").delete().eq("track_id", track.id);
+  const { error: deleteError } = await supabase
+    .from("course_lessons")
+    .delete()
+    .eq("track_id", track.id);
+  if (deleteError) throw remoteSaveError(deleteError);
   for (let j = 0; j < track.lessons.length; j++) {
     const l = track.lessons[j]!;
-    await supabase.from("course_lessons").upsert({
+    const { error: lessonError } = await supabase.from("course_lessons").upsert({
       id: l.id,
       track_id: track.id,
       title: l.title,
@@ -233,7 +238,14 @@ export async function saveStudioTrackRemote(track: StudioTrack) {
       sort_order: j,
       updated_at: new Date().toISOString(),
     });
+    if (lessonError) throw remoteSaveError(lessonError);
   }
+}
+
+function remoteSaveError(error: { message: string }) {
+  return new Error(
+    `Saved on this device only — members can't see it yet. ${error.message}`,
+  );
 }
 
 export async function deleteStudioTrackRemote(id: string) {
@@ -242,7 +254,8 @@ export async function deleteStudioTrackRemote(id: string) {
   if (!hasLiveBackend()) return;
   const supabase = getSupabase();
   if (!supabase) return;
-  await supabase.from("course_tracks").delete().eq("id", id);
+  const { error } = await supabase.from("course_tracks").delete().eq("id", id);
+  if (error) throw remoteSaveError(error);
 }
 
 export async function fetchNavSettings(): Promise<NavSettings> {

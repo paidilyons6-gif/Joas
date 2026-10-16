@@ -18,6 +18,8 @@ const PATHS: Record<NavTopicId, string> = {
   courses: "/portal/courses",
   vault: "/portal/resources",
   office: "/portal/office",
+  ask: "/portal/ask",
+  calendar: "/portal/calendar",
   calculators: "/portal/calculators",
   toolkit: "/portal/tools",
   studio: "/portal/studio",
@@ -138,8 +140,10 @@ export function PortalLayout() {
               Home
             </NavLink>
             <NavLink to="/portal/courses">Courses</NavLink>
-            <NavLink to="/portal/emailing">Emailing list</NavLink>
+            <NavLink to="/portal/emailing">Send an email</NavLink>
             <NavLink to="/portal/office">The Office</NavLink>
+            <NavLink to="/portal/ask">Ask Becca</NavLink>
+            <NavLink to="/portal/calendar">Calendar</NavLink>
             <NavLink to="/portal/calculators">Calculators</NavLink>
             <NavLink to="/portal/tools">Toolkit</NavLink>
             <NavLink to="/portal/studio">Studio</NavLink>

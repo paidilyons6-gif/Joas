@@ -90,7 +90,7 @@ export function ProgramsPage() {
             </h1>
             <p className="section__copy">
               Like The Village: sign up free, buy Becca&apos;s program, and get
-              access — courses with video lessons, tools, and Business Meeting
+              access — courses with video lessons, tools, and The Office
               inside The Office.
             </p>
           </Reveal>

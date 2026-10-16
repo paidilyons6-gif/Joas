@@ -44,8 +44,48 @@ import {
   sendWaitlistAnnounce,
   type WaitlistRow,
 } from "../../lib/waitlist";
+import type { LessonImage, LessonSection } from "../../data/courses";
 
 const PRICE_SECRET_KEY = "bbb_studio_price_secret";
+
+function SectionImagesField({
+  images,
+  onChange,
+}: {
+  images: LessonImage[];
+  onChange: (images: LessonImage[]) => void;
+}) {
+  const serialized = images
+    .map((img) => (img.caption ? `${img.src} | ${img.caption}` : img.src))
+    .join("\n");
+  const [text, setText] = useState(serialized);
+  useEffect(() => setText(serialized), [serialized]);
+
+  function commit() {
+    onChange(
+      text
+        .split("\n")
+        .map((line) => {
+          const [src, ...rest] = line.split("|");
+          const caption = rest.join("|").trim();
+          return { src: src.trim(), ...(caption ? { caption } : {}) };
+        })
+        .filter((img) => img.src),
+    );
+  }
+
+  return (
+    <label className="calc-field">
+      <span>Images (one per line: link | caption)</span>
+      <textarea
+        rows={2}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={commit}
+      />
+    </label>
+  );
+}
 
 type ProductDraft = {
   productId?: string;
@@ -258,10 +298,14 @@ export function StudioPage() {
 
   function createCourse() {
     const track = emptyTrack();
-    void saveStudioTrackRemote(track).then(() => {
-      refresh();
-      navigate(`/portal/studio/${track.id}`);
-    });
+    void saveStudioTrackRemote(track)
+      .catch((error: unknown) => {
+        alert(error instanceof Error ? error.message : "Could not save");
+      })
+      .then(() => {
+        refresh();
+        navigate(`/portal/studio/${track.id}`);
+      });
   }
 
   function editProgram(editableId: string, source: "builtin" | "studio") {
@@ -279,7 +323,11 @@ export function StudioPage() {
       return;
     }
     if (!confirm("Delete this custom course? This cannot be undone.")) return;
-    void deleteStudioTrackRemote(id).then(() => refresh());
+    void deleteStudioTrackRemote(id)
+      .catch((error: unknown) => {
+        alert(error instanceof Error ? error.message : "Could not delete");
+      })
+      .then(() => refresh());
   }
 
   function toggleNav(id: NavTopicId) {
@@ -329,7 +377,7 @@ export function StudioPage() {
           </h1>
           <p className="portal-lede">
             Create and price programs, edit course parts and lesson videos,
-            and run Business Meeting — signed in as admin ({user.email}).
+            and run The Office — signed in as admin ({user.email}).
           </p>
         </div>
         <button
@@ -981,7 +1029,7 @@ export function StudioEditorPage() {
     });
   }
 
-  function updateSection(index: number, patch: { heading?: string; body?: string }) {
+  function updateSection(index: number, patch: Partial<LessonSection>) {
     if (!lesson) return;
     const sections = lesson.sections.map((s, i) =>
       i === index ? { ...s, ...patch } : s,
@@ -1019,10 +1067,15 @@ export function StudioEditorPage() {
 
   function onSave(event: FormEvent) {
     event.preventDefault();
-    void saveStudioTrackRemote(current).then(() => {
-      setSaved("Program & lessons saved ♡");
-      window.setTimeout(() => setSaved(""), 2200);
-    });
+    void saveStudioTrackRemote(current).then(
+      () => {
+        setSaved("Program & lessons saved ♡");
+        window.setTimeout(() => setSaved(""), 2200);
+      },
+      (error: unknown) => {
+        setSaved(error instanceof Error ? error.message : "Could not save");
+      },
+    );
   }
 
   function publishToggle() {
@@ -1036,10 +1089,15 @@ export function StudioEditorPage() {
         : "Draft",
     };
     setTrack(next);
-    void saveStudioTrackRemote(next).then(() => {
-      setSaved(next.published ? "Live for members ♡" : "Hidden as draft");
-      window.setTimeout(() => setSaved(""), 2200);
-    });
+    void saveStudioTrackRemote(next).then(
+      () => {
+        setSaved(next.published ? "Live for members ♡" : "Hidden as draft");
+        window.setTimeout(() => setSaved(""), 2200);
+      },
+      (error: unknown) => {
+        setSaved(error instanceof Error ? error.message : "Could not save");
+      },
+    );
   }
 
   return (
@@ -1145,12 +1203,12 @@ export function StudioEditorPage() {
                 type="url"
                 value={lesson.videoUrl || ""}
                 onChange={(e) => updateLesson({ videoUrl: e.target.value })}
-                placeholder="YouTube, Vimeo, Loom, or direct .mp4 link"
+                placeholder="Bunny.net play/embed, YouTube, Vimeo, Loom…"
               />
             </label>
             <p className="portal-lede" style={{ marginTop: "-0.5rem" }}>
-              Paste a link — members see the video at the top of this lesson
-              part.
+              Paste a Bunny.net link (same as BodiesByBecca) — members see the
+              video at the top of this lesson part.
             </p>
             <label className="check-item">
               <input
@@ -1199,6 +1257,10 @@ export function StudioEditorPage() {
                     }
                   />
                 </label>
+                <SectionImagesField
+                  images={section.images || []}
+                  onChange={(images) => updateSection(index, { images })}
+                />
               </div>
             ))}
             <button className="btn btn--ghost-ink" type="button" onClick={addSection}>

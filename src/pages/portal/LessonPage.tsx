@@ -6,7 +6,7 @@ import { canAccessLesson } from "../../lib/access";
 import { isAdminEmail } from "../../lib/admin";
 import { useClientPreview } from "../../lib/clientPreview";
 import { loadDrafts, saveLessonNote } from "../../lib/draftsRepo";
-import { resolveLessonVideo } from "../../lib/videoEmbed";
+import { VideoPlayer } from "../../components/VideoPlayer";
 import { coursesAreOpen } from "../../lib/coursesOpen";
 
 export function LessonPage() {
@@ -42,8 +42,6 @@ export function LessonPage() {
   const idx = track.lessons.findIndex((l) => l.id === lesson.id);
   const prev = track.lessons[idx - 1];
   const next = track.lessons[idx + 1];
-  const video = resolveLessonVideo(lesson.videoUrl);
-
   async function persistNotes() {
     if (!user || !lesson) return;
     await saveLessonNote(user.id, lesson.id, notes);
@@ -61,19 +59,8 @@ export function LessonPage() {
       </p>
       <h1>{lesson.title}</h1>
 
-      {video && (
-        <div className="lesson-video">
-          {video.kind === "file" ? (
-            <video controls playsInline src={video.src} preload="metadata" />
-          ) : (
-            <iframe
-              src={video.src}
-              title={`${lesson.title} video`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          )}
-        </div>
+      {lesson.videoUrl && (
+        <VideoPlayer url={lesson.videoUrl} title={`${lesson.title} video`} />
       )}
 
       <div className="lesson-desktop-grid">
@@ -90,7 +77,30 @@ export function LessonPage() {
           {lesson.sections.map((section) => (
             <section className="lesson-panel" key={section.heading}>
               <h2>{section.heading}</h2>
-              <p>{section.body}</p>
+              {section.body && (
+                <p className="lesson-section__body">{section.body}</p>
+              )}
+              {section.images && section.images.length > 0 && (
+                <div className="lesson-images">
+                  {section.images.map((img) => (
+                    <figure key={img.src}>
+                      <img
+                        src={img.src}
+                        alt={img.caption || section.heading}
+                        loading="lazy"
+                        onLoad={(e) => {
+                          const el = e.currentTarget;
+                          el.parentElement?.classList.toggle(
+                            "lesson-images__wide",
+                            el.naturalWidth > el.naturalHeight,
+                          );
+                        }}
+                      />
+                      {img.caption && <figcaption>{img.caption}</figcaption>}
+                    </figure>
+                  ))}
+                </div>
+              )}
             </section>
           ))}
 

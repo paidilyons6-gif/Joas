@@ -26,7 +26,9 @@ import { AccountPage } from "./pages/portal/AccountPage";
 import { StudioPage, StudioEditorPage } from "./pages/portal/StudioPage";
 import { ProgramsPage } from "./pages/ProgramsPage";
 import { OfficePage } from "./pages/portal/OfficePage";
+import { AskBeccaPage } from "./pages/portal/AskBeccaPage";
 import { EmailingListPage } from "./pages/portal/EmailingListPage";
+import { CalendarPage } from "./pages/portal/CalendarPage";
 import { RequireMember } from "./components/RequireMember";
 import type { ReactNode } from "react";
 
@@ -140,6 +142,22 @@ export default function App() {
                 element={
                   <RequireMember>
                     <OfficePage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="ask"
+                element={
+                  <RequireMember>
+                    <AskBeccaPage />
+                  </RequireMember>
+                }
+              />
+              <Route
+                path="calendar"
+                element={
+                  <RequireMember>
+                    <CalendarPage />
                   </RequireMember>
                 }
               />
